@@ -506,8 +506,6 @@ Saat ini proyek ini **belum memiliki lisensi publik resmi**.
 
 ## Kontak / Author
 
-Silakan ganti placeholder berikut sesuai identitas proyek:
-
 - **Nama**: `Andi Bayu Hanggoro`
 - **Email**: `andibayuhanggoro28@gmail.com`
 - **GitHub**: `https://github.com/adbayu`
