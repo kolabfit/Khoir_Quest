@@ -1,14 +1,6 @@
 part of '../main.dart';
 
-enum _TeacherSection {
-  dashboard,
-  huruf,
-  angka,
-  benda,
-  lagu,
-  storage,
-  settings,
-}
+enum _TeacherSection { dashboard, huruf, angka, benda, lagu, storage, settings }
 
 enum _TeacherCategory { huruf, angka, benda, lagu }
 
@@ -54,7 +46,6 @@ extension on _TeacherCategory {
     _TeacherCategory.benda => 'assets/images/Belajar_Benda.png',
     _TeacherCategory.lagu => 'assets/images/Bernyanyi.png',
   };
-
 }
 
 extension on _TeacherSection {
@@ -162,11 +153,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xffFCFBFF),
-              Color(0xffF5F4FF),
-              Color(0xffEFF8FF),
-            ],
+            colors: [Color(0xffFCFBFF), Color(0xffF5F4FF), Color(0xffEFF8FF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -181,9 +168,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                     app: app,
                     section: _section,
                     collapsed: _sidebarCollapsed,
-                    onToggleCollapse: () => setState(
-                      () => _sidebarCollapsed = !_sidebarCollapsed,
-                    ),
+                    onToggleCollapse: () =>
+                        setState(() => _sidebarCollapsed = !_sidebarCollapsed),
                     onSelected: _selectSection,
                   ),
                 ),
@@ -199,8 +185,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                       onCollapseTap: mobile
                           ? null
                           : () => setState(
-                                () => _sidebarCollapsed = !_sidebarCollapsed,
-                              ),
+                              () => _sidebarCollapsed = !_sidebarCollapsed,
+                            ),
                       onQuickUpload: () => _openUploadDialog(activeCategory),
                     ),
                     Expanded(
@@ -273,7 +259,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
           ),
         ),
       ),
-      floatingActionButton: mobile &&
+      floatingActionButton:
+          mobile &&
               activeCategory != _TeacherCategory.huruf &&
               activeCategory != _TeacherCategory.angka
           ? FloatingActionButton.extended(
@@ -307,84 +294,88 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     _TeacherCategory category,
   ) {
     return switch (category) {
-      _TeacherCategory.huruf => app.letters
-          .map(
-            (group) => _TeacherContentData(
-              id: group.id.isEmpty ? group.letter : group.id,
-              title: group.letter,
-              subtitle: group.objects.isEmpty
-                  ? 'Contoh belum diisi'
-                  : group.objects.first.name,
-              category: 'Abjad',
-              statusLabel: 'Aktif',
-              mediaPath: group.objects.isEmpty
-                  ? DefaultLearningCatalog.hurufPlaceholderAsset
-                  : group.objects.first.img,
-              color: category.color,
-              icon: category.icon,
-              badgeText: '',
-              actionLabel: 'Edit Gambar',
-              editable: true,
-              letter: group,
-            ),
-          )
-          .toList(),
-      _TeacherCategory.angka => app.numbers
-          .map(
-            (item) => _TeacherContentData(
-              id: item.id.isEmpty ? item.number : item.id,
-              title: item.number,
-              subtitle: item.name,
-              category: 'Bilangan',
-              statusLabel: 'Aktif',
-              mediaPath: item.img,
-              color: category.color,
-              icon: category.icon,
-              badgeText: '',
-              actionLabel: 'Edit Gambar',
-              editable: true,
-              number: item,
-            ),
-          )
-          .toList(),
-      _TeacherCategory.benda => app.objects
-          .map(
-            (item) => _TeacherContentData(
-              id: item.id.isEmpty ? item.name : item.id,
-              title: item.name,
-              subtitle: item.category,
-              category: 'Benda',
-              statusLabel: 'Aktif',
-              mediaPath: item.img,
-              color: category.color,
-              icon: category.icon,
-              badgeText: item.category,
-              actionLabel: MediaSourceHelper.isLocalFilePath(item.img)
-                  ? 'Lokal'
-                  : 'Default',
-              editable: true,
-              object: item,
-            ),
-          )
-          .toList(),
-      _TeacherCategory.lagu => app.songs
-          .map(
-            (item) => _TeacherContentData(
-              id: item.id,
-              title: item.title,
-              subtitle: item.fileName ?? 'Video lagu offline',
-              category: 'Lagu Anak',
-              statusLabel: 'Aktif',
-              mediaPath: DefaultLearningCatalog.laguPlaceholderAsset,
-              color: category.color,
-              icon: category.icon,
-              badgeText: 'Video',
-              actionLabel: item.fileName ?? 'Lokal',
-              editable: true,
-              song: item,
-            ),
-          )
-          .toList(),
+      _TeacherCategory.huruf =>
+        app.letters
+            .map(
+              (group) => _TeacherContentData(
+                id: group.id.isEmpty ? group.letter : group.id,
+                title: group.letter,
+                subtitle: group.objects.isEmpty
+                    ? 'Contoh belum diisi'
+                    : group.objects.first.name,
+                category: 'Abjad',
+                statusLabel: 'Aktif',
+                mediaPath: group.objects.isEmpty
+                    ? DefaultLearningCatalog.hurufPlaceholderAsset
+                    : group.objects.first.img,
+                color: category.color,
+                icon: category.icon,
+                badgeText: '',
+                actionLabel: 'Edit Gambar',
+                editable: true,
+                letter: group,
+              ),
+            )
+            .toList(),
+      _TeacherCategory.angka =>
+        app.numbers
+            .map(
+              (item) => _TeacherContentData(
+                id: item.id.isEmpty ? item.number : item.id,
+                title: item.number,
+                subtitle: item.name,
+                category: 'Bilangan',
+                statusLabel: 'Aktif',
+                mediaPath: item.img,
+                color: category.color,
+                icon: category.icon,
+                badgeText: '',
+                actionLabel: 'Edit Gambar',
+                editable: true,
+                number: item,
+              ),
+            )
+            .toList(),
+      _TeacherCategory.benda =>
+        app.objects
+            .map(
+              (item) => _TeacherContentData(
+                id: item.id.isEmpty ? item.name : item.id,
+                title: item.name,
+                subtitle: item.category,
+                category: 'Benda',
+                statusLabel: 'Aktif',
+                mediaPath: item.img,
+                color: category.color,
+                icon: category.icon,
+                badgeText: item.category,
+                actionLabel: MediaSourceHelper.isLocalFilePath(item.img)
+                    ? 'Lokal'
+                    : 'Default',
+                editable: true,
+                object: item,
+              ),
+            )
+            .toList(),
+      _TeacherCategory.lagu =>
+        app.songs
+            .map(
+              (item) => _TeacherContentData(
+                id: item.id,
+                title: item.title,
+                subtitle: item.fileName ?? 'Video lagu offline',
+                category: 'Lagu Anak',
+                statusLabel: 'Aktif',
+                mediaPath: DefaultLearningCatalog.laguPlaceholderAsset,
+                color: category.color,
+                icon: category.icon,
+                badgeText: 'Video',
+                actionLabel: item.fileName ?? 'Lokal',
+                editable: true,
+                song: item,
+              ),
+            )
+            .toList(),
     };
   }
 
@@ -414,12 +405,13 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     AppState app,
     _TeacherCategory category,
   ) {
-    final values = _itemsForCategory(app, category)
-        .map((item) => item.badgeText)
-        .where((value) => value.trim().isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final values =
+        _itemsForCategory(app, category)
+            .map((item) => item.badgeText)
+            .where((value) => value.trim().isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
     return ['Semua', ...values];
   }
 
@@ -682,17 +674,26 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                     : 430,
               ),
               itemCount: items.length,
-              itemBuilder: (_, i) => _TeacherContentCard(
-                item: items[i],
-                onEdit: items[i].editable
-                    ? () => _openUploadDialog(activeCategory, existing: items[i])
-                    : null,
-                onUpload: items[i].editable
-                    ? () => _openUploadDialog(activeCategory, existing: items[i])
-                    : null,
-                onDelete: items[i].editable ? () => _deleteContent(items[i]) : null,
-                onReadOnlyTap: () => _showReadOnlyMessage(activeCategory),
-              ).animate().fadeIn(
+              itemBuilder: (_, i) =>
+                  _TeacherContentCard(
+                    item: items[i],
+                    onEdit: items[i].editable
+                        ? () => _openUploadDialog(
+                            activeCategory,
+                            existing: items[i],
+                          )
+                        : null,
+                    onUpload: items[i].editable
+                        ? () => _openUploadDialog(
+                            activeCategory,
+                            existing: items[i],
+                          )
+                        : null,
+                    onDelete: items[i].editable
+                        ? () => _deleteContent(items[i])
+                        : null,
+                    onReadOnlyTap: () => _showReadOnlyMessage(activeCategory),
+                  ).animate().fadeIn(
                     duration: 260.ms,
                     delay: Duration(milliseconds: i * 35),
                   ),
@@ -714,9 +715,9 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
             subtitle: 'Perubahan konten dan progres yang baru terjadi.',
           ),
           const SizedBox(height: 10),
-          ...entries.take(6).map(
-            (activity) => _TeacherActivityTile(activity: activity),
-          ),
+          ...entries
+              .take(6)
+              .map((activity) => _TeacherActivityTile(activity: activity)),
         ],
       ),
     );
@@ -738,7 +739,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
             children: [
               _TeacherSectionTitle(
                 title: 'Penyimpanan',
-                subtitle: 'Semua media disimpan lokal agar dashboard tetap offline.',
+                subtitle:
+                    'Semua media disimpan lokal agar dashboard tetap offline.',
               ),
               const SizedBox(height: 16),
               Row(
@@ -854,7 +856,9 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        app.childName.trim().isEmpty ? 'Pengajar' : app.childName,
+                        app.childName.trim().isEmpty
+                            ? 'Pengajar'
+                            : app.childName,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
@@ -882,15 +886,17 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
           Text(
             'Tema Cepat',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: const Color(0xff2E2963),
-                  fontWeight: FontWeight.w900,
-                ),
+              color: const Color(0xff2E2963),
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: appThemes.take(mobile ? 4 : appThemes.length).map((theme) {
+            children: appThemes.take(mobile ? 4 : appThemes.length).map((
+              theme,
+            ) {
               final selected = theme.id == app.themeId;
               return GestureDetector(
                 onTap: () => ref.read(appStateProvider).setTheme(theme.id),
@@ -904,9 +910,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                         : Colors.white.withValues(alpha: .72),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: selected
-                          ? theme.primary
-                          : const Color(0xffE7E2FF),
+                      color: selected ? theme.primary : const Color(0xffE7E2FF),
                       width: selected ? 2 : 1.2,
                     ),
                     boxShadow: [
@@ -985,10 +989,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     final result = await showDialog<_TeacherDraftResult>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: .18),
-      builder: (_) => _TeacherUploadDialog(
-        category: category,
-        existing: existing,
-      ),
+      builder: (_) =>
+          _TeacherUploadDialog(category: category, existing: existing),
     );
     if (result == null || !mounted) return;
 
@@ -1135,9 +1137,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: category.color,
-        content: Text(
-          '${category.label} siap diubah dari dashboard pengajar.',
-        ),
+        content: Text('${category.label} siap diubah dari dashboard pengajar.'),
       ),
     );
   }
@@ -1266,7 +1266,11 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       value /= 1024;
       unitIndex++;
     }
-    final digits = value >= 100 ? 0 : value >= 10 ? 1 : 2;
+    final digits = value >= 100
+        ? 0
+        : value >= 10
+        ? 1
+        : 2;
     return '${value.toStringAsFixed(digits)} ${units[unitIndex]}';
   }
 }
@@ -1447,10 +1451,7 @@ class _TeacherSidebarTile extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: selected
               ? LinearGradient(
-                  colors: [
-                    item.color,
-                    item.color.withValues(alpha: .78),
-                  ],
+                  colors: [item.color, item.color.withValues(alpha: .78)],
                 )
               : null,
           color: selected ? null : Colors.transparent,
@@ -1539,7 +1540,9 @@ class _TeacherTopbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final teacherName = app.childName.trim().isEmpty ? 'Pengajar' : app.childName;
+    final teacherName = app.childName.trim().isEmpty
+        ? 'Pengajar'
+        : app.childName;
     return Padding(
       padding: EdgeInsets.fromLTRB(mobile ? 16 : 20, 18, mobile ? 16 : 24, 12),
       child: _TeacherSurfaceCard(
@@ -1680,10 +1683,7 @@ class _TeacherSummaryCard extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [
-                  Colors.white,
-                  data.color.withValues(alpha: .20),
-                ],
+                colors: [Colors.white, data.color.withValues(alpha: .20)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -1770,13 +1770,18 @@ class _TeacherCategoryChip extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: selected
               ? LinearGradient(
-                  colors: [category.color, category.color.withValues(alpha: .78)],
+                  colors: [
+                    category.color,
+                    category.color.withValues(alpha: .78),
+                  ],
                 )
               : null,
           color: selected ? null : category.lightColor,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: selected ? category.color : category.color.withValues(alpha: .18),
+            color: selected
+                ? category.color
+                : category.color.withValues(alpha: .18),
             width: selected ? 1.8 : 1.2,
           ),
           boxShadow: selected
@@ -1960,7 +1965,10 @@ class _TeacherContentCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(18),
                           ),
                         ),
-                        icon: const Icon(Icons.remove_red_eye_outlined, size: 18),
+                        icon: const Icon(
+                          Icons.remove_red_eye_outlined,
+                          size: 18,
+                        ),
                         label: Text(item.actionLabel),
                       ),
                     ),
@@ -1973,10 +1981,7 @@ class _TeacherContentCard extends StatelessWidget {
 }
 
 class _TeacherUploadDialog extends StatefulWidget {
-  const _TeacherUploadDialog({
-    required this.category,
-    this.existing,
-  });
+  const _TeacherUploadDialog({required this.category, this.existing});
 
   final _TeacherCategory category;
   final _TeacherContentData? existing;
@@ -2000,7 +2005,8 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
   void initState() {
     super.initState();
     _title = TextEditingController(
-      text: widget.existing?.letter?.letter ??
+      text:
+          widget.existing?.letter?.letter ??
           widget.existing?.number?.number ??
           widget.existing?.title ??
           '',
@@ -2009,16 +2015,15 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
       text: widget.existing?.letter?.objects.isNotEmpty == true
           ? widget.existing!.letter!.objects.first.name
           : widget.existing?.number?.name ??
-              widget.existing?.object?.category ??
-              '',
+                widget.existing?.object?.category ??
+                '',
     );
     _fileName = widget.existing?.song?.fileName;
-    _mediaPath =
-        widget.existing?.letter?.objects.isNotEmpty == true
-            ? widget.existing!.letter!.objects.first.img
-            : widget.existing?.number?.img ??
-                widget.existing?.object?.img ??
-                widget.existing?.song?.videoUrl;
+    _mediaPath = widget.existing?.letter?.objects.isNotEmpty == true
+        ? widget.existing!.letter!.objects.first.img
+        : widget.existing?.number?.img ??
+              widget.existing?.object?.img ??
+              widget.existing?.song?.videoUrl;
   }
 
   @override
@@ -2083,10 +2088,10 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                             _isSong
                                 ? 'Upload video lagu anak lokal untuk dashboard offline.'
                                 : _isHuruf
-                                    ? 'Atur abjad, contoh benda, dan gambar preview secara terpisah.'
-                                    : _isAngka
-                                        ? 'Atur bilangan, nama bilangan, dan gambar preview.'
-                                        : 'Simpan benda baru beserta gambar lokalnya.',
+                                ? 'Atur abjad, contoh benda, dan gambar preview secara terpisah.'
+                                : _isAngka
+                                ? 'Atur bilangan, nama bilangan, dan gambar preview.'
+                                : 'Simpan benda baru beserta gambar lokalnya.',
                             style: const TextStyle(
                               color: Color(0xff6D6A95),
                               fontWeight: FontWeight.w800,
@@ -2103,15 +2108,15 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                   label: _isSong
                       ? 'Judul Lagu'
                       : _isHuruf
-                          ? 'Abjad'
-                          : _isAngka
-                              ? 'Bilangan'
-                              : 'Nama Benda',
+                      ? 'Abjad'
+                      : _isAngka
+                      ? 'Bilangan'
+                      : 'Nama Benda',
                   icon: _isSong
                       ? Icons.music_note_rounded
                       : _isAngka
-                          ? Icons.numbers_rounded
-                          : Icons.edit_rounded,
+                      ? Icons.numbers_rounded
+                      : Icons.edit_rounded,
                   readOnly: _isHuruf || _isAngka,
                 ),
                 if (!_isSong)
@@ -2120,18 +2125,18 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                     label: _isHuruf
                         ? 'Contoh Benda'
                         : _isAngka
-                            ? 'Nama Bilangan'
-                            : 'Kategori',
+                        ? 'Nama Bilangan'
+                        : 'Kategori',
                     icon: _isHuruf
                         ? Icons.lightbulb_outline_rounded
                         : _isAngka
-                            ? Icons.record_voice_over_rounded
-                            : Icons.category_rounded,
+                        ? Icons.record_voice_over_rounded
+                        : Icons.category_rounded,
                     hint: _isHuruf
                         ? 'contoh: Apel, Bola, Cicak'
                         : _isAngka
-                            ? 'contoh: Satu, Dua, Tiga'
-                            : 'contoh: makanan, hewan, sekolah',
+                        ? 'contoh: Satu, Dua, Tiga'
+                        : 'contoh: makanan, hewan, sekolah',
                   ),
                 const SizedBox(height: 4),
                 GestureDetector(
@@ -2169,10 +2174,10 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                                   _isSong
                                       ? _TeacherCategory.lagu.asset
                                       : _isHuruf
-                                          ? _TeacherCategory.huruf.asset
-                                          : _isAngka
-                                              ? _TeacherCategory.angka.asset
-                                              : _TeacherCategory.benda.asset,
+                                      ? _TeacherCategory.huruf.asset
+                                      : _isAngka
+                                      ? _TeacherCategory.angka.asset
+                                      : _TeacherCategory.benda.asset,
                                   fit: BoxFit.contain,
                                 ),
                         ),
@@ -2181,10 +2186,10 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                           _isSong
                               ? 'Tap untuk pilih video lagu'
                               : _isHuruf
-                                  ? 'Tap untuk pilih gambar huruf'
-                                  : _isAngka
-                                      ? 'Tap untuk pilih gambar angka'
-                                      : 'Tap untuk pilih gambar benda',
+                              ? 'Tap untuk pilih gambar huruf'
+                              : _isAngka
+                              ? 'Tap untuk pilih gambar angka'
+                              : 'Tap untuk pilih gambar benda',
                           style: const TextStyle(
                             fontWeight: FontWeight.w900,
                             color: Color(0xff2F2966),
@@ -2227,7 +2232,9 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                     SizedBox(
                       width: mediaWidth < 420 ? double.infinity : 220,
                       child: OutlinedButton(
-                        onPressed: _saving ? null : () => Navigator.of(context).pop(),
+                        onPressed: _saving
+                            ? null
+                            : () => Navigator.of(context).pop(),
                         child: const Text('Batal'),
                       ),
                     ),
@@ -2249,7 +2256,9 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                               )
                             : const Icon(Icons.save_rounded),
                         label: Text(
-                          widget.existing == null ? 'Simpan Konten' : 'Update Konten',
+                          widget.existing == null
+                              ? 'Simpan Konten'
+                              : 'Update Konten',
                         ),
                       ),
                     ),
@@ -2264,29 +2273,42 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
   }
 
   Future<void> _pickMedia() async {
-    final result = await FilePicker.pickFiles(
-      type: _isSong ? FileType.video : FileType.image,
-      withData: true,
-    );
-    final file = result?.files.single;
-    final bytes = file?.bytes;
-    if (file == null || bytes == null) return;
+    Uint8List? bytes;
+    String? pickedName;
+    if (!_isSong &&
+        !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (picked == null) return;
+      bytes = await picked.readAsBytes();
+      pickedName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    } else {
+      final result = await FilePicker.pickFiles(
+        type: _isSong ? FileType.video : FileType.image,
+        withData: true,
+      );
+      final file = result?.files.single;
+      bytes = file?.bytes;
+      pickedName = file?.name;
+    }
+    if (bytes == null || (pickedName ?? '').trim().isEmpty) return;
 
     final savedPath = _isSong
         ? await LocalDatabase.instance.saveVideoBytes(
             bytes: bytes,
-            fileName: file.name,
+            fileName: pickedName!,
           )
         : await LocalDatabase.instance.saveImageBytes(
             bytes: bytes,
-            fileName: file.name,
+            fileName: pickedName!,
             bucket: _isHuruf || _isAngka
                 ? StorageBucket.hurufImages
                 : StorageBucket.bendaImages,
           );
     if (!mounted) return;
     setState(() {
-      _fileName = file.name;
+      _fileName = pickedName;
       _mediaPath = savedPath;
     });
   }
@@ -2456,10 +2478,7 @@ class _TeacherRolePill extends StatelessWidget {
 }
 
 class _TeacherSectionTitle extends StatelessWidget {
-  const _TeacherSectionTitle({
-    required this.title,
-    required this.subtitle,
-  });
+  const _TeacherSectionTitle({required this.title, required this.subtitle});
 
   final String title;
   final String subtitle;
@@ -2472,9 +2491,9 @@ class _TeacherSectionTitle extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: const Color(0xff2F2966),
-                fontWeight: FontWeight.w900,
-              ),
+            color: const Color(0xff2F2966),
+            fontWeight: FontWeight.w900,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -2488,7 +2507,6 @@ class _TeacherSectionTitle extends StatelessWidget {
     );
   }
 }
-
 
 class _TeacherDropdownField extends StatelessWidget {
   const _TeacherDropdownField({
@@ -2667,10 +2685,7 @@ class _TeacherActivityTile extends StatelessWidget {
 }
 
 class _TeacherStorageRow extends StatelessWidget {
-  const _TeacherStorageRow({
-    required this.segment,
-    required this.maxBytes,
-  });
+  const _TeacherStorageRow({required this.segment, required this.maxBytes});
 
   final _TeacherStorageSegment segment;
   final int maxBytes;
@@ -2928,28 +2943,28 @@ class _TeacherStorageData {
   });
 
   const _TeacherStorageData.loading()
-      : totalBytes = 0,
-        capacityBytes = 5 * 1024 * 1024 * 1024,
-        segments = const [
-          _TeacherStorageSegment(
-            label: 'Gambar',
-            bytes: 0,
-            color: Color(0xff8B5CF6),
-            icon: Icons.image_rounded,
-          ),
-          _TeacherStorageSegment(
-            label: 'Audio',
-            bytes: 0,
-            color: Color(0xff22C55E),
-            icon: Icons.audiotrack_rounded,
-          ),
-          _TeacherStorageSegment(
-            label: 'Video',
-            bytes: 0,
-            color: Color(0xff38BDF8),
-            icon: Icons.video_library_rounded,
-          ),
-        ];
+    : totalBytes = 0,
+      capacityBytes = 5 * 1024 * 1024 * 1024,
+      segments = const [
+        _TeacherStorageSegment(
+          label: 'Gambar',
+          bytes: 0,
+          color: Color(0xff8B5CF6),
+          icon: Icons.image_rounded,
+        ),
+        _TeacherStorageSegment(
+          label: 'Audio',
+          bytes: 0,
+          color: Color(0xff22C55E),
+          icon: Icons.audiotrack_rounded,
+        ),
+        _TeacherStorageSegment(
+          label: 'Video',
+          bytes: 0,
+          color: Color(0xff38BDF8),
+          icon: Icons.video_library_rounded,
+        ),
+      ];
 
   final int totalBytes;
   final int capacityBytes;

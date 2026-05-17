@@ -19,6 +19,8 @@ class AppState extends ChangeNotifier {
 
   SharedPreferences? _prefs;
   final LocalDatabase _db;
+  final CloudSyncService _cloudSync = CloudSyncService.instance;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   String? email;
   String childName = 'Teman';
   Gender gender = Gender.boy;
@@ -39,6 +41,7 @@ class AppState extends ChangeNotifier {
   final List<LetterGroup> letters = [...defaultLettersData];
   final List<NumberItem> numbers = [...defaultNumbersData];
   final List<LearningObject> objects = [...objectsData];
+  final List<IqraItem> iqraItems = [...iqraData];
   final List<SongItem> songs = [...songsData];
   final Set<String> favorites = {};
   final Set<String> iqraMastered = {};
@@ -48,16 +51,29 @@ class AppState extends ChangeNotifier {
   final List<String> iqraHistory = [];
   int stars = 12;
   int iqraStreak = 0;
+  bool syncInProgress = false;
+  String syncStatus = 'Cache lokal aktif';
+  DateTime? lastSyncedAt;
 
   AppThemeData get theme =>
       appThemes.firstWhere((t) => t.id == themeId, orElse: () => appThemes[0]);
 
   Future<void> load() async {
     await _db.ensureReady();
+    await _cloudSync.ensureReady();
     _prefs = await SharedPreferences.getInstance();
     onboardingSeen = _prefs?.getBool('onboardingSeen') ?? false;
     await _migrateSharedPreferencesAccount();
-    final account = await _db.currentAccount();
+    var account = await _db.currentAccount();
+    if (_cloudSync.isConfigured) {
+      final profile = await _cloudSync.currentProfile();
+      if (profile != null) {
+        account = await _db.restoreCloudSession(
+          username: profile.username,
+          role: _roleFromString(profile.role),
+        );
+      }
+    }
     if (account == null) {
       final savedTheme =
           await _db.loadThemeId() ?? _prefs?.getString('themeId') ?? 'default';
@@ -68,20 +84,11 @@ class AppState extends ChangeNotifier {
     } else {
       _applyAccount(account);
     }
-    objects
-      ..clear()
-      ..addAll(await _db.loadObjects());
-    letters
-      ..clear()
-      ..addAll(await _db.loadLetters());
-    _sortLetters();
-    numbers
-      ..clear()
-      ..addAll(await _db.loadNumbers());
-    _sortNumbers();
-    songs
-      ..clear()
-      ..addAll(await _db.loadSongs());
+    await _reloadLearningCatalog();
+    await _startConnectivityWatch();
+    if (email != null && role != null) {
+      await syncCloudContent(silent: true);
+    }
     ready = true;
     notifyListeners();
   }
@@ -97,24 +104,41 @@ class AppState extends ChangeNotifier {
   }) async {
     if (nextEmail.trim().length < 3) throw 'Username minimal 3 karakter ya';
     if (password.length < 6) throw 'Password minimal 6 karakter ya';
-    final nextRole = teacherMode || _resolveRole(nextEmail) == Role.teacher
-        ? Role.teacher
-        : Role.child;
-    final account = await _db.authenticate(
-      username: nextEmail,
-      password: password,
-      register: register,
-      autoCreate: autoCreate,
-      role: nextRole,
-      childName: name?.trim().isNotEmpty == true ? name!.trim() : 'Teman',
-      gender: nextGender ?? gender,
-      themeId: themeId,
-      defaultProgress: progress,
-      defaultStars: stars,
-    );
-    _applyAccount(account);
-    tab = role == Role.teacher ? TabItem.akun : TabItem.main;
-    notifyListeners();
+    if (!AuthService.instance.isValidUsername(nextEmail)) {
+      throw 'Username hanya boleh huruf kecil, angka, titik, underscore, atau strip.';
+    }
+    try {
+      var nextRole = teacherMode || _resolveRole(nextEmail) == Role.teacher
+          ? Role.teacher
+          : Role.child;
+      if (_cloudSync.isConfigured) {
+        final profile = await _cloudSync.authenticate(
+          username: nextEmail,
+          password: password,
+          register: register,
+          preferredRole: nextRole.name,
+        );
+        nextRole = _roleFromString(profile.role);
+      }
+      final account = await _db.authenticate(
+        username: nextEmail,
+        password: password,
+        register: register,
+        autoCreate: autoCreate,
+        role: nextRole,
+        childName: name?.trim().isNotEmpty == true ? name!.trim() : 'Teman',
+        gender: nextGender ?? gender,
+        themeId: themeId,
+        defaultProgress: progress,
+        defaultStars: stars,
+      );
+      _applyAccount(account);
+      tab = role == Role.teacher ? TabItem.akun : TabItem.main;
+      await syncCloudContent(silent: true);
+      notifyListeners();
+    } catch (error) {
+      throw ApiErrorMapper.toMessage(error);
+    }
   }
 
   Role _resolveRole(String identity) {
@@ -139,6 +163,9 @@ class AppState extends ChangeNotifier {
     email = null;
     role = null;
     favorites.clear();
+    if (_cloudSync.isConfigured) {
+      await _cloudSync.logout();
+    }
     await _db.clearSession();
     notifyListeners();
   }
@@ -165,13 +192,12 @@ class AppState extends ChangeNotifier {
   void openLearn(LearnMode mode) {
     learnMode = mode;
     tab = TabItem.belajar;
-    notifyListeners();
-  }
-
-  Future<void> bump(String key, [int amount = 7]) async {
-    progress[key] = min(100, (progress[key] ?? 0) + amount);
-    stars += 1;
-    await _saveAccount();
+    final progressKey = _progressKeyForMode(mode);
+    if (progressKey != null) {
+      progress[progressKey] = min(100, (progress[progressKey] ?? 0) + 8);
+      stars += 1;
+      unawaited(_persistLearningOpen(mode, progressKey));
+    }
     notifyListeners();
   }
 
@@ -185,10 +211,6 @@ class AppState extends ChangeNotifier {
       iqraHistory.removeRange(20, iqraHistory.length);
     }
     iqraStreak += 1;
-    progress['iqra'] = min(
-      100,
-      (iqraMastered.length / iqraData.length * 100).round(),
-    );
     stars += 2;
     await _recordHistory(
       materialId: item.latin,
@@ -202,10 +224,6 @@ class AppState extends ChangeNotifier {
 
   Future<void> markHurfSuccess(String letter) async {
     hurfMastered.add(letter);
-    progress['membaca'] = min(
-      100,
-      (hurfMastered.length / max(1, letters.length) * 100).round(),
-    );
     stars += 2;
     await _recordHistory(
       materialId: letter,
@@ -219,10 +237,6 @@ class AppState extends ChangeNotifier {
 
   Future<void> markAngkaSuccess(String number) async {
     angkaMastered.add(number);
-    progress['angka'] = min(
-      100,
-      (angkaMastered.length / max(1, numbers.length) * 100).round(),
-    );
     stars += 2;
     await _recordHistory(
       materialId: number,
@@ -236,10 +250,6 @@ class AppState extends ChangeNotifier {
 
   Future<void> markBendaSuccess(String name) async {
     bendaMastered.add(name);
-    progress['benda'] = min(
-      100,
-      (bendaMastered.length / max(1, objects.length) * 100).round(),
-    );
     stars += 2;
     await _recordHistory(
       materialId: name,
@@ -254,6 +264,7 @@ class AppState extends ChangeNotifier {
   Future<void> addObject(String name, String img, String category) async {
     final object = await _db.addObject(name, img, category);
     objects.insert(0, object);
+    await _syncSingleMaterial(object.id);
     notifyListeners();
   }
 
@@ -272,11 +283,14 @@ class AppState extends ChangeNotifier {
     letters.removeWhere((entry) => entry.id == item.id);
     letters.insert(0, item);
     _sortLetters();
+    await _syncSingleMaterial(item.id);
     notifyListeners();
   }
 
   Future<void> removeLetter(LetterGroup item) async {
-    letters.removeWhere((entry) => entry.id == item.id || entry.letter == item.letter);
+    letters.removeWhere(
+      (entry) => entry.id == item.id || entry.letter == item.letter,
+    );
     if (hurfMastered.remove(item.letter)) {
       progress['membaca'] = min(
         100,
@@ -285,6 +299,7 @@ class AppState extends ChangeNotifier {
       await _saveAccount();
     }
     await _db.removeLetter(item);
+    await _deleteCloudMaterial(item.id);
     notifyListeners();
   }
 
@@ -303,11 +318,14 @@ class AppState extends ChangeNotifier {
     numbers.removeWhere((entry) => entry.id == item.id);
     numbers.insert(0, item);
     _sortNumbers();
+    await _syncSingleMaterial(item.id);
     notifyListeners();
   }
 
   void _sortLetters() {
-    letters.sort((a, b) => a.letter.toUpperCase().compareTo(b.letter.toUpperCase()));
+    letters.sort(
+      (a, b) => a.letter.toUpperCase().compareTo(b.letter.toUpperCase()),
+    );
   }
 
   void _sortNumbers() {
@@ -321,7 +339,9 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> removeNumber(NumberItem item) async {
-    numbers.removeWhere((entry) => entry.id == item.id || entry.number == item.number);
+    numbers.removeWhere(
+      (entry) => entry.id == item.id || entry.number == item.number,
+    );
     if (angkaMastered.remove(item.number)) {
       progress['angka'] = min(
         100,
@@ -330,30 +350,34 @@ class AppState extends ChangeNotifier {
       await _saveAccount();
     }
     await _db.removeNumber(item);
+    await _deleteCloudMaterial(item.id);
     notifyListeners();
   }
 
-  Future<void> removeObject(LearningObject item, {bool deleteMedia = true}) async {
+  Future<void> removeObject(
+    LearningObject item, {
+    bool deleteMedia = true,
+  }) async {
     objects.remove(item);
     if (deleteMedia && MediaSourceHelper.isLocalFilePath(item.img)) {
       await _db.deleteFile(item.img);
     }
     await _db.removeObject(item);
+    await _deleteCloudMaterial(item.id);
     notifyListeners();
   }
 
   Future<void> addSong(String title, String url, {String? fileName}) async {
-    songs.insert(
-      0,
-      SongItem(
-        DateTime.now().millisecondsSinceEpoch.toString(),
-        title,
-        url,
-        const [],
-        fileName: fileName,
-      ),
+    final song = SongItem(
+      DateTime.now().millisecondsSinceEpoch.toString(),
+      title,
+      url,
+      const [],
+      fileName: fileName,
     );
+    songs.insert(0, song);
     await _db.saveSongs(songs);
+    await _syncSingleMaterial(song.id);
     notifyListeners();
   }
 
@@ -367,6 +391,7 @@ class AppState extends ChangeNotifier {
     if (email != null) {
       await _db.saveFavoriteIds(email!, favorites);
     }
+    await _deleteCloudMaterial(song.id);
     notifyListeners();
   }
 
@@ -402,6 +427,127 @@ class AppState extends ChangeNotifier {
       iqraMastered: _prefs?.getStringList('iqra_mastered') ?? const [],
       iqraHistory: _prefs?.getStringList('iqra_history') ?? const [],
     );
+  }
+
+  Future<void> syncCloudContent({bool silent = false}) async {
+    final username = email;
+    final currentRole = role;
+    if (username == null || currentRole == null) return;
+    if (!_cloudSync.isConfigured) {
+      syncStatus = 'Supabase belum aktif';
+      if (!silent) notifyListeners();
+      return;
+    }
+    if (syncInProgress) return;
+    syncInProgress = true;
+    syncStatus = 'Sinkronisasi cloud...';
+    if (!silent && ready) notifyListeners();
+    try {
+      await _cloudSync.syncForRole(role: currentRole.name);
+      await _reloadLearningCatalog();
+      lastSyncedAt = DateTime.now();
+      syncStatus = 'Tersinkron ${_formatSyncTime(lastSyncedAt!)}';
+    } catch (_) {
+      syncStatus = 'Mode offline. Cache lokal dipakai.';
+    } finally {
+      syncInProgress = false;
+      if (ready) notifyListeners();
+    }
+  }
+
+  Future<void> _syncSingleMaterial(String materialId) async {
+    if (materialId.trim().isEmpty) return;
+    if (role != Role.teacher || email == null || !_cloudSync.isConfigured) {
+      return;
+    }
+    try {
+      syncInProgress = true;
+      syncStatus = 'Upload materi ke cloud...';
+      if (ready) notifyListeners();
+      final profile = await _cloudSync.currentProfile();
+      await _cloudSync.syncLocalMaterial(
+        materialId,
+        createdBy: profile?.userId ?? email!,
+      );
+      await _reloadLearningCatalog();
+      lastSyncedAt = DateTime.now();
+      syncStatus = 'Materi tersinkron ${_formatSyncTime(lastSyncedAt!)}';
+    } catch (_) {
+      syncStatus = 'Tersimpan lokal. Sinkron tertunda.';
+    } finally {
+      syncInProgress = false;
+      if (ready) notifyListeners();
+    }
+  }
+
+  Future<void> _deleteCloudMaterial(String materialId) async {
+    if (materialId.trim().isEmpty) return;
+    if (role != Role.teacher || !_cloudSync.isConfigured) return;
+    try {
+      syncInProgress = true;
+      syncStatus = 'Menghapus materi cloud...';
+      if (ready) notifyListeners();
+      await _cloudSync.deleteMaterial(materialId);
+      lastSyncedAt = DateTime.now();
+      syncStatus = 'Perubahan tersinkron ${_formatSyncTime(lastSyncedAt!)}';
+    } catch (_) {
+      syncStatus = 'Hapus lokal selesai. Sinkron cloud tertunda.';
+    } finally {
+      syncInProgress = false;
+      if (ready) notifyListeners();
+    }
+  }
+
+  Future<void> _reloadLearningCatalog() async {
+    objects
+      ..clear()
+      ..addAll(await _db.loadObjects());
+    letters
+      ..clear()
+      ..addAll(await _db.loadLetters());
+    _sortLetters();
+    numbers
+      ..clear()
+      ..addAll(await _db.loadNumbers());
+    _sortNumbers();
+    iqraItems
+      ..clear()
+      ..addAll(await _db.loadIqraItems());
+    songs
+      ..clear()
+      ..addAll(await _db.loadSongs());
+  }
+
+  Future<void> _startConnectivityWatch() async {
+    if (_connectivitySubscription != null || !_cloudSync.isConfigured) return;
+    _connectivitySubscription = _cloudSync.connectivityChanges.listen((
+      states,
+    ) async {
+      if (states.contains(ConnectivityResult.none)) {
+        syncStatus = 'Offline cache aktif';
+        if (ready) notifyListeners();
+        return;
+      }
+      if (email == null || role == null || syncInProgress) return;
+      syncStatus = 'Koneksi pulih. Refresh materi...';
+      if (ready) notifyListeners();
+      await syncCloudContent();
+    });
+  }
+
+  Role _roleFromString(String value) =>
+      value.trim().toLowerCase() == 'teacher' ? Role.teacher : Role.child;
+
+  String _formatSyncTime(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
   }
 
   void _applyAccount(UserAccount account) {
@@ -479,5 +625,34 @@ class AppState extends ChangeNotifier {
         playedAt: DateTime.now(),
       ),
     );
+  }
+
+  String? _progressKeyForMode(LearnMode mode) => switch (mode) {
+    LearnMode.huruf => 'membaca',
+    LearnMode.angka => 'angka',
+    LearnMode.benda => 'benda',
+    LearnMode.iqra => 'iqra',
+    LearnMode.menu => null,
+  };
+
+  String? _historyCategoryForMode(LearnMode mode) => switch (mode) {
+    LearnMode.huruf => 'huruf',
+    LearnMode.angka => 'angka',
+    LearnMode.benda => 'benda',
+    LearnMode.iqra => 'iqra',
+    LearnMode.menu => null,
+  };
+
+  Future<void> _persistLearningOpen(LearnMode mode, String progressKey) async {
+    final category = _historyCategoryForMode(mode);
+    if (category != null) {
+      await _recordHistory(
+        materialId: 'screen_${mode.name}',
+        category: category,
+        duration: 1,
+        score: progress[progressKey] ?? 0,
+      );
+    }
+    await _saveAccount();
   }
 }

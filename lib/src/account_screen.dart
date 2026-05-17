@@ -90,6 +90,11 @@ int _accountTotalProgress(Map<String, int> progress) {
   return (values.reduce((a, b) => a + b) / values.length).round();
 }
 
+int _studiedMaterialCount(AppState app) {
+  const keys = ['membaca', 'angka', 'benda', 'iqra'];
+  return keys.where((key) => (app.progress[key] ?? 0) > 0).length;
+}
+
 int _accountLevel(int stars) => (stars ~/ 100 + 1).clamp(1, 5);
 
 String _levelTitle(int level) => switch (level) {
@@ -380,11 +385,12 @@ class _LearningStats extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tablet = MediaQuery.sizeOf(context).width >= 700;
     final badgeCount = BadgeService.instance.unlockedCount(app.progress);
+    final studiedCount = _studiedMaterialCount(app);
     final stats = [
       _StatData(
         Icons.menu_book_rounded,
         'Materi Dipelajari',
-        32,
+        studiedCount,
         'Topik',
         const Color(0xff33C66A),
       ),

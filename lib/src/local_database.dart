@@ -105,6 +105,111 @@ class LocalDatabase {
     await _userRepository.clearSession();
   }
 
+  Future<UserAccount> restoreCloudSession({
+    required String username,
+    required Role role,
+    String childName = 'Teman',
+    Gender gender = Gender.boy,
+    String themeId = 'default',
+    String avatarPath = '',
+  }) async {
+    await ensureReady();
+    if (kIsWeb) {
+      final existing = _webLoadAccount(username);
+      final account = existing == null
+          ? UserAccount(
+              username: username.toLowerCase().trim(),
+              childName: childName,
+              gender: gender,
+              role: role,
+              themeId: themeId,
+              stars: 12,
+              iqraStreak: 0,
+              progress: const {'membaca': 0, 'angka': 0, 'benda': 0, 'iqra': 0},
+              iqraMastered: const [],
+              iqraHistory: const [],
+              avatarPath: avatarPath,
+            )
+          : UserAccount(
+              username: existing.username,
+              childName: existing.childName,
+              gender: existing.gender,
+              role: role,
+              themeId: existing.themeId,
+              stars: existing.stars,
+              iqraStreak: existing.iqraStreak,
+              progress: Map<String, int>.from(existing.progress),
+              iqraMastered: List<String>.from(existing.iqraMastered),
+              iqraHistory: List<String>.from(existing.iqraHistory),
+              hurfMastered: List<String>.from(existing.hurfMastered),
+              angkaMastered: List<String>.from(existing.angkaMastered),
+              bendaMastered: List<String>.from(existing.bendaMastered),
+              favoriteMaterialIds: List<String>.from(
+                existing.favoriteMaterialIds,
+              ),
+              avatarPath: existing.avatarPath.isEmpty
+                  ? avatarPath
+                  : existing.avatarPath,
+              createdAt: existing.createdAt,
+            );
+      await _webSaveAccount(account);
+      await _webPrefs!.setString(_webCurrentUserKey, account.username);
+      return account;
+    }
+    final existing = await _userRepository.accountByUsername(
+      username: username,
+      genderParser: _parseGender,
+      roleParser: _parseRole,
+    );
+    if (existing == null) {
+      await _userRepository.migrateLegacyAccount(
+        username: username,
+        childName: childName,
+        gender: gender,
+        role: role,
+        themeId: themeId,
+        stars: 12,
+        iqraStreak: 0,
+        progress: const {'membaca': 0, 'angka': 0, 'benda': 0, 'iqra': 0},
+        iqraMastered: const [],
+        iqraHistory: const [],
+      );
+    } else {
+      await _userRepository.saveAccount(
+        UserAccount(
+          username: existing.username,
+          childName: existing.childName,
+          gender: existing.gender,
+          role: role,
+          themeId: existing.themeId,
+          stars: existing.stars,
+          iqraStreak: existing.iqraStreak,
+          progress: existing.progress,
+          iqraMastered: existing.iqraMastered,
+          iqraHistory: existing.iqraHistory,
+          hurfMastered: existing.hurfMastered,
+          angkaMastered: existing.angkaMastered,
+          bendaMastered: existing.bendaMastered,
+          favoriteMaterialIds: existing.favoriteMaterialIds,
+          avatarPath: existing.avatarPath.isEmpty
+              ? avatarPath
+              : existing.avatarPath,
+          createdAt: existing.createdAt,
+        ),
+      );
+    }
+    await _userRepository.setCurrentUsername(username);
+    await _progressRepository.ensureDefaults(username);
+    await _badgeRepository.ensureSeeded(username);
+    final account = await _userRepository.accountByUsername(
+      username: username,
+      genderParser: _parseGender,
+      roleParser: _parseRole,
+    );
+    final progress = await _progressRepository.loadProgress(username);
+    return _withProgress(account!, progress);
+  }
+
   Future<UserAccount> authenticate({
     required String username,
     required String password,
@@ -331,17 +436,14 @@ class LocalDatabase {
       final decoded = jsonDecode(raw) as List<dynamic>;
       return decoded.map((item) {
         final map = Map<String, dynamic>.from(item as Map);
-        return LetterGroup(
-          map['letter'] as String,
-          [
-            LearningObject(
-              map['example'] as String? ?? '',
-              map['img'] as String? ?? DefaultLearningCatalog.hurufPlaceholderAsset,
-              map['category'] as String? ?? 'contoh',
-            ),
-          ],
-          map['id'] as String? ?? '',
-        );
+        return LetterGroup(map['letter'] as String, [
+          LearningObject(
+            map['example'] as String? ?? '',
+            map['img'] as String? ??
+                DefaultLearningCatalog.hurufPlaceholderAsset,
+            map['category'] as String? ?? 'contoh',
+          ),
+        ], map['id'] as String? ?? '');
       }).toList();
     }
     final items = await _materialRepository.loadByCategory(
@@ -350,18 +452,34 @@ class LocalDatabase {
     if (items.isEmpty) return [...defaultLettersData];
     return items
         .map(
-          (item) => LetterGroup(
-            _normalizeLetterTitle(item.title),
-            [
-              LearningObject(
-                item.subcategory.isEmpty ? 'Contoh' : item.subcategory,
-                item.imagePath.isEmpty
-                    ? defaultMediaFallback(LearningCategories.huruf)
-                    : item.imagePath,
-                'contoh',
-              ),
-            ],
-            item.materialId,
+          (item) => LetterGroup(_normalizeLetterTitle(item.title), [
+            LearningObject(
+              item.subcategory.isEmpty ? 'Contoh' : item.subcategory,
+              item.imagePath.isEmpty
+                  ? defaultMediaFallback(LearningCategories.huruf)
+                  : item.imagePath,
+              'contoh',
+            ),
+          ], item.materialId),
+        )
+        .toList();
+  }
+
+  Future<List<IqraItem>> loadIqraItems() async {
+    await ensureReady();
+    if (kIsWeb) {
+      return [...iqraData];
+    }
+    final items = await _materialRepository.loadByCategory(
+      LearningCategories.iqra,
+    );
+    if (items.isEmpty) return [...iqraData];
+    return items
+        .map(
+          (item) => IqraItem(
+            item.title.isEmpty ? item.subcategory : item.title,
+            item.subcategory.isEmpty ? item.title : item.subcategory,
+            audioUrl: item.audioPath,
           ),
         )
         .toList();
@@ -376,36 +494,31 @@ class LocalDatabase {
     await ensureReady();
     final normalizedLetter = letter.trim().toUpperCase();
     final normalizedExample = example.trim();
-    final materialId =
-        existingId?.trim().isNotEmpty == true
-            ? existingId!.trim()
-            : 'huruf_${normalizedLetter.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}';
+    final materialId = existingId?.trim().isNotEmpty == true
+        ? existingId!.trim()
+        : 'huruf_${normalizedLetter.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}';
     if (kIsWeb) {
       final items = await loadLetters();
-      final next = LetterGroup(
-        normalizedLetter,
-        [LearningObject(normalizedExample, imagePath, 'contoh')],
-        materialId,
-      );
+      final next = LetterGroup(normalizedLetter, [
+        LearningObject(normalizedExample, imagePath, 'contoh'),
+      ], materialId);
       items.removeWhere((item) => item.id == materialId);
       items.insert(0, next);
       await _webPrefs!.setString(
         _webLettersKey,
         jsonEncode(
-          items
-              .map((item) {
-                final sample = item.objects.isEmpty
-                    ? const LearningObject('', '')
-                    : item.objects.first;
-                return {
-                  'id': item.id,
-                  'letter': item.letter,
-                  'example': sample.name,
-                  'img': sample.img,
-                  'category': sample.category,
-                };
-              })
-              .toList(),
+          items.map((item) {
+            final sample = item.objects.isEmpty
+                ? const LearningObject('', '')
+                : item.objects.first;
+            return {
+              'id': item.id,
+              'letter': item.letter,
+              'example': sample.name,
+              'img': sample.img,
+              'category': sample.category,
+            };
+          }).toList(),
         ),
       );
       return next;
@@ -417,17 +530,13 @@ class LocalDatabase {
       subcategory: normalizedExample,
       imagePath: imagePath,
     );
-    return LetterGroup(
-      _normalizeLetterTitle(entity.title),
-      [
-        LearningObject(
-          entity.subcategory.isEmpty ? 'Contoh' : entity.subcategory,
-          entity.imagePath,
-          'contoh',
-        ),
-      ],
-      entity.materialId,
-    );
+    return LetterGroup(_normalizeLetterTitle(entity.title), [
+      LearningObject(
+        entity.subcategory.isEmpty ? 'Contoh' : entity.subcategory,
+        entity.imagePath,
+        'contoh',
+      ),
+    ], entity.materialId);
   }
 
   Future<void> removeLetter(LetterGroup item) async {
@@ -435,24 +544,24 @@ class LocalDatabase {
     final imagePath = item.objects.isEmpty ? '' : item.objects.first.img;
     if (kIsWeb) {
       final items = await loadLetters();
-      items.removeWhere((entry) => entry.id == item.id || entry.letter == item.letter);
+      items.removeWhere(
+        (entry) => entry.id == item.id || entry.letter == item.letter,
+      );
       await _webPrefs!.setString(
         _webLettersKey,
         jsonEncode(
-          items
-              .map((entry) {
-                final sample = entry.objects.isEmpty
-                    ? const LearningObject('', '')
-                    : entry.objects.first;
-                return {
-                  'id': entry.id,
-                  'letter': entry.letter,
-                  'example': sample.name,
-                  'img': sample.img,
-                  'category': sample.category,
-                };
-              })
-              .toList(),
+          items.map((entry) {
+            final sample = entry.objects.isEmpty
+                ? const LearningObject('', '')
+                : entry.objects.first;
+            return {
+              'id': entry.id,
+              'letter': entry.letter,
+              'example': sample.name,
+              'img': sample.img,
+              'category': sample.category,
+            };
+          }).toList(),
         ),
       );
       return;
@@ -508,13 +617,17 @@ class LocalDatabase {
     await ensureReady();
     final normalizedNumber = number.trim();
     final normalizedName = name.trim();
-    final materialId =
-        existingId?.trim().isNotEmpty == true
-            ? existingId!.trim()
-            : 'angka_${normalizedNumber}_${DateTime.now().millisecondsSinceEpoch}';
+    final materialId = existingId?.trim().isNotEmpty == true
+        ? existingId!.trim()
+        : 'angka_${normalizedNumber}_${DateTime.now().millisecondsSinceEpoch}';
     if (kIsWeb) {
       final items = await loadNumbers();
-      final next = NumberItem(normalizedNumber, normalizedName, imagePath, materialId);
+      final next = NumberItem(
+        normalizedNumber,
+        normalizedName,
+        imagePath,
+        materialId,
+      );
       items.removeWhere((item) => item.id == materialId);
       items.insert(0, next);
       await _webPrefs!.setString(
@@ -553,7 +666,9 @@ class LocalDatabase {
     await ensureReady();
     if (kIsWeb) {
       final items = await loadNumbers();
-      items.removeWhere((entry) => entry.id == item.id || entry.number == item.number);
+      items.removeWhere(
+        (entry) => entry.id == item.id || entry.number == item.number,
+      );
       await _webPrefs!.setString(
         _webNumbersKey,
         jsonEncode(
@@ -778,7 +893,10 @@ class LocalDatabase {
   Future<int> countAccounts() async {
     await ensureReady();
     if (kIsWeb) {
-      return _webPrefs!.getKeys().where((key) => key.startsWith('web.account.')).length;
+      return _webPrefs!
+          .getKeys()
+          .where((key) => key.startsWith('web.account.'))
+          .length;
     }
     return _userRepository.countAccounts();
   }

@@ -376,7 +376,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             nextGender: gender,
           );
     } catch (e) {
-      setState(() => error = e.toString());
+      setState(() => error = ApiErrorMapper.toMessage(e));
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -400,7 +400,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             nextGender: gender,
           );
     } catch (e) {
-      setState(() => error = e.toString());
+      setState(() => error = ApiErrorMapper.toMessage(e));
     } finally {
       if (mounted) setState(() => loading = false);
     }

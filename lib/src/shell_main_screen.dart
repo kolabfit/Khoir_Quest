@@ -1130,124 +1130,144 @@ class _ActionIllustrationCard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final mobile = constraints.maxWidth < 520;
-          final reserve = mobile
+          final compactMobile = constraints.maxWidth < 390;
+          final reserve = compactMobile
+              ? 0.0
+              : mobile
               ? min(contentRightPadding, constraints.maxWidth * .42)
               : contentRightPadding;
           final nextImageWidth =
               (mobile
-                      ? min(imageWidth, constraints.maxWidth * .36)
+                      ? min(
+                          imageWidth,
+                          constraints.maxWidth * (compactMobile ? .28 : .36),
+                        )
                       : imageWidth)
                   .toDouble();
           final nextImageHeight = (mobile ? min(imageHeight, 118) : imageHeight)
               .toDouble();
+          final button = Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: buttonColor,
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                  color: Colors.black.withValues(alpha: .10),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  color: whiteButton ? buttonIconColor : Colors.white,
+                  size: 15,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  buttonText,
+                  style: TextStyle(
+                    color: whiteButton ? buttonIconColor : Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          );
+          final textContent = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                maxLines: compactMobile ? 3 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: titleColor,
+                  fontSize: mobile ? 20 : 19,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                subtitle,
+                maxLines: compactMobile ? 3 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: mobile ? 14 : 13,
+                  fontWeight: FontWeight.w900,
+                  height: 1.25,
+                ),
+              ),
+              const SizedBox(height: 12),
+              button,
+            ],
+          );
+          final card = Container(
+            width: double.infinity,
+            constraints: BoxConstraints(minHeight: compactMobile ? 144 : 126),
+            padding: EdgeInsets.fromLTRB(18, 16, reserve + 8, 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              gradient: LinearGradient(
+                colors: colors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                  color: colors.last.withValues(alpha: .22),
+                ),
+              ],
+            ),
+            child: compactMobile
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(child: textContent),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: nextImageWidth,
+                        child: Image.asset(
+                          asset,
+                          height: nextImageHeight,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ],
+                  )
+                : textContent,
+          );
           return Padding(
                 padding: EdgeInsets.only(top: 16, right: mobile ? 0 : 10),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      constraints: const BoxConstraints(minHeight: 126),
-                      padding: EdgeInsets.fromLTRB(18, 16, reserve + 8, 14),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        gradient: LinearGradient(
-                          colors: colors,
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        border: Border.all(color: Colors.white, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            blurRadius: 18,
-                            offset: const Offset(0, 10),
-                            color: colors.last.withValues(alpha: .22),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
+                child: compactMobile
+                    ? card
+                    : Stack(
+                        clipBehavior: Clip.none,
                         children: [
-                          Text(
-                            title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: titleColor,
-                              fontSize: mobile ? 20 : 19,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(height: 7),
-                          Text(
-                            subtitle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: mobile ? 14 : 13,
-                              fontWeight: FontWeight.w900,
-                              height: 1.25,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: buttonColor,
-                              borderRadius: BorderRadius.circular(999),
-                              boxShadow: [
-                                BoxShadow(
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                  color: Colors.black.withValues(alpha: .10),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  icon,
-                                  color: whiteButton
-                                      ? buttonIconColor
-                                      : Colors.white,
-                                  size: 15,
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  buttonText,
-                                  style: TextStyle(
-                                    color: whiteButton
-                                        ? buttonIconColor
-                                        : Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ],
+                          card,
+                          Positioned(
+                            right: mobile ? max(imageRight, -14) : imageRight,
+                            top: -14,
+                            bottom: -8,
+                            child: Image.asset(
+                              asset,
+                              height: nextImageHeight,
+                              width: nextImageWidth,
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    Positioned(
-                      right: mobile ? max(imageRight, -14) : imageRight,
-                      top: -14,
-                      bottom: -8,
-                      child: Image.asset(
-                        asset,
-                        height: nextImageHeight,
-                        width: nextImageWidth,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ],
-                ),
               )
               .animate()
               .fadeIn(duration: 330.ms, delay: 300.ms)

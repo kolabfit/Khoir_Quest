@@ -696,15 +696,10 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
           badge: obj.name.toLowerCase(),
           kind: _PremiumCardKind.letter,
           mastered: mastered,
-          onAudio: () async {
-            await speakIndonesian(tts, letterPronunciation);
-            await ref.read(appStateProvider).bump('membaca', 4);
-          },
+          onAudio: () => speakIndonesian(tts, letterPronunciation),
           onMic: () => listenForProgress(
             expected: letterPronunciation,
             successText: 'Pintar! ${item.letter} cocok.',
-            progressKey: 'membaca',
-            amount: 6,
             masteryKey: item.letter,
             masteryType: 'huruf',
           ),
@@ -717,8 +712,6 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
   Future<void> listenForProgress({
     required String expected,
     required String successText,
-    required String progressKey,
-    required int amount,
     String? masteryKey,
     String? masteryType,
   }) async {
@@ -750,7 +743,6 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
           if (!mounted) return;
 
           if (ok) {
-            await ref.read(appStateProvider).bump(progressKey, amount);
             if (masteryKey != null && masteryType == 'huruf') {
               await ref.read(appStateProvider).markHurfSuccess(masteryKey);
             }
@@ -887,15 +879,10 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
           badge: _numberBadge(item.number),
           kind: _PremiumCardKind.number,
           mastered: mastered,
-          onAudio: () async {
-            await speakIndonesian(tts, item.name);
-            await ref.read(appStateProvider).bump('angka', 5);
-          },
+          onAudio: () => speakIndonesian(tts, item.name),
           onMic: () => listenForProgress(
             expected: item.name,
             successText: 'Mantap! ${item.number} benar.',
-            progressKey: 'angka',
-            amount: 7,
             masteryKey: item.number,
             masteryType: 'angka',
           ),
@@ -908,8 +895,6 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
   Future<void> listenForProgress({
     required String expected,
     required String successText,
-    required String progressKey,
-    required int amount,
     String? masteryKey,
     String? masteryType,
   }) async {
@@ -941,7 +926,6 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
           if (!mounted) return;
 
           if (ok) {
-            await ref.read(appStateProvider).bump(progressKey, amount);
             if (masteryKey != null && masteryType == 'angka') {
               await ref.read(appStateProvider).markAngkaSuccess(masteryKey);
             }
@@ -1080,15 +1064,10 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
           favorite: fav,
           onFavorite: () =>
               ref.read(appStateProvider).toggleFavorite(favoriteId),
-          onAudio: () async {
-            await speakIndonesian(tts, item.name);
-            await ref.read(appStateProvider).bump('benda', 5);
-          },
+          onAudio: () => speakIndonesian(tts, item.name),
           onMic: () => listenForProgress(
             expected: item.name,
             successText: 'Keren! ${item.name} cocok.',
-            progressKey: 'benda',
-            amount: 7,
             masteryKey: item.name,
             masteryType: 'benda',
           ),
@@ -1101,8 +1080,6 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
   Future<void> listenForProgress({
     required String expected,
     required String successText,
-    required String progressKey,
-    required int amount,
     String? masteryKey,
     String? masteryType,
   }) async {
@@ -1134,7 +1111,6 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
           if (!mounted) return;
 
           if (ok) {
-            await ref.read(appStateProvider).bump(progressKey, amount);
             if (masteryKey != null && masteryType == 'benda') {
               await ref.read(appStateProvider).markBendaSuccess(masteryKey);
             }
@@ -1789,33 +1765,35 @@ class _PremiumLearningCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(
+                        alpha: t.night ? .16 : .70,
+                      ),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      badge,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xff59617E),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        constraints: const BoxConstraints(maxWidth: 86),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(
-                            alpha: t.night ? .16 : .70,
-                          ),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          badge,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xff59617E),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
                       GestureDetector(
                         onTap: onMic,
                         child: Container(
@@ -2415,6 +2393,7 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
       return IqraFunMode(onClose: () => setState(() => seru = false));
     }
     final app = ref.watch(appStateProvider);
+    final iqraItems = app.iqraItems;
     final progress = app.progress['iqra'] ?? 0;
     return Stack(
       children: [
@@ -2435,11 +2414,12 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
               _IqraProgressCard(
                 progress: progress,
                 mastered: app.iqraMastered.length,
-                total: iqraData.length,
+                total: iqraItems.length,
                 streak: app.iqraStreak,
               ),
               const SizedBox(height: 18),
               _IqraCatalogSection(
+                items: iqraItems,
                 selectedIndex: index,
                 latinEnabled: widget.readingHelp,
                 mastered: app.iqraMastered,
@@ -2451,18 +2431,18 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
                     index = i;
                     feedback = '';
                   });
-                  playIqra(iqraData[i], autoplay: true);
+                  playIqra(iqraItems[i], autoplay: true);
                 },
                 onAudio: (i) async {
                   setState(() {
                     index = i;
                     feedback = '';
                   });
-                  await playIqra(iqraData[i]);
+                  await playIqra(iqraItems[i]);
                 },
                 onPractice: (i) async {
                   setState(() => index = i);
-                  await practiceIqra(iqraData[i]);
+                  await practiceIqra(iqraItems[i]);
                 },
                 onFavorite: (item) {
                   ref
@@ -2486,7 +2466,9 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
   }
 
   void goPage(int target) {
-    final next = (target + iqraData.length) % iqraData.length;
+    final total = ref.read(appStateProvider).iqraItems.length;
+    if (total <= 0) return;
+    final next = (target + total) % total;
     page.animateToPage(next, duration: 320.ms, curve: Curves.easeOutCubic);
   }
 
@@ -2502,7 +2484,6 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
     } else {
       await _speakIqra(item.char);
     }
-    if (!autoplay) await ref.read(appStateProvider).bump('iqra', 1);
   }
 
   Future<void> _speakIqra(String text) async {
@@ -3112,6 +3093,7 @@ class _IqraMiniStat extends StatelessWidget {
 
 class _IqraCatalogSection extends StatelessWidget {
   const _IqraCatalogSection({
+    required this.items,
     required this.selectedIndex,
     required this.latinEnabled,
     required this.mastered,
@@ -3124,6 +3106,7 @@ class _IqraCatalogSection extends StatelessWidget {
     required this.onFavorite,
   });
 
+  final List<IqraItem> items;
   final int selectedIndex;
   final bool latinEnabled;
   final Set<String> mastered;
@@ -3150,7 +3133,7 @@ class _IqraCatalogSection extends StatelessWidget {
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: iqraData.length,
+              itemCount: items.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
                 mainAxisSpacing: 12,
@@ -3158,7 +3141,7 @@ class _IqraCatalogSection extends StatelessWidget {
                 childAspectRatio: wide ? .72 : .68,
               ),
               itemBuilder: (context, i) {
-                final item = iqraData[i];
+                final item = items[i];
                 return _IqraLetterCard(
                   number: i + 1,
                   item: item,
@@ -3509,7 +3492,7 @@ class _IqraFunModeState extends ConsumerState<IqraFunMode> {
   void initState() {
     super.initState();
     confetti = ConfettiController(duration: const Duration(seconds: 2));
-    index = Random().nextInt(iqraData.length);
+    index = 0;
     tts.setLanguage('ar');
   }
 
@@ -3523,7 +3506,9 @@ class _IqraFunModeState extends ConsumerState<IqraFunMode> {
   @override
   Widget build(BuildContext context) {
     final app = ref.watch(appStateProvider);
-    final item = iqraData[index];
+    final iqraItems = app.iqraItems.isEmpty ? iqraData : app.iqraItems;
+    final safeIndex = index % iqraItems.length;
+    final item = iqraItems[safeIndex];
     return PagePad(
       child: Stack(
         children: [
@@ -3636,7 +3621,10 @@ class _IqraFunModeState extends ConsumerState<IqraFunMode> {
   }
 
   Future<void> listenOffline() async {
-    final item = iqraData[index];
+    final iqraItems = ref.read(appStateProvider).iqraItems.isEmpty
+        ? iqraData
+        : ref.read(appStateProvider).iqraItems;
+    final item = iqraItems[index % iqraItems.length];
     setState(() {
       listening = true;
       feedback = 'Validasi offline aktif...';
@@ -3665,8 +3653,11 @@ class _IqraFunModeState extends ConsumerState<IqraFunMode> {
   void next({bool delay = false}) async {
     if (delay) await Future<void>.delayed(700.ms);
     if (!mounted) return;
+    final iqraItems = ref.read(appStateProvider).iqraItems.isEmpty
+        ? iqraData
+        : ref.read(appStateProvider).iqraItems;
     setState(() {
-      index = Random().nextInt(iqraData.length);
+      index = Random().nextInt(iqraItems.length);
       feedback = 'Tekan mic lalu baca huruf.';
     });
   }
@@ -3901,7 +3892,6 @@ class _ModeSeruScreenState extends ConsumerState<ModeSeruScreen> {
       confetti.play();
       setState(() => feedback = 'Pintar sekali! Bintang bertambah.');
       await speakIndonesian(tts, 'Pintar sekali');
-      await ref.read(appStateProvider).bump(challenge.category, 8);
     } else {
       setState(() => feedback = 'Hampir benar, ayo coba lagi!');
       await speakIndonesian(tts, 'Ayo coba lagi');

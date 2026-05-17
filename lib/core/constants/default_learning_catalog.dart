@@ -119,6 +119,38 @@ class DefaultLearningCatalog {
     'Ya',
   ];
 
+  static const iqraPairs = <Map<String, String>>[
+    {'symbol': '\u0627', 'label': 'Alif'},
+    {'symbol': '\u0628', 'label': 'Ba'},
+    {'symbol': '\u062A', 'label': 'Ta'},
+    {'symbol': '\u062B', 'label': 'Tsa'},
+    {'symbol': '\u062C', 'label': 'Jim'},
+    {'symbol': '\u062D', 'label': 'Ha'},
+    {'symbol': '\u062E', 'label': 'Kho'},
+    {'symbol': '\u062F', 'label': 'Dal'},
+    {'symbol': '\u0630', 'label': 'Dzal'},
+    {'symbol': '\u0631', 'label': 'Ra'},
+    {'symbol': '\u0632', 'label': 'Zai'},
+    {'symbol': '\u0633', 'label': 'Sin'},
+    {'symbol': '\u0634', 'label': 'Syin'},
+    {'symbol': '\u0635', 'label': 'Shod'},
+    {'symbol': '\u0636', 'label': 'Dhod'},
+    {'symbol': '\u0637', 'label': 'Tho'},
+    {'symbol': '\u0638', 'label': 'Zho'},
+    {'symbol': '\u0639', 'label': 'Ain'},
+    {'symbol': '\u063A', 'label': 'Ghoin'},
+    {'symbol': '\u0641', 'label': 'Fa'},
+    {'symbol': '\u0642', 'label': 'Qof'},
+    {'symbol': '\u0643', 'label': 'Kaf'},
+    {'symbol': '\u0644', 'label': 'Lam'},
+    {'symbol': '\u0645', 'label': 'Mim'},
+    {'symbol': '\u0646', 'label': 'Nun'},
+    {'symbol': '\u0648', 'label': 'Wau'},
+    {'symbol': '\u0647', 'label': 'Ha'},
+    {'symbol': '\u0621', 'label': 'Hamzah'},
+    {'symbol': '\u064A', 'label': 'Ya'},
+  ];
+
   static int totalForCategory(String category) {
     return switch (category) {
       LearningCategories.huruf => hurufSeed.length,

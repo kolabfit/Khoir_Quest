@@ -48,10 +48,11 @@ class MaterialRepository {
             ..createdAt = DateTime.now()
             ..updatedAt = DateTime.now(),
         ),
-        ...DefaultLearningCatalog.iqraSeed.map(
+        ...DefaultLearningCatalog.iqraPairs.map(
           (item) => LearningMaterialEntity()
-            ..materialId = 'iqra_${item.toLowerCase()}'
-            ..title = item
+            ..materialId = 'iqra_${item['label']!.toLowerCase()}'
+            ..title = item['symbol']!
+            ..subcategory = item['label']!
             ..category = LearningCategories.iqra
             ..imagePath =
                 seededPaths[DefaultStorageFiles.iqraImage] ??
@@ -77,6 +78,44 @@ class MaterialRepository {
 
   Future<List<LearningMaterialEntity>> loadSongs() =>
       loadByCategory(LearningCategories.lagu);
+
+  Future<List<LearningMaterialEntity>> loadAll() {
+    return _database.read(
+      (isar) =>
+          isar.learningMaterialEntitys.where().sortByUpdatedAtDesc().findAll(),
+    );
+  }
+
+  Future<LearningMaterialEntity?> findByMaterialId(String materialId) {
+    return _database.read(
+      (isar) => isar.learningMaterialEntitys.getByMaterialId(materialId),
+    );
+  }
+
+  Future<void> replaceCategory(
+    String category,
+    List<LearningMaterialEntity> items,
+  ) async {
+    await _database.write((isar) async {
+      final existing = await isar.learningMaterialEntitys
+          .where()
+          .filter()
+          .categoryEqualTo(category)
+          .findAll();
+      if (existing.isNotEmpty) {
+        await isar.learningMaterialEntitys.deleteAll(
+          existing.map((item) => item.id).toList(),
+        );
+      }
+      if (items.isNotEmpty) {
+        await isar.learningMaterialEntitys.putAll(items);
+      }
+    });
+  }
+
+  Future<void> upsertEntity(LearningMaterialEntity entity) {
+    return _database.write((isar) => isar.learningMaterialEntitys.put(entity));
+  }
 
   Future<void> replaceSongs(List<LearningMaterialEntity> items) async {
     await _database.write((isar) async {
@@ -123,7 +162,8 @@ class MaterialRepository {
     final existing = await _database.read(
       (isar) => isar.learningMaterialEntitys.getByMaterialId(materialId),
     );
-    final entity = existing ?? LearningMaterialEntity()..materialId = materialId;
+    final entity = existing ?? LearningMaterialEntity()
+      ..materialId = materialId;
     entity
       ..category = category
       ..title = title

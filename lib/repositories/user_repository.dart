@@ -36,6 +36,33 @@ class UserRepository {
     return session?.currentUsername;
   }
 
+  Future<UserAccount?> accountByUsername({
+    required String username,
+    required dynamic Function(String value) genderParser,
+    required dynamic Function(String value) roleParser,
+  }) async {
+    final profile = await _profileByUsername(username);
+    if (profile == null) return null;
+    return _toAccount(
+      profile,
+      genderParser: genderParser,
+      roleParser: roleParser,
+    );
+  }
+
+  Future<void> setCurrentUsername(String? username) async {
+    await _database.write((isar) async {
+      await isar.localSessionEntitys.put(
+        LocalSessionEntity()
+          ..id = 0
+          ..currentUsername = username == null
+              ? null
+              : _normalizeUsername(username)
+          ..updatedAt = DateTime.now(),
+      );
+    });
+  }
+
   Future<void> clearSession() async {
     await _database.write((isar) async {
       await isar.localSessionEntitys.put(
@@ -107,8 +134,12 @@ class UserRepository {
       throw 'Password salah';
     }
 
-    saved.passwordHash = hash;
-    saved.updatedAt = now;
+    saved
+      ..passwordHash = hash
+      ..role = roleName
+      ..childName = saved.childName.trim().isEmpty ? childName : saved.childName
+      ..gender = saved.gender.isEmpty ? genderName : saved.gender
+      ..updatedAt = now;
     await _database.write((isar) async {
       await isar.userProfileEntitys.put(saved);
       await isar.localSessionEntitys.put(
