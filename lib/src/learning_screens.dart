@@ -1730,19 +1730,14 @@ class _PremiumLearningCard extends StatelessWidget {
               ),
               Column(
                 children: [
-                  if (kind == _PremiumCardKind.letter ||
-                      kind == _PremiumCardKind.number)
+                  if (kind == _PremiumCardKind.letter)
                     SizedBox(
-                      height: isNumberCard && compact ? 50 : 62,
+                      height: 62,
                       child: FittedBox(
                         child: Text(
                           title,
                           style: TextStyle(
-                            color:
-                                kind == _PremiumCardKind.letter ||
-                                    kind == _PremiumCardKind.number
-                                ? (t.night ? color : const Color(0xff293464))
-                                : textColor,
+                            color: t.night ? color : const Color(0xff293464),
                             fontSize: 64,
                             height: 1,
                             fontWeight: FontWeight.w900,
@@ -1754,16 +1749,48 @@ class _PremiumLearningCard extends StatelessWidget {
                     const SizedBox(height: 12),
                   Expanded(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isNumberCard ? 1 : 6,
-                        vertical: isNumberCard && compact ? 0 : 6,
+                      padding: EdgeInsets.fromLTRB(
+                        isNumberCard ? 8 : 6,
+                        isNumberCard
+                            ? (mastered
+                                  ? (compact ? 26 : 30)
+                                  : (compact ? 16 : 20))
+                            : 6,
+                        isNumberCard ? 8 : 6,
+                        isNumberCard ? (compact ? 12 : 16) : 6,
                       ),
-                      child: Transform.scale(
-                        scale: isNumberCard ? (compact ? 1.28 : 1.12) : 1,
-                        child: AppImage(url: imageUrl, fit: BoxFit.contain),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          if (isNumberCard)
+                            Padding(
+                              padding: EdgeInsets.only(
+                                bottom: compact ? 6 : 10,
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  title,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(
+                                      alpha: t.night ? .22 : .34,
+                                    ),
+                                    fontSize: compact ? 128 : 156,
+                                    height: 1,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Transform.scale(
+                            scale: isNumberCard ? (compact ? 1.18 : 1.04) : 1,
+                            child: AppImage(url: imageUrl, fit: BoxFit.contain),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+                  SizedBox(height: isNumberCard ? 10 : 0),
                   Text(
                     subtitle,
                     maxLines: 1,
@@ -1774,21 +1801,23 @@ class _PremiumLearningCard extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    caption,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color:
-                          (t.night
-                                  ? NightPalette.muted
-                                  : const Color(0xff293464))
-                              .withValues(alpha: .82),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                  if (!isNumberCard) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      caption,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color:
+                            (t.night
+                                    ? NightPalette.muted
+                                    : const Color(0xff293464))
+                                .withValues(alpha: .82),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
