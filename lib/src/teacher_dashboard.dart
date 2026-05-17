@@ -116,6 +116,17 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   @override
   void dispose() => super.dispose();
 
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: .22),
+      builder: (_) => const _TeacherLogoutDialog(),
+    );
+    if (confirmed == true && mounted) {
+      await ref.read(appStateProvider).logout();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = ref.watch(appStateProvider);
@@ -951,7 +962,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
           ),
           const SizedBox(height: 20),
           OutlinedButton.icon(
-            onPressed: () => ref.read(appStateProvider).logout(),
+            onPressed: _confirmLogout,
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
               side: const BorderSide(color: Color(0xffFF6B81)),
@@ -2808,6 +2819,139 @@ class _TeacherStorageChip extends StatelessWidget {
       index++;
     }
     return '${value.toStringAsFixed(value >= 10 ? 1 : 2)} ${units[index]}';
+  }
+}
+
+class _TeacherLogoutDialog extends StatelessWidget {
+  const _TeacherLogoutDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: _TeacherSurfaceCard(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xffFF8A9B), Color(0xffFF5D73)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                          color: const Color(0xffFF5D73).withValues(alpha: .22),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Keluar dari dashboard?',
+                          style: TextStyle(
+                            color: Color(0xff2F2966),
+                            fontSize: 21,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Sesi pengajar akan ditutup.',
+                          style: TextStyle(
+                            color: Color(0xff6D6A95),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xffFFF1F4),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: const Color(0xffFFD5DE)),
+                ),
+                child: const Text(
+                  'Konten yang sudah disimpan tetap aman. Kamu bisa masuk lagi untuk lanjut mengelola materi kapan saja.',
+                  style: TextStyle(
+                    color: Color(0xff6B5570),
+                    fontWeight: FontWeight.w800,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(54),
+                        side: const BorderSide(color: Color(0xffE6E0FF)),
+                        foregroundColor: const Color(0xff6D6A95),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text(
+                        'Tetap di sini',
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(54),
+                        backgroundColor: const Color(0xffFF5D73),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text(
+                        'Ya, keluar',
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

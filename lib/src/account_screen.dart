@@ -10,6 +10,17 @@ class AccountScreen extends ConsumerStatefulWidget {
 class _AccountScreenState extends ConsumerState<AccountScreen> {
   bool themePage = false;
 
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: .24),
+      builder: (_) => const _AccountLogoutDialog(),
+    );
+    if (confirmed == true && mounted) {
+      await ref.read(appStateProvider).logout();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = ref.watch(appStateProvider);
@@ -71,7 +82,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               const _BadgeShowcase(),
             ],
             const SizedBox(height: 16),
-            _LogoutCard(onTap: () => ref.read(appStateProvider).logout()),
+            _LogoutCard(onTap: _confirmLogout),
           ],
         ),
       ),
@@ -1108,6 +1119,119 @@ class _LogoutCard extends StatelessWidget {
           ),
           const Icon(Icons.chevron_right_rounded, color: Color(0xffA8ADC8)),
         ],
+      ),
+    );
+  }
+}
+
+class _AccountLogoutDialog extends StatelessWidget {
+  const _AccountLogoutDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = _themeOf(context);
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 420),
+        padding: const EdgeInsets.all(22),
+        decoration: _accountCardDecoration(context, radius: 30),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xffFF8FA3).withValues(alpha: .95),
+                    const Color(0xffFF4D6D),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 18,
+                    offset: const Offset(0, 10),
+                    color: const Color(0xffFF4D6D).withValues(alpha: .28),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: Colors.white,
+                size: 34,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Keluar dari akun?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xff343864),
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Progress dan pengaturan tetap aman. Kamu bisa login lagi kapan saja.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: t.night
+                    ? const Color(0xffB8C0D8)
+                    : const Color(0xff6E7391),
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 22),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      side: const BorderSide(color: Color(0xffD8D7F5)),
+                      foregroundColor: const Color(0xff5A5F7D),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      'Batal',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      backgroundColor: const Color(0xffFF4D6D),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      'Ya, keluar',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

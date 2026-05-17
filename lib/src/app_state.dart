@@ -128,20 +128,27 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       var nextRole = teacherMode || _resolveRole(nextEmail) == Role.teacher
           ? Role.teacher
           : Role.child;
+      CloudAuthProfile? cloudProfile;
+      Object? cloudError;
       if (_cloudSync.isConfigured) {
-        final profile = await _cloudSync.authenticate(
-          username: nextEmail,
-          password: password,
-          register: register,
-          preferredRole: nextRole.name,
-        );
-        nextRole = _roleFromString(profile.role);
+        try {
+          cloudProfile = await _cloudSync.authenticate(
+            username: nextEmail,
+            password: password,
+            register: register,
+            preferredRole: nextRole.name,
+          );
+          nextRole = _roleFromString(cloudProfile.role);
+        } catch (error) {
+          if (register) rethrow;
+          cloudError = error;
+        }
       }
-      final account = await _db.authenticate(
+      var account = await _db.authenticate(
         username: nextEmail,
         password: password,
         register: register,
-        autoCreate: autoCreate,
+        autoCreate: autoCreate || (!register && cloudProfile != null),
         role: nextRole,
         childName: name?.trim().isNotEmpty == true ? name!.trim() : 'Teman',
         gender: nextGender ?? gender,
@@ -149,6 +156,29 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         defaultProgress: progress,
         defaultStars: stars,
       );
+      if (cloudProfile != null) {
+        account = await _db.restoreCloudSession(
+          username: cloudProfile.username.isEmpty
+              ? nextEmail
+              : cloudProfile.username,
+          role: _roleFromString(cloudProfile.role),
+          childName: cloudProfile.childName,
+          gender: cloudProfile.gender == 'girl' ? Gender.girl : Gender.boy,
+          themeId: cloudProfile.themeId,
+          avatarPath: cloudProfile.avatarUrl,
+          stars: cloudProfile.stars,
+          iqraStreak: cloudProfile.iqraStreak,
+          progress: cloudProfile.progress,
+          iqraMastered: cloudProfile.iqraMastered,
+          iqraHistory: cloudProfile.iqraHistory,
+          hurfMastered: cloudProfile.hurfMastered,
+          angkaMastered: cloudProfile.angkaMastered,
+          bendaMastered: cloudProfile.bendaMastered,
+          favoriteMaterialIds: cloudProfile.favoriteMaterialIds,
+        );
+      } else if (cloudError != null) {
+        // Lanjut pakai akun lokal bila login cloud gagal tetapi data lokal ada.
+      }
       _applyAccount(account);
       tab = role == Role.teacher ? TabItem.akun : TabItem.main;
       _startAutoSync();

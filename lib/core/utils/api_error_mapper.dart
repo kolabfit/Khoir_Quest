@@ -44,11 +44,18 @@ class ApiErrorMapper {
 
     if (normalized.isEmpty) return fallback;
     if (_containsAny(normalized, const [
+      'akun belum terdaftar',
+      'user not found',
+      'user does not exist',
+      'no user found',
+    ])) {
+      return 'User tidak ditemukan. Silakan daftar dulu.';
+    }
+    if (_containsAny(normalized, const [
       'invalid login credentials',
       'email not confirmed',
       'invalid credentials',
       'password salah',
-      'akun belum terdaftar',
     ])) {
       return 'Username atau password salah.';
     }
