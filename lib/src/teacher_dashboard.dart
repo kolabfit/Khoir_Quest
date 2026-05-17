@@ -368,25 +368,25 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
               ),
             )
             .toList(),
-      _TeacherCategory.lagu =>
-        app.songs
-            .map(
-              (item) => _TeacherContentData(
-                id: item.id,
-                title: item.title,
-                subtitle: item.fileName ?? 'Video lagu offline',
-                category: 'Lagu Anak',
-                statusLabel: 'Aktif',
-                mediaPath: DefaultLearningCatalog.laguPlaceholderAsset,
-                color: category.color,
-                icon: category.icon,
-                badgeText: 'Video',
-                actionLabel: item.fileName ?? 'Lokal',
-                editable: true,
-                song: item,
-              ),
-            )
-            .toList(),
+      _TeacherCategory.lagu => app.songs.map((item) {
+        final remote = MediaSourceHelper.isRemoteUrl(item.videoUrl);
+        return _TeacherContentData(
+          id: item.id,
+          title: item.title,
+          subtitle:
+              item.fileName ??
+              (remote ? 'Tersinkron ke database' : 'Video lagu lokal'),
+          category: 'Lagu Anak',
+          statusLabel: remote ? 'Sinkron' : 'Lokal',
+          mediaPath: DefaultLearningCatalog.laguPlaceholderAsset,
+          color: category.color,
+          icon: category.icon,
+          badgeText: remote ? 'Database' : 'Video',
+          actionLabel: remote ? 'Database' : (item.fileName ?? 'Lokal'),
+          editable: true,
+          song: item,
+        );
+      }).toList(),
     };
   }
 

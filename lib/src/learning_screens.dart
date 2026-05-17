@@ -397,8 +397,11 @@ class _AdventureCard extends StatelessWidget {
                     ),
                     Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Image.asset(data.asset, fit: BoxFit.contain),
+                        padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
+                        child: Transform.scale(
+                          scale: 1.16,
+                          child: Image.asset(data.asset, fit: BoxFit.contain),
+                        ),
                       ),
                     ),
                   ],
@@ -696,7 +699,10 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
           badge: obj.name.toLowerCase(),
           kind: _PremiumCardKind.letter,
           mastered: mastered,
-          onAudio: () => speakIndonesian(tts, letterPronunciation),
+          onAudio: () async {
+            await ref.read(appStateProvider).markHurfViewed(item.letter);
+            await speakIndonesian(tts, letterPronunciation);
+          },
           onMic: () => listenForProgress(
             expected: letterPronunciation,
             successText: 'Pintar! ${item.letter} cocok.',
@@ -879,7 +885,10 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
           badge: _numberBadge(item.number),
           kind: _PremiumCardKind.number,
           mastered: mastered,
-          onAudio: () => speakIndonesian(tts, item.name),
+          onAudio: () async {
+            await ref.read(appStateProvider).markAngkaViewed(item.number);
+            await speakIndonesian(tts, item.name);
+          },
           onMic: () => listenForProgress(
             expected: item.name,
             successText: 'Mantap! ${item.number} benar.',
@@ -1064,7 +1073,10 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
           favorite: fav,
           onFavorite: () =>
               ref.read(appStateProvider).toggleFavorite(favoriteId),
-          onAudio: () => speakIndonesian(tts, item.name),
+          onAudio: () async {
+            await ref.read(appStateProvider).markBendaViewed(item.name);
+            await speakIndonesian(tts, item.name);
+          },
           onMic: () => listenForProgress(
             expected: item.name,
             successText: 'Keren! ${item.name} cocok.',
@@ -1650,6 +1662,8 @@ class _PremiumLearningCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = _themeOf(context);
+    final compact = MediaQuery.sizeOf(context).width < 430;
+    final isNumberCard = kind == _PremiumCardKind.number;
     final cardColor = mastered ? const Color(0xff38C985) : color;
     final bg = t.night
         ? Color.lerp(cardColor, NightPalette.surface, .54)!
@@ -1711,7 +1725,7 @@ class _PremiumLearningCard extends StatelessWidget {
                   if (kind == _PremiumCardKind.letter ||
                       kind == _PremiumCardKind.number)
                     SizedBox(
-                      height: 62,
+                      height: isNumberCard && compact ? 50 : 62,
                       child: FittedBox(
                         child: Text(
                           title,
@@ -1732,11 +1746,14 @@ class _PremiumLearningCard extends StatelessWidget {
                     const SizedBox(height: 12),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 6,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isNumberCard ? 1 : 6,
+                        vertical: isNumberCard && compact ? 0 : 6,
                       ),
-                      child: AppImage(url: imageUrl, fit: BoxFit.contain),
+                      child: Transform.scale(
+                        scale: isNumberCard ? (compact ? 1.28 : 1.12) : 1,
+                        child: AppImage(url: imageUrl, fit: BoxFit.contain),
+                      ),
                     ),
                   ),
                   Text(
@@ -2431,6 +2448,7 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
                     index = i;
                     feedback = '';
                   });
+                  ref.read(appStateProvider).markIqraViewed(iqraItems[i]);
                   playIqra(iqraItems[i], autoplay: true);
                 },
                 onAudio: (i) async {

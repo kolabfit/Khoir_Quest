@@ -495,13 +495,19 @@ class LocalDatabase {
   Future<List<IqraItem>> loadIqraItems() async {
     await ensureReady();
     if (kIsWeb) {
-      return [...iqraData];
+      final items = [...iqraData];
+      items.sort(_compareIqraItems);
+      return items;
     }
     final items = await _materialRepository.loadByCategory(
       LearningCategories.iqra,
     );
-    if (items.isEmpty) return [...iqraData];
-    return items
+    if (items.isEmpty) {
+      final defaults = [...iqraData];
+      defaults.sort(_compareIqraItems);
+      return defaults;
+    }
+    final mapped = items
         .map(
           (item) => IqraItem(
             item.title.isEmpty ? item.subcategory : item.title,
@@ -510,6 +516,8 @@ class LocalDatabase {
           ),
         )
         .toList();
+    mapped.sort(_compareIqraItems);
+    return mapped;
   }
 
   Future<LetterGroup> saveLetter({
@@ -621,18 +629,20 @@ class LocalDatabase {
       LearningCategories.angka,
     );
     if (items.isEmpty) return [...defaultNumbersData];
-    return items
-        .map(
-          (item) => NumberItem(
-            _normalizeNumberTitle(item.title),
-            item.subcategory.isEmpty ? item.title : item.subcategory,
-            item.imagePath.isEmpty
-                ? defaultMediaFallback(LearningCategories.angka)
-                : item.imagePath,
-            item.materialId,
-          ),
-        )
-        .toList();
+    return items.map((item) {
+      final normalizedNumber = _normalizeNumberTitle(item.title);
+      return NumberItem(
+        normalizedNumber,
+        _normalizeNumberSubtitle(
+          item.subcategory.isEmpty ? item.title : item.subcategory,
+          fallbackNumber: normalizedNumber,
+        ),
+        item.imagePath.isEmpty
+            ? defaultMediaFallback(LearningCategories.angka)
+            : item.imagePath,
+        item.materialId,
+      );
+    }).toList();
   }
 
   Future<NumberItem> saveNumber({
@@ -683,7 +693,10 @@ class LocalDatabase {
     );
     return NumberItem(
       _normalizeNumberTitle(entity.title),
-      entity.subcategory.isEmpty ? entity.title : entity.subcategory,
+      _normalizeNumberSubtitle(
+        entity.subcategory.isEmpty ? entity.title : entity.subcategory,
+        fallbackNumber: _normalizeNumberTitle(entity.title),
+      ),
       entity.imagePath,
       entity.materialId,
     );
@@ -1185,6 +1198,43 @@ class LocalDatabase {
   String _normalizeNumberTitle(String value) {
     final text = value.trim();
     return text.replaceFirst(RegExp(r'^angka\s+', caseSensitive: false), '');
+  }
+
+  String _normalizeNumberSubtitle(
+    String value, {
+    required String fallbackNumber,
+  }) {
+    final cleaned = value.trim().replaceFirst(
+      RegExp(r'^angka\s+', caseSensitive: false),
+      '',
+    );
+    if (cleaned.isNotEmpty && cleaned != fallbackNumber) {
+      return cleaned;
+    }
+    return switch (fallbackNumber) {
+      '1' => 'Satu',
+      '2' => 'Dua',
+      '3' => 'Tiga',
+      '4' => 'Empat',
+      '5' => 'Lima',
+      '6' => 'Enam',
+      '7' => 'Tujuh',
+      '8' => 'Delapan',
+      '9' => 'Sembilan',
+      '10' => 'Sepuluh',
+      _ => fallbackNumber,
+    };
+  }
+
+  int _compareIqraItems(IqraItem a, IqraItem b) {
+    final order = {
+      for (var i = 0; i < DefaultLearningCatalog.iqraPairs.length; i++)
+        DefaultLearningCatalog.iqraPairs[i]['label']!.toLowerCase(): i,
+    };
+    final aIndex = order[a.latin.toLowerCase()] ?? 999;
+    final bIndex = order[b.latin.toLowerCase()] ?? 999;
+    if (aIndex != bIndex) return aIndex.compareTo(bIndex);
+    return a.latin.toLowerCase().compareTo(b.latin.toLowerCase());
   }
 
   String _webAccountKey(String username) =>

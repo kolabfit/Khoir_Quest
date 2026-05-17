@@ -546,7 +546,7 @@ class _PremiumSongCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 7),
                     Text(
-                      song.fileName ?? 'Lagu Anak',
+                      _songSourceLabel(song),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -857,7 +857,7 @@ class _MiniSongMeta extends StatelessWidget {
           ),
         ),
         Text(
-          song.fileName ?? 'Lagu Anak',
+          _songSourceLabel(song),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -1235,6 +1235,14 @@ class _MiniControl extends StatelessWidget {
       ),
     );
   }
+}
+
+String _songSourceLabel(SongItem song) {
+  final fileName = song.fileName?.trim();
+  if (fileName != null && fileName.isNotEmpty) return fileName;
+  return MediaSourceHelper.isRemoteUrl(song.videoUrl)
+      ? 'Tersinkron ke database'
+      : 'Video lokal';
 }
 
 String _formatMiniDuration(Duration duration) {

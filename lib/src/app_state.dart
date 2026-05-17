@@ -242,17 +242,21 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void openLearn(LearnMode mode) {
     learnMode = mode;
     tab = TabItem.belajar;
-    final progressKey = _progressKeyForMode(mode);
-    if (progressKey != null) {
-      progress[progressKey] = min(100, (progress[progressKey] ?? 0) + 8);
-      stars += 1;
-      unawaited(_persistLearningOpen(mode, progressKey));
+    if (mode != LearnMode.menu) {
+      unawaited(_persistLearningOpen(mode));
     }
     notifyListeners();
   }
 
+  Future<void> markIqraViewed(IqraItem item) async {
+    stars += 1;
+    _registerIqraViewed(item);
+    await _saveAccount();
+    notifyListeners();
+  }
+
   Future<void> markIqraSuccess(IqraItem item) async {
-    iqraMastered.add(item.latin);
+    _registerIqraViewed(item);
     iqraHistory.insert(
       0,
       '${DateTime.now().toIso8601String()}|${item.char}|${item.latin}',
@@ -272,8 +276,15 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  Future<void> markHurfViewed(String letter) async {
+    stars += 1;
+    _registerHurfViewed(letter);
+    await _saveAccount();
+    notifyListeners();
+  }
+
   Future<void> markHurfSuccess(String letter) async {
-    hurfMastered.add(letter);
+    _registerHurfViewed(letter);
     stars += 2;
     await _recordHistory(
       materialId: letter,
@@ -285,8 +296,15 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  Future<void> markAngkaViewed(String number) async {
+    stars += 1;
+    _registerAngkaViewed(number);
+    await _saveAccount();
+    notifyListeners();
+  }
+
   Future<void> markAngkaSuccess(String number) async {
-    angkaMastered.add(number);
+    _registerAngkaViewed(number);
     stars += 2;
     await _recordHistory(
       materialId: number,
@@ -298,8 +316,15 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  Future<void> markBendaViewed(String name) async {
+    stars += 1;
+    _registerBendaViewed(name);
+    await _saveAccount();
+    notifyListeners();
+  }
+
   Future<void> markBendaSuccess(String name) async {
-    bendaMastered.add(name);
+    _registerBendaViewed(name);
     stars += 2;
     await _recordHistory(
       materialId: name,
@@ -568,6 +593,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     songs
       ..clear()
       ..addAll(await _db.loadSongs());
+    _refreshDerivedProgress();
   }
 
   Future<void> _startConnectivityWatch() async {
@@ -751,14 +777,74 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     LearnMode.menu => null,
   };
 
-  Future<void> _persistLearningOpen(LearnMode mode, String progressKey) async {
+  bool _registerIqraViewed(IqraItem item) {
+    final added = iqraMastered.add(item.latin);
+    if (!added) return false;
+    progress['iqra'] = min(
+      100,
+      (iqraMastered.length / max(1, iqraItems.length) * 100).round(),
+    );
+    return true;
+  }
+
+  bool _registerHurfViewed(String letter) {
+    final added = hurfMastered.add(letter);
+    if (!added) return false;
+    progress['membaca'] = min(
+      100,
+      (hurfMastered.length / max(1, letters.length) * 100).round(),
+    );
+    return true;
+  }
+
+  bool _registerAngkaViewed(String number) {
+    final added = angkaMastered.add(number);
+    if (!added) return false;
+    progress['angka'] = min(
+      100,
+      (angkaMastered.length / max(1, numbers.length) * 100).round(),
+    );
+    return true;
+  }
+
+  bool _registerBendaViewed(String name) {
+    final added = bendaMastered.add(name);
+    if (!added) return false;
+    progress['benda'] = min(
+      100,
+      (bendaMastered.length / max(1, objects.length) * 100).round(),
+    );
+    return true;
+  }
+
+  void _refreshDerivedProgress() {
+    progress['membaca'] = min(
+      100,
+      (hurfMastered.length / max(1, letters.length) * 100).round(),
+    );
+    progress['angka'] = min(
+      100,
+      (angkaMastered.length / max(1, numbers.length) * 100).round(),
+    );
+    progress['benda'] = min(
+      100,
+      (bendaMastered.length / max(1, objects.length) * 100).round(),
+    );
+    progress['iqra'] = min(
+      100,
+      (iqraMastered.length / max(1, iqraItems.length) * 100).round(),
+    );
+  }
+
+  Future<void> _persistLearningOpen(LearnMode mode) async {
     final category = _historyCategoryForMode(mode);
+    final progressKey = _progressKeyForMode(mode);
     if (category != null) {
       await _recordHistory(
         materialId: 'screen_${mode.name}',
         category: category,
         duration: 1,
-        score: progress[progressKey] ?? 0,
+        score: progressKey == null ? 0 : (progress[progressKey] ?? 0),
       );
     }
     await _saveAccount();
