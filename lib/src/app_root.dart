@@ -124,8 +124,6 @@ class KhoirQuestApp extends ConsumerWidget {
       ),
       home: !app.ready
           ? const SplashScreen()
-          : !app.onboardingSeen
-          ? const OnboardingScreen()
           : app.role == null
           ? const AuthScreen()
           : app.role == Role.teacher
@@ -141,45 +139,57 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        blurRadius: 30,
-                        offset: const Offset(0, 12),
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: .2),
-                      ),
-                    ],
-                  ),
-                  child: Image.asset(
-                    'assets/images/Anak_hebat.png',
-                    fit: BoxFit.contain,
-                  ),
-                )
-                .animate(onPlay: (c) => c.repeat(reverse: true))
-                .moveY(begin: -10, end: 10, duration: 1200.ms),
-            const SizedBox(height: 20),
-            Text(
-              'KHOIR QUEST',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 6,
-                color: Theme.of(context).colorScheme.primary,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset('assets/images/loading_page.jpeg', fit: BoxFit.cover),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: .10),
+                  const Color(0xff4F2ACB).withValues(alpha: .22),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-            ).animate().fadeIn(duration: 600.ms),
-          ],
-        ),
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox.square(
+                        dimension: 42,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 4,
+                          color: Colors.white,
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat())
+                      .rotate(duration: 1100.ms),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Memuat petualangan...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 18,
+                          color: Color(0x99000000),
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(duration: 500.ms),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

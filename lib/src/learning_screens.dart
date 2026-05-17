@@ -1664,7 +1664,7 @@ class _PremiumLearningCard extends StatelessWidget {
     final t = _themeOf(context);
     final compact = MediaQuery.sizeOf(context).width < 430;
     final isNumberCard = kind == _PremiumCardKind.number;
-    final cardColor = mastered ? const Color(0xff38C985) : color;
+    final cardColor = color;
     final bg = t.night
         ? Color.lerp(cardColor, NightPalette.surface, .54)!
         : cardColor;
@@ -1697,10 +1697,18 @@ class _PremiumLearningCard extends StatelessWidget {
                 left: 7,
                 top: 7,
                 child: mastered
-                    ? Icon(
-                        Icons.check_circle_rounded,
-                        color: Colors.white,
-                        size: 24,
+                    ? Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: Color(0xff38C985),
+                          size: 20,
+                        ),
                       )
                     : const SizedBox.shrink(),
               ),
