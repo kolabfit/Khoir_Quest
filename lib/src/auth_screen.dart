@@ -94,7 +94,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                   fontWeight: FontWeight.w900,
                                   height: 1.1,
                                   color: t.dark
-                                      ? Colors.white
+                                      ? const Color.fromARGB(255, 0, 0, 0)
                                       : const Color(0xff143447),
                                 ),
                               ),
