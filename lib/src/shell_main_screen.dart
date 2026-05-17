@@ -316,9 +316,9 @@ class _HomeHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = app.theme.night;
     final tablet = MediaQuery.sizeOf(context).width >= 700;
-    final name = app.childName.trim().isEmpty || app.childName == 'Teman'
-        ? 'Google User'
-        : app.childName.trim();
+    final name = app.email?.trim().isNotEmpty == true
+        ? app.email!.trim()
+        : 'Pengguna';
     final avatar = app.gender == Gender.girl
         ? 'assets/images/profil_perempuan.png'
         : 'assets/images/profil_lakilaki.png';

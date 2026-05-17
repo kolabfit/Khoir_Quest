@@ -1,3 +1,5 @@
+import 'package:isar/isar.dart';
+
 import '../database/collections/learning_history_collection.dart';
 import '../database/isar_database_service.dart';
 import '../models/app_local_models.dart';
@@ -20,5 +22,31 @@ class HistoryRepository {
           ..playedAt = record.playedAt,
       ),
     );
+  }
+
+  Future<List<LearningHistoryRecord>> loadRecords(
+    String username, {
+    int limit = 100,
+  }) async {
+    final owner = username.toLowerCase().trim();
+    final items = await _database.read(
+      (isar) => isar.learningHistoryEntitys
+          .filter()
+          .ownerUsernameEqualTo(owner)
+          .sortByPlayedAtDesc()
+          .limit(limit)
+          .findAll(),
+    );
+    return items
+        .map(
+          (item) => LearningHistoryRecord(
+            materialId: item.materialId,
+            category: item.category,
+            duration: item.duration,
+            score: item.score,
+            playedAt: item.playedAt,
+          ),
+        )
+        .toList();
   }
 }

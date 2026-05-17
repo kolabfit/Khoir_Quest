@@ -112,6 +112,20 @@ class LocalDatabase {
     Gender gender = Gender.boy,
     String themeId = 'default',
     String avatarPath = '',
+    int stars = 12,
+    int iqraStreak = 0,
+    Map<String, int> progress = const {
+      'membaca': 0,
+      'angka': 0,
+      'benda': 0,
+      'iqra': 0,
+    },
+    List<String> iqraMastered = const [],
+    List<String> iqraHistory = const [],
+    List<String> hurfMastered = const [],
+    List<String> angkaMastered = const [],
+    List<String> bendaMastered = const [],
+    List<String> favoriteMaterialIds = const [],
   }) async {
     await ensureReady();
     if (kIsWeb) {
@@ -123,30 +137,32 @@ class LocalDatabase {
               gender: gender,
               role: role,
               themeId: themeId,
-              stars: 12,
-              iqraStreak: 0,
-              progress: const {'membaca': 0, 'angka': 0, 'benda': 0, 'iqra': 0},
-              iqraMastered: const [],
-              iqraHistory: const [],
+              stars: stars,
+              iqraStreak: iqraStreak,
+              progress: progress,
+              iqraMastered: iqraMastered,
+              iqraHistory: iqraHistory,
+              hurfMastered: hurfMastered,
+              angkaMastered: angkaMastered,
+              bendaMastered: bendaMastered,
+              favoriteMaterialIds: favoriteMaterialIds,
               avatarPath: avatarPath,
             )
           : UserAccount(
               username: existing.username,
-              childName: existing.childName,
-              gender: existing.gender,
+              childName: childName,
+              gender: gender,
               role: role,
-              themeId: existing.themeId,
-              stars: existing.stars,
-              iqraStreak: existing.iqraStreak,
-              progress: Map<String, int>.from(existing.progress),
-              iqraMastered: List<String>.from(existing.iqraMastered),
-              iqraHistory: List<String>.from(existing.iqraHistory),
-              hurfMastered: List<String>.from(existing.hurfMastered),
-              angkaMastered: List<String>.from(existing.angkaMastered),
-              bendaMastered: List<String>.from(existing.bendaMastered),
-              favoriteMaterialIds: List<String>.from(
-                existing.favoriteMaterialIds,
-              ),
+              themeId: themeId,
+              stars: stars,
+              iqraStreak: iqraStreak,
+              progress: progress,
+              iqraMastered: iqraMastered,
+              iqraHistory: iqraHistory,
+              hurfMastered: hurfMastered,
+              angkaMastered: angkaMastered,
+              bendaMastered: bendaMastered,
+              favoriteMaterialIds: favoriteMaterialIds,
               avatarPath: existing.avatarPath.isEmpty
                   ? avatarPath
                   : existing.avatarPath,
@@ -168,29 +184,33 @@ class LocalDatabase {
         gender: gender,
         role: role,
         themeId: themeId,
-        stars: 12,
-        iqraStreak: 0,
-        progress: const {'membaca': 0, 'angka': 0, 'benda': 0, 'iqra': 0},
-        iqraMastered: const [],
-        iqraHistory: const [],
+        stars: stars,
+        iqraStreak: iqraStreak,
+        progress: progress,
+        iqraMastered: iqraMastered,
+        iqraHistory: iqraHistory,
+        hurfMastered: hurfMastered,
+        angkaMastered: angkaMastered,
+        bendaMastered: bendaMastered,
+        favoriteMaterialIds: favoriteMaterialIds,
       );
     } else {
       await _userRepository.saveAccount(
         UserAccount(
           username: existing.username,
-          childName: existing.childName,
-          gender: existing.gender,
+          childName: childName,
+          gender: gender,
           role: role,
-          themeId: existing.themeId,
-          stars: existing.stars,
-          iqraStreak: existing.iqraStreak,
-          progress: existing.progress,
-          iqraMastered: existing.iqraMastered,
-          iqraHistory: existing.iqraHistory,
-          hurfMastered: existing.hurfMastered,
-          angkaMastered: existing.angkaMastered,
-          bendaMastered: existing.bendaMastered,
-          favoriteMaterialIds: existing.favoriteMaterialIds,
+          themeId: themeId,
+          stars: stars,
+          iqraStreak: iqraStreak,
+          progress: progress,
+          iqraMastered: iqraMastered,
+          iqraHistory: iqraHistory,
+          hurfMastered: hurfMastered,
+          angkaMastered: angkaMastered,
+          bendaMastered: bendaMastered,
+          favoriteMaterialIds: favoriteMaterialIds,
           avatarPath: existing.avatarPath.isEmpty
               ? avatarPath
               : existing.avatarPath,
@@ -199,15 +219,22 @@ class LocalDatabase {
       );
     }
     await _userRepository.setCurrentUsername(username);
-    await _progressRepository.ensureDefaults(username);
+    await _progressRepository.syncProgress(
+      username: username,
+      progress: progress,
+      hurfMastered: hurfMastered,
+      angkaMastered: angkaMastered,
+      bendaMastered: bendaMastered,
+      iqraMastered: iqraMastered,
+    );
     await _badgeRepository.ensureSeeded(username);
     final account = await _userRepository.accountByUsername(
       username: username,
       genderParser: _parseGender,
       roleParser: _parseRole,
     );
-    final progress = await _progressRepository.loadProgress(username);
-    return _withProgress(account!, progress);
+    final loadedProgress = await _progressRepository.loadProgress(username);
+    return _withProgress(account!, loadedProgress);
   }
 
   Future<UserAccount> authenticate({
@@ -960,6 +987,30 @@ class LocalDatabase {
       return;
     }
     await _historyRepository.addRecord(username, record);
+  }
+
+  Future<List<LearningHistoryRecord>> loadHistory(
+    String username, {
+    int limit = 100,
+  }) async {
+    await ensureReady();
+    if (kIsWeb) {
+      final items =
+          _webPrefs!.getStringList(_webHistoryKey(username)) ?? const [];
+      return items.take(limit).map((raw) {
+        final map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+        return LearningHistoryRecord(
+          materialId: map['materialId'] as String? ?? '',
+          category: map['category'] as String? ?? 'huruf',
+          duration: (map['duration'] as num?)?.toInt() ?? 0,
+          score: (map['score'] as num?)?.toInt() ?? 0,
+          playedAt:
+              DateTime.tryParse(map['playedAt'] as String? ?? '') ??
+              DateTime.now(),
+        );
+      }).toList();
+    }
+    return _historyRepository.loadRecords(username, limit: limit);
   }
 
   Future<String> saveImageBytes({

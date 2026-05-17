@@ -218,9 +218,9 @@ class _PremiumProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tablet = MediaQuery.sizeOf(context).width >= 700;
-    final name = app.childName.trim().isEmpty || app.childName == 'Teman'
-        ? 'Google User'
-        : app.childName.trim();
+    final name = app.email?.trim().isNotEmpty == true
+        ? app.email!.trim()
+        : 'Pengguna';
     final level = _accountLevel(app.stars);
     final need = level >= 5 ? 500 : level * 100;
     final current = app.stars.clamp(0, need);

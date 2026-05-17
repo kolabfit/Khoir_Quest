@@ -12,8 +12,9 @@ enum TabItem { main, belajar, lagu, akun }
 
 enum LearnMode { menu, huruf, angka, benda, iqra }
 
-class AppState extends ChangeNotifier {
+class AppState extends ChangeNotifier with WidgetsBindingObserver {
   AppState(this._db) {
+    WidgetsBinding.instance.addObserver(this);
     load();
   }
 
@@ -21,6 +22,8 @@ class AppState extends ChangeNotifier {
   final LocalDatabase _db;
   final CloudSyncService _cloudSync = CloudSyncService.instance;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  Timer? _autoSyncTimer;
+  DateTime? _lastAutoSyncAt;
   String? email;
   String childName = 'Teman';
   Gender gender = Gender.boy;
@@ -71,6 +74,19 @@ class AppState extends ChangeNotifier {
         account = await _db.restoreCloudSession(
           username: profile.username,
           role: _roleFromString(profile.role),
+          childName: profile.childName,
+          gender: profile.gender == 'girl' ? Gender.girl : Gender.boy,
+          themeId: profile.themeId,
+          avatarPath: profile.avatarUrl,
+          stars: profile.stars,
+          iqraStreak: profile.iqraStreak,
+          progress: profile.progress,
+          iqraMastered: profile.iqraMastered,
+          iqraHistory: profile.iqraHistory,
+          hurfMastered: profile.hurfMastered,
+          angkaMastered: profile.angkaMastered,
+          bendaMastered: profile.bendaMastered,
+          favoriteMaterialIds: profile.favoriteMaterialIds,
         );
       }
     }
@@ -86,6 +102,7 @@ class AppState extends ChangeNotifier {
     }
     await _reloadLearningCatalog();
     await _startConnectivityWatch();
+    _startAutoSync();
     if (email != null && role != null) {
       await syncCloudContent(silent: true);
     }
@@ -134,6 +151,7 @@ class AppState extends ChangeNotifier {
       );
       _applyAccount(account);
       tab = role == Role.teacher ? TabItem.akun : TabItem.main;
+      _startAutoSync();
       await syncCloudContent(silent: true);
       notifyListeners();
     } catch (error) {
@@ -163,6 +181,8 @@ class AppState extends ChangeNotifier {
     email = null;
     role = null;
     favorites.clear();
+    _autoSyncTimer?.cancel();
+    _autoSyncTimer = null;
     if (_cloudSync.isConfigured) {
       await _cloudSync.logout();
     }
@@ -443,6 +463,8 @@ class AppState extends ChangeNotifier {
     syncStatus = 'Sinkronisasi cloud...';
     if (!silent && ready) notifyListeners();
     try {
+      await _pushCloudAccountState();
+      await _pushCloudLearningHistory();
       await _cloudSync.syncForRole(role: currentRole.name);
       await _reloadLearningCatalog();
       lastSyncedAt = DateTime.now();
@@ -535,6 +557,39 @@ class AppState extends ChangeNotifier {
     });
   }
 
+  void _startAutoSync() {
+    _autoSyncTimer?.cancel();
+    if (!_cloudSync.isConfigured) return;
+    _autoSyncTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
+      await _syncIfNeeded(reason: 'timer');
+    });
+  }
+
+  Future<void> _syncIfNeeded({
+    required String reason,
+    bool force = false,
+  }) async {
+    if (email == null || role == null) return;
+    if (!_cloudSync.isConfigured) return;
+    if (syncInProgress) return;
+    if (!force) {
+      final last = _lastAutoSyncAt;
+      if (last != null &&
+          DateTime.now().difference(last) < const Duration(seconds: 20)) {
+        return;
+      }
+    }
+    _lastAutoSyncAt = DateTime.now();
+    await syncCloudContent(silent: reason != 'resume');
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_syncIfNeeded(reason: 'resume', force: true));
+    }
+  }
+
   Role _roleFromString(String value) =>
       value.trim().toLowerCase() == 'teacher' ? Role.teacher : Role.child;
 
@@ -546,7 +601,9 @@ class AppState extends ChangeNotifier {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _connectivitySubscription?.cancel();
+    _autoSyncTimer?.cancel();
     super.dispose();
   }
 
@@ -587,24 +644,9 @@ class AppState extends ChangeNotifier {
     final username = email;
     final currentRole = role;
     if (username == null || currentRole == null) return;
-    await _db.saveAccount(
-      UserAccount(
-        username: username,
-        childName: childName,
-        gender: gender,
-        role: currentRole,
-        themeId: themeId,
-        stars: stars,
-        iqraStreak: iqraStreak,
-        progress: progress,
-        iqraMastered: iqraMastered.toList(),
-        iqraHistory: iqraHistory.toList(),
-        hurfMastered: hurfMastered.toList(),
-        angkaMastered: angkaMastered.toList(),
-        bendaMastered: bendaMastered.toList(),
-        favoriteMaterialIds: favorites.toList(),
-      ),
-    );
+    final account = _currentAccountSnapshot();
+    await _db.saveAccount(account);
+    unawaited(_cloudSync.syncUserState(account));
   }
 
   Future<void> _recordHistory({
@@ -625,6 +667,42 @@ class AppState extends ChangeNotifier {
         playedAt: DateTime.now(),
       ),
     );
+    unawaited(_pushCloudLearningHistory());
+  }
+
+  UserAccount _currentAccountSnapshot() {
+    final username = email ?? '';
+    final currentRole = role ?? Role.child;
+    return UserAccount(
+      username: username,
+      childName: childName,
+      gender: gender,
+      role: currentRole,
+      themeId: themeId,
+      stars: stars,
+      iqraStreak: iqraStreak,
+      progress: Map<String, int>.from(progress),
+      iqraMastered: iqraMastered.toList(),
+      iqraHistory: iqraHistory.toList(),
+      hurfMastered: hurfMastered.toList(),
+      angkaMastered: angkaMastered.toList(),
+      bendaMastered: bendaMastered.toList(),
+      favoriteMaterialIds: favorites.toList(),
+    );
+  }
+
+  Future<void> _pushCloudAccountState() async {
+    final username = email;
+    final currentRole = role;
+    if (username == null || currentRole == null) return;
+    await _cloudSync.syncUserState(_currentAccountSnapshot());
+  }
+
+  Future<void> _pushCloudLearningHistory() async {
+    final username = email;
+    if (username == null) return;
+    final records = await _db.loadHistory(username, limit: 100);
+    await _cloudSync.syncLearningHistory(records);
   }
 
   String? _progressKeyForMode(LearnMode mode) => switch (mode) {

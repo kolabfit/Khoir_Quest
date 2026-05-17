@@ -8,6 +8,34 @@ create table if not exists public.profiles (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+alter table public.profiles
+  add column if not exists child_name text not null default 'Teman',
+  add column if not exists gender text not null default 'boy' check (gender in ('boy', 'girl')),
+  add column if not exists theme_id text not null default 'default',
+  add column if not exists stars integer not null default 12,
+  add column if not exists iqra_streak integer not null default 0,
+  add column if not exists progress jsonb not null default '{"membaca":0,"angka":0,"benda":0,"iqra":0}'::jsonb,
+  add column if not exists iqra_mastered text[] not null default '{}',
+  add column if not exists iqra_history text[] not null default '{}',
+  add column if not exists hurf_mastered text[] not null default '{}',
+  add column if not exists angka_mastered text[] not null default '{}',
+  add column if not exists benda_mastered text[] not null default '{}',
+  add column if not exists favorite_material_ids text[] not null default '{}',
+  add column if not exists updated_at timestamptz not null default timezone('utc', now());
+
+create table if not exists public.learning_histories (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  material_id text not null,
+  category text not null check (category in ('huruf', 'angka', 'benda', 'iqra', 'lagu')),
+  duration integer not null default 0,
+  score integer not null default 0,
+  played_at timestamptz not null default timezone('utc', now())
+);
+
+create unique index if not exists learning_histories_user_material_category_played_at_idx
+on public.learning_histories (user_id, material_id, category, played_at);
+
 create table if not exists public.learning_materials (
   id text primary key,
   category text not null check (category in ('huruf', 'angka', 'benda', 'iqra', 'lagu')),
@@ -55,13 +83,29 @@ begin
 end;
 $$;
 
+create or replace function public.set_profiles_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = timezone('utc', now());
+  return new;
+end;
+$$;
+
 drop trigger if exists set_learning_materials_updated_at on public.learning_materials;
 create trigger set_learning_materials_updated_at
 before update on public.learning_materials
 for each row execute function public.set_learning_materials_updated_at();
 
+drop trigger if exists set_profiles_updated_at on public.profiles;
+create trigger set_profiles_updated_at
+before update on public.profiles
+for each row execute function public.set_profiles_updated_at();
+
 alter table public.profiles enable row level security;
 alter table public.learning_materials enable row level security;
+alter table public.learning_histories enable row level security;
 
 drop policy if exists "profiles_select_self" on public.profiles;
 create policy "profiles_select_self"
@@ -84,6 +128,20 @@ for update
 to authenticated
 using (auth.uid() = id)
 with check (auth.uid() = id);
+
+drop policy if exists "learning_histories_select_self" on public.learning_histories;
+create policy "learning_histories_select_self"
+on public.learning_histories
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "learning_histories_insert_self" on public.learning_histories;
+create policy "learning_histories_insert_self"
+on public.learning_histories
+for insert
+to authenticated
+with check (auth.uid() = user_id);
 
 create or replace function public.is_teacher()
 returns boolean

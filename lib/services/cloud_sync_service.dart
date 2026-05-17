@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../core/utils/media_source_helper.dart';
 import '../database/collections/learning_material_collection.dart';
+import '../models/app_local_models.dart';
 import '../models/cloud_auth_profile.dart';
 import '../models/learning_material_model.dart';
 import '../repositories/learning_material_repository.dart';
@@ -56,6 +57,45 @@ class CloudSyncService {
   }
 
   Future<void> logout() => _auth.logout();
+
+  Future<void> syncUserState(UserAccount account) async {
+    if (!isConfigured || !hasSession || !await isOnline()) return;
+    final profile = await _auth.currentProfile();
+    if (profile == null) return;
+    await _auth.upsertProfileState(
+      userId: profile.userId,
+      username: account.username,
+      role: account.role is Enum
+          ? (account.role as Enum).name
+          : '${account.role}',
+      avatarUrl: account.avatarPath,
+      childName: account.childName,
+      gender: account.gender is Enum
+          ? (account.gender as Enum).name
+          : '${account.gender}',
+      themeId: account.themeId,
+      stars: account.stars,
+      iqraStreak: account.iqraStreak,
+      progress: account.progress,
+      iqraMastered: account.iqraMastered,
+      iqraHistory: account.iqraHistory,
+      hurfMastered: account.hurfMastered,
+      angkaMastered: account.angkaMastered,
+      bendaMastered: account.bendaMastered,
+      favoriteMaterialIds: account.favoriteMaterialIds,
+    );
+  }
+
+  Future<void> syncLearningHistory(List<LearningHistoryRecord> records) async {
+    if (!isConfigured || !hasSession || !await isOnline() || records.isEmpty) {
+      return;
+    }
+    final profile = await _auth.currentProfile();
+    if (profile == null) return;
+    for (final record in records) {
+      await _auth.addLearningHistory(userId: profile.userId, record: record);
+    }
+  }
 
   Future<void> syncForRole({required String role}) async {
     if (!isConfigured || !hasSession || !await isOnline()) return;

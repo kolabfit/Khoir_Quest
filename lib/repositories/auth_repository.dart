@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/app_local_models.dart';
 import '../services/supabase_service.dart';
 
 class AuthRepository {
@@ -64,6 +65,23 @@ class AuthRepository {
     required String username,
     required String role,
     String avatarUrl = '',
+    String childName = 'Teman',
+    String gender = 'boy',
+    String themeId = 'default',
+    int stars = 12,
+    int iqraStreak = 0,
+    Map<String, int> progress = const {
+      'membaca': 0,
+      'angka': 0,
+      'benda': 0,
+      'iqra': 0,
+    },
+    List<String> iqraMastered = const [],
+    List<String> iqraHistory = const [],
+    List<String> hurfMastered = const [],
+    List<String> angkaMastered = const [],
+    List<String> bendaMastered = const [],
+    List<String> favoriteMaterialIds = const [],
   }) async {
     final data = await _client
         .from('profiles')
@@ -72,10 +90,50 @@ class AuthRepository {
           'username': normalizeUsername(username),
           'role': role,
           'avatar_url': avatarUrl.isEmpty ? null : avatarUrl,
+          'child_name': childName,
+          'gender': gender,
+          'theme_id': themeId,
+          'stars': stars,
+          'iqra_streak': iqraStreak,
+          'progress': progress,
+          'iqra_mastered': iqraMastered,
+          'iqra_history': iqraHistory,
+          'hurf_mastered': hurfMastered,
+          'angka_mastered': angkaMastered,
+          'benda_mastered': bendaMastered,
+          'favorite_material_ids': favoriteMaterialIds,
         }, onConflict: 'id')
         .select()
         .single();
     return Map<String, dynamic>.from(data);
+  }
+
+  Future<void> addLearningHistory({
+    required String userId,
+    required LearningHistoryRecord record,
+  }) async {
+    await _client.from('learning_histories').upsert({
+      'user_id': userId,
+      'material_id': record.materialId,
+      'category': record.category,
+      'duration': record.duration,
+      'score': record.score,
+      'played_at': record.playedAt.toUtc().toIso8601String(),
+    }, onConflict: 'user_id,material_id,category,played_at');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchLearningHistories(
+    String userId,
+  ) async {
+    final data = await _client
+        .from('learning_histories')
+        .select()
+        .eq('user_id', userId)
+        .order('played_at', ascending: false)
+        .limit(100);
+    return (data as List)
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
   }
 
   Future<void> signOut() => _client.auth.signOut();
