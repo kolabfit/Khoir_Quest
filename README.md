@@ -1,6 +1,12 @@
-# Khoir Quest
+<p align="center">
+   <img width="300" height="300" alt="Logo_Aplikasi" src="https://github.com/user-attachments/assets/0a147627-fd09-469d-95ab-9c4895498e52"/>
+<p>
+<h1 align="center">
+   Khoir Quets
+</h1>
 
-> Aplikasi Flutter pembelajaran anak bertema petualangan edukatif untuk membantu anak usia dini belajar sambil bermain, dengan pengalaman yang ramah anak, interaktif, dan tetap nyaman dipakai secara offline.
+
+> Aplikasi Flutter pembelajaran anak bertema petualangan edukatif untuk membantu anak usia dini belajar sambil bermain, dengan pengalaman yang ramah anak, interaktif, dan tetap dapat dipakai secara offline.
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)
@@ -187,7 +193,7 @@ Penjelasan singkat:
 ### 1. Clone repository
 
 ```bash
-git clone <URL_REPOSITORY_ANDA>
+git clone https://github.com/kolabfit/Khoir_Quest
 cd App_Paud_Sentrakreasi
 ```
 
@@ -294,7 +300,7 @@ flutter run --dart-define-from-file=.env.json
 
 Pastikan project Supabase memiliki:
 
-- Auth aktif untuk email/password
+- Auth **tidak** aktif untuk email/password
 - tabel dan policy dari `supabase/schema.sql`
 - bucket storage `learning-assets`
 
@@ -443,59 +449,7 @@ Jika Supabase digunakan:
 
 ## Screenshot / Preview
 
-> Simpan screenshot di folder `docs/screenshots/`, lalu ganti/isi path gambar berikut sesuai kebutuhan.
-
-### Login
-
-![Login](docs/screenshots/login.png)
-
-### Welcome Screen
-
-![Welcome Screen](docs/screenshots/welcome-screen.png)
-
-### Pusat Belajar
-
-![Pusat Belajar](docs/screenshots/pusat-belajar.png)
-
-### Halaman Huruf
-
-![Halaman Huruf](docs/screenshots/halaman-huruf.png)
-
-### Halaman Angka
-
-![Halaman Angka](docs/screenshots/halaman-angka.png)
-
-### Halaman Benda
-
-![Halaman Benda](docs/screenshots/halaman-benda.png)
-
-### Halaman Iqra
-
-![Halaman Iqra](docs/screenshots/halaman-iqra.png)
-
-### Lagu Anak
-
-![Lagu Anak](docs/screenshots/lagu-anak.png)
-
-### Mode Seru
-
-![Mode Seru](docs/screenshots/mode-seru.png)
-
-### Dashboard Pengajar
-
-![Dashboard Pengajar](docs/screenshots/dashboard-pengajar.png)
-
-### Akun
-
-![Akun](docs/screenshots/akun.png)
-
-### Tema Malam
-
-![Tema Malam](docs/screenshots/tema-malam.png)
-
-### Badge
-
-![Badge](docs/screenshots/badge.png)
+-
 
 ## Roadmap
 
@@ -550,22 +504,11 @@ Agar proses review lebih mudah, usahakan:
 
 Saat ini proyek ini **belum memiliki lisensi publik resmi**.
 
-Jika repository ini akan dipublikasikan secara open-source, disarankan menambahkan file `LICENSE` dengan lisensi yang sesuai, misalnya:
-
-- MIT
-- Apache-2.0
-- GPL-3.0
-
-Sebelum lisensi ditentukan, anggap penggunaan ulang kode mengikuti kebijakan pemilik repository.
-
 ## Kontak / Author
 
-Silakan ganti placeholder berikut sesuai identitas proyek:
-
-- **Nama**: `Nama Pembuat`
-- **Email**: `email@domain.com`
-- **GitHub**: `https://github.com/username`
-- **Portfolio**: `https://portfolio-anda.com`
+- **Nama**: `Andi Bayu Hanggoro`
+- **Email**: `andibayuhanggoro28@gmail.com`
+- **GitHub**: `https://github.com/adbayu`
 
 ---
 
