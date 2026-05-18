@@ -33,6 +33,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   TabItem tab = TabItem.main;
   LearnMode learnMode = LearnMode.menu;
   bool ready = false;
+  bool online = true;
 
   final Map<String, int> progress = {
     'membaca': 0,
@@ -55,7 +56,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   int stars = 12;
   int iqraStreak = 0;
   bool syncInProgress = false;
-  String syncStatus = 'Cache lokal aktif';
+  String syncStatus = 'Siap sinkron ke cloud';
   DateTime? lastSyncedAt;
 
   AppThemeData get theme =>
@@ -66,6 +67,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     await _cloudSync.ensureReady();
     _prefs = await SharedPreferences.getInstance();
     onboardingSeen = _prefs?.getBool('onboardingSeen') ?? false;
+    online = await _cloudSync.isOnline();
     await _migrateSharedPreferencesAccount();
     var account = await _db.currentAccount();
     if (_cloudSync.isConfigured) {
@@ -508,6 +510,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final username = email;
     final currentRole = role;
     if (username == null || currentRole == null) return;
+    online = await _cloudSync.isOnline();
+    if (!online) {
+      syncStatus = 'Butuh koneksi internet';
+      if (!silent && ready) notifyListeners();
+      return;
+    }
     if (!_cloudSync.isConfigured) {
       syncStatus = 'Supabase belum aktif';
       if (!silent) notifyListeners();
@@ -524,8 +532,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _reloadLearningCatalog();
       lastSyncedAt = DateTime.now();
       syncStatus = 'Tersinkron ${_formatSyncTime(lastSyncedAt!)}';
-    } catch (_) {
-      syncStatus = 'Mode offline. Cache lokal dipakai.';
+    } catch (error) {
+      syncStatus = ApiErrorMapper.toMessage(
+        error,
+        fallback: 'Sinkron gagal. Cek koneksi internet.',
+      );
     } finally {
       syncInProgress = false;
       if (ready) notifyListeners();
@@ -535,6 +546,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _syncSingleMaterial(String materialId) async {
     if (materialId.trim().isEmpty) return;
     if (role != Role.teacher || email == null || !_cloudSync.isConfigured) {
+      return;
+    }
+    online = await _cloudSync.isOnline();
+    if (!online) {
+      syncStatus = 'Butuh koneksi internet';
+      if (ready) notifyListeners();
       return;
     }
     try {
@@ -549,8 +566,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _reloadLearningCatalog();
       lastSyncedAt = DateTime.now();
       syncStatus = 'Materi tersinkron ${_formatSyncTime(lastSyncedAt!)}';
-    } catch (_) {
-      syncStatus = 'Tersimpan lokal. Sinkron tertunda.';
+    } catch (error) {
+      syncStatus = ApiErrorMapper.toMessage(
+        error,
+        fallback: 'Tersimpan lokal. Sinkron tertunda.',
+      );
     } finally {
       syncInProgress = false;
       if (ready) notifyListeners();
@@ -560,6 +580,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _deleteCloudMaterial(String materialId) async {
     if (materialId.trim().isEmpty) return;
     if (role != Role.teacher || !_cloudSync.isConfigured) return;
+    online = await _cloudSync.isOnline();
+    if (!online) {
+      syncStatus = 'Butuh koneksi internet';
+      if (ready) notifyListeners();
+      return;
+    }
     try {
       syncInProgress = true;
       syncStatus = 'Menghapus materi cloud...';
@@ -567,8 +593,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _cloudSync.deleteMaterial(materialId);
       lastSyncedAt = DateTime.now();
       syncStatus = 'Perubahan tersinkron ${_formatSyncTime(lastSyncedAt!)}';
-    } catch (_) {
-      syncStatus = 'Hapus lokal selesai. Sinkron cloud tertunda.';
+    } catch (error) {
+      syncStatus = ApiErrorMapper.toMessage(
+        error,
+        fallback: 'Hapus lokal selesai. Sinkron cloud tertunda.',
+      );
     } finally {
       syncInProgress = false;
       if (ready) notifyListeners();
@@ -601,8 +630,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _connectivitySubscription = _cloudSync.connectivityChanges.listen((
       states,
     ) async {
+      online = !states.contains(ConnectivityResult.none);
       if (states.contains(ConnectivityResult.none)) {
-        syncStatus = 'Offline cache aktif';
+        syncStatus = 'Butuh koneksi internet';
         if (ready) notifyListeners();
         return;
       }
