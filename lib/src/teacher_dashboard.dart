@@ -1260,10 +1260,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       return (payload.length * 0.75).round();
     }
     if (MediaSourceHelper.isLocalFilePath(path) && !kIsWeb) {
-      final file = File(path);
-      if (await file.exists()) {
-        return file.length();
-      }
+      return fileLength(path);
     }
     return 0;
   }

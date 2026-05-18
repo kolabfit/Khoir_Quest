@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiErrorMapper {
@@ -31,7 +29,7 @@ class ApiErrorMapper {
       return _fromText(error.message, fallback: fallback);
     }
 
-    if (error is SocketException) {
+    if (_looksLikeSocketException(error)) {
       return 'Koneksi internet bermasalah. Periksa jaringan lalu coba lagi.';
     }
 
@@ -146,5 +144,11 @@ class ApiErrorMapper {
       if (text.contains(pattern)) return true;
     }
     return false;
+  }
+
+  static bool _looksLikeSocketException(Object error) {
+    return error.runtimeType.toString().toLowerCase().contains(
+      'socketexception',
+    );
   }
 }

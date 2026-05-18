@@ -1,18 +1,17 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:sembast/sembast_io.dart';
+import 'package:sembast/sembast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/constants/default_learning_catalog.dart';
+import '../core/utils/local_file_ops.dart';
 import '../database/collections/learning_material_collection.dart';
 import '../repositories/material_repository.dart';
 import '../repositories/progress_repository.dart';
 import '../repositories/theme_repository.dart';
 import '../repositories/user_repository.dart';
 import '../storage/local_storage_service.dart';
+import 'legacy_database_opener.dart';
 
 class LegacyMigrationService {
   LegacyMigrationService({
@@ -34,11 +33,10 @@ class LegacyMigrationService {
     if (prefs.getBool('khoir_quest_offline_migration_v1') == true) return;
 
     if (!kIsWeb) {
-      final supportDir = await getApplicationSupportDirectory();
-      final legacyPath = p.join(supportDir.path, 'belajar_yuk.db');
-      final legacyFile = File(legacyPath);
-      if (await legacyFile.exists()) {
-        final db = await databaseFactoryIo.openDatabase(legacyPath, version: 1);
+      final supportPath = await applicationSupportPath();
+      final legacyPath = p.join(supportPath, 'belajar_yuk.db');
+      final db = await openLegacyDatabaseIfExists(legacyPath);
+      if (db != null) {
         await _migrateAccounts(db);
         await _migrateSongs(db);
         await db.close();

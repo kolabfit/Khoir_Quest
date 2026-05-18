@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import '../core/constants/default_learning_catalog.dart';
+import '../core/utils/local_file_ops.dart';
 import '../core/utils/media_source_helper.dart';
 import '../repositories/storage_repository.dart';
 import 'supabase_service.dart';
@@ -40,7 +40,7 @@ class UploadService {
   Future<void> ensureReady() => _supabase.ensureInitialized();
 
   Future<String> uploadLearningImage(
-    File file, {
+    dynamic file, {
     required String category,
   }) async {
     final asset = await uploadLearningAssetFromSource(
@@ -74,7 +74,7 @@ class UploadService {
     } else if (MediaSourceHelper.isDataUri(sourcePath)) {
       bytes = _decodeDataUri(sourcePath);
     } else if (!kIsWeb) {
-      bytes = await File(sourcePath).readAsBytes();
+      bytes = await readFileBytes(sourcePath);
     } else {
       throw 'File web tidak valid untuk upload.';
     }

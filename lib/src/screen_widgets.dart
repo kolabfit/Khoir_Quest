@@ -73,9 +73,10 @@ class _DirectVideoState extends State<DirectVideo> {
         fileName: 'legacy_song_${DateTime.now().millisecondsSinceEpoch}.mp4',
       );
       if (!mounted || persisted == null) return;
-      controller = VideoPlayerController.file(File(persisted));
-    } else if (MediaSourceHelper.isLocalFilePath(source)) {
-      controller = VideoPlayerController.file(File(source));
+      if (kIsWeb) return;
+      controller = localVideoController(persisted);
+    } else if (MediaSourceHelper.isLocalFilePath(source) && !kIsWeb) {
+      controller = localVideoController(source);
     } else if (MediaSourceHelper.isAssetPath(source)) {
       controller = VideoPlayerController.asset(source);
     } else {
@@ -713,9 +714,9 @@ class AppImage extends StatelessWidget {
             const EmptyState(text: 'Gambar belum tersedia.'),
       );
     }
-    if (MediaSourceHelper.isLocalFilePath(url)) {
-      return Image.file(
-        File(url),
+    if (MediaSourceHelper.isLocalFilePath(url) && !kIsWeb) {
+      return localImageWidget(
+        url,
         fit: fit,
         errorBuilder: (context, error, stackTrace) =>
             const EmptyState(text: 'Gambar belum tersedia.'),

@@ -1,12 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 import '../core/constants/app_identity.dart';
+import '../core/utils/local_file_ops.dart';
 
 enum StorageBucket {
   hurufImages('images/huruf'),
@@ -29,30 +28,30 @@ class LocalStorageService {
 
   static final instance = LocalStorageService._();
 
-  Directory? _rootDirectory;
+  String? _rootPath;
 
-  Future<Directory> rootDirectory() async {
-    final existing = _rootDirectory;
+  Future<String> rootDirectoryPath() async {
+    final existing = _rootPath;
     if (existing != null) return existing;
-    final base = await getApplicationSupportDirectory();
-    final root = Directory(p.join(base.path, AppIdentity.storageRoot));
-    await root.create(recursive: true);
-    _rootDirectory = root;
+    final base = await applicationSupportPath();
+    final root = p.join(base, AppIdentity.storageRoot);
+    await ensureDirectory(root);
+    _rootPath = root;
     return root;
   }
 
   Future<void> ensureReady() async {
     if (kIsWeb) return;
-    await rootDirectory();
+    await rootDirectoryPath();
     for (final bucket in StorageBucket.values) {
-      await bucketDirectory(bucket);
+      await bucketDirectoryPath(bucket);
     }
   }
 
-  Future<Directory> bucketDirectory(StorageBucket bucket) async {
-    final root = await rootDirectory();
-    final dir = Directory(p.join(root.path, bucket.relativePath));
-    await dir.create(recursive: true);
+  Future<String> bucketDirectoryPath(StorageBucket bucket) async {
+    final root = await rootDirectoryPath();
+    final dir = p.join(root, bucket.relativePath);
+    await ensureDirectory(dir);
     return dir;
   }
 
@@ -66,12 +65,11 @@ class LocalStorageService {
       return 'data:$mime;base64,${base64Encode(bytes)}';
     }
     await ensureReady();
-    final dir = await bucketDirectory(bucket);
+    final dir = await bucketDirectoryPath(bucket);
     final safeName = _safeFileName(fileName);
-    final path = p.join(dir.path, safeName);
-    final file = File(path);
-    await file.writeAsBytes(bytes, flush: true);
-    return file.path;
+    final path = p.join(dir, safeName);
+    await writeFileBytes(path, bytes, flush: true);
+    return path;
   }
 
   Future<String> ensureAssetFile({
@@ -82,13 +80,12 @@ class LocalStorageService {
     if (kIsWeb) {
       return assetPath;
     }
-    final dir = await bucketDirectory(bucket);
-    final path = p.join(dir.path, _safeFileName(fileName));
-    final file = File(path);
-    if (await file.exists()) return file.path;
+    final dir = await bucketDirectoryPath(bucket);
+    final path = p.join(dir, _safeFileName(fileName));
+    if (await fileExists(path)) return path;
     final data = await rootBundle.load(assetPath);
-    await file.writeAsBytes(data.buffer.asUint8List(), flush: true);
-    return file.path;
+    await writeFileBytes(path, data.buffer.asUint8List(), flush: true);
+    return path;
   }
 
   Future<String?> persistDataUri(
@@ -110,10 +107,7 @@ class LocalStorageService {
   Future<void> deleteFile(String path) async {
     if (kIsWeb) return;
     if (path.isEmpty) return;
-    final file = File(path);
-    if (await file.exists()) {
-      await file.delete();
-    }
+    await deleteFileIfExists(path);
   }
 
   String _mimeTypeFromFileName(String fileName) {

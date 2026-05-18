@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
@@ -23,6 +22,8 @@ import 'package:video_player/video_player.dart';
 import 'core/constants/app_identity.dart';
 import 'core/constants/default_learning_catalog.dart';
 import 'core/utils/api_error_mapper.dart';
+import 'core/utils/local_file_ops.dart';
+import 'core/utils/local_media_widgets.dart';
 import 'core/utils/media_source_helper.dart';
 import 'database/collections/learning_material_collection.dart';
 import 'database/isar_database_service.dart';
