@@ -17,9 +17,8 @@ class _SongsScreenState extends ConsumerState<SongsScreen> {
     final app = ref.watch(appStateProvider);
     final t = app.theme;
     final songs = app.songs;
-    if (selected == null && songs.isNotEmpty) selected = songs.first;
     if (selected != null && !songs.any((s) => s.id == selected!.id)) {
-      selected = songs.isEmpty ? null : songs.first;
+      selected = null;
     }
 
     final tablet = MediaQuery.sizeOf(context).width >= 760;
@@ -158,40 +157,54 @@ class _SongsScreenState extends ConsumerState<SongsScreen> {
             ),
           ),
         ),
-        if (selected != null)
-          Positioned(
-            left: tablet ? 28 : 18,
-            right: tablet ? 28 : 18,
-            bottom: _playerBottomOffset,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: tablet ? 980 : 520),
-                child: _MiniMusicPlayer(
-                  song: selected!,
-                  canSkip: songs.length > 1,
-                  onPrevious: () {
-                    if (songs.length < 2 || selected == null) return;
-                    final currentIndex = songs.indexWhere(
-                      (item) => item.id == selected!.id,
-                    );
-                    final safeIndex = currentIndex < 0 ? 0 : currentIndex;
-                    final prevIndex =
-                        (safeIndex - 1 + songs.length) % songs.length;
-                    setState(() => selected = songs[prevIndex]);
-                  },
-                  onNext: () {
-                    if (songs.length < 2 || selected == null) return;
-                    final currentIndex = songs.indexWhere(
-                      (item) => item.id == selected!.id,
-                    );
-                    final safeIndex = currentIndex < 0 ? 0 : currentIndex;
-                    final nextIndex = (safeIndex + 1) % songs.length;
-                    setState(() => selected = songs[nextIndex]);
-                  },
-                ),
-              ),
+        Positioned(
+          left: tablet ? 28 : 18,
+          right: tablet ? 28 : 18,
+          bottom: _playerBottomOffset,
+          child: AnimatedSwitcher(
+            duration: 320.ms,
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) => SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(animation),
+              child: FadeTransition(opacity: animation, child: child),
             ),
+            child: selected == null
+                ? const SizedBox.shrink(key: ValueKey('empty_player'))
+                : Center(
+                    key: ValueKey(selected!.id),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: tablet ? 980 : 520),
+                      child: _MiniMusicPlayer(
+                        song: selected!,
+                        canSkip: songs.length > 1,
+                        onPrevious: () {
+                          if (songs.length < 2 || selected == null) return;
+                          final currentIndex = songs.indexWhere(
+                            (item) => item.id == selected!.id,
+                          );
+                          final safeIndex = currentIndex < 0 ? 0 : currentIndex;
+                          final prevIndex =
+                              (safeIndex - 1 + songs.length) % songs.length;
+                          setState(() => selected = songs[prevIndex]);
+                        },
+                        onNext: () {
+                          if (songs.length < 2 || selected == null) return;
+                          final currentIndex = songs.indexWhere(
+                            (item) => item.id == selected!.id,
+                          );
+                          final safeIndex = currentIndex < 0 ? 0 : currentIndex;
+                          final nextIndex = (safeIndex + 1) % songs.length;
+                          setState(() => selected = songs[nextIndex]);
+                        },
+                      ),
+                    ),
+                  ),
           ),
+        ),
       ],
     );
   }
@@ -500,20 +513,7 @@ class _PremiumSongCard extends StatelessWidget {
                         height: 1.05,
                       ),
                     ),
-                    const SizedBox(height: 7),
-                    Text(
-                      _songSourceLabel(song),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: t.night
-                            ? NightPalette.muted
-                            : const Color(0xff74799E),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 9),
+                    const SizedBox(height: 10),
                     _SongDurationPill(song: song),
                   ],
                 ),
@@ -818,16 +818,6 @@ class _MiniSongMeta extends StatelessWidget {
             color: Colors.white,
             fontSize: 15,
             fontWeight: FontWeight.w900,
-          ),
-        ),
-        Text(
-          _songSourceLabel(song),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: .86),
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
           ),
         ),
       ],
@@ -1235,12 +1225,6 @@ class _MiniControl extends StatelessWidget {
   }
 }
 
-String _songSourceLabel(SongItem song) {
-  final fileName = song.fileName?.trim();
-  if (fileName != null && fileName.isNotEmpty) return fileName;
-  return 'Video lagu';
-}
-
 final Map<String, Future<Duration?>> _songDurationFutures = {};
 
 Future<void> _prepareSongSource(
@@ -1278,18 +1262,35 @@ Future<Duration?> _resolveSongDuration(String source) {
   final trimmed = source.trim();
   return _songDurationFutures.putIfAbsent(trimmed, () async {
     if (trimmed.isEmpty) return null;
-    final player = AudioPlayer();
+    VideoPlayerController? controller;
     try {
-      await _prepareSongSource(
-        player,
-        trimmed,
-        tempFilePrefix: 'song_duration',
-      );
-      return player.duration;
+      if (MediaSourceHelper.isDataUri(trimmed)) {
+        if (kIsWeb) {
+          controller = VideoPlayerController.networkUrl(Uri.parse(trimmed));
+        } else {
+          final persisted = await LocalStorageService.instance.persistDataUri(
+            trimmed,
+            bucket: StorageBucket.songVideos,
+            fileName:
+                'song_duration_${DateTime.now().millisecondsSinceEpoch}.mp4',
+          );
+          if (persisted == null) return null;
+          controller = localVideoController(persisted);
+        }
+      } else if (MediaSourceHelper.isLocalFilePath(trimmed) && !kIsWeb) {
+        controller = localVideoController(trimmed);
+      } else if (MediaSourceHelper.isAssetPath(trimmed)) {
+        controller = VideoPlayerController.asset(trimmed);
+      } else {
+        controller = VideoPlayerController.networkUrl(Uri.parse(trimmed));
+      }
+      await controller.initialize();
+      final duration = controller.value.duration;
+      return duration > Duration.zero ? duration : null;
     } catch (_) {
       return null;
     } finally {
-      await player.dispose();
+      await controller?.dispose();
     }
   });
 }
