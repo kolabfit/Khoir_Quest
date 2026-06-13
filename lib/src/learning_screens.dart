@@ -644,7 +644,9 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
       itemBuilder: (context, itemIndex, color) {
         final item = filtered[itemIndex];
         final obj = item.objects.first;
-        final mastered = app.hurfMastered.contains(item.letter);
+        final mastered = app.hurfMastered.contains(
+          progressMasteryKey(item.letter),
+        );
         return _PremiumLearningCard(
           color: color,
           title: item.letter,
@@ -721,7 +723,9 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
       onPage: (next) => setState(() => pageIndex = next),
       itemBuilder: (context, itemIndex, color) {
         final item = filtered[itemIndex];
-        final mastered = app.angkaMastered.contains(item.number);
+        final mastered = app.angkaMastered.contains(
+          progressMasteryKey(item.number),
+        );
         return _PremiumLearningCard(
           color: color,
           title: item.number,
@@ -794,7 +798,9 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
         final item = filtered[itemIndex];
         final favoriteId = item.id.isEmpty ? 'benda:${item.name}' : item.id;
         final fav = app.favorites.contains(favoriteId);
-        final mastered = app.bendaMastered.contains(item.name);
+        final mastered = app.bendaMastered.contains(
+          progressMasteryKey(item.name),
+        );
         return _PremiumLearningCard(
           color: color,
           title: item.name,

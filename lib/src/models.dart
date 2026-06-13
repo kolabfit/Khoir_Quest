@@ -58,6 +58,8 @@ bool isIqraMastered(Set<String> mastered, IqraItem item) =>
 int iqraMasteredCount(Set<String> mastered, List<IqraItem> items) =>
     items.where((item) => isIqraMastered(mastered, item)).length;
 
+String progressMasteryKey(String value) => value.trim().toUpperCase();
+
 class SongItem {
   const SongItem(
     this.id,
