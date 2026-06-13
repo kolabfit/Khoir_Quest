@@ -50,6 +50,14 @@ class IqraItem {
   final String group;
 }
 
+String iqraMasteryKey(IqraItem item) => '${item.char}:${item.latin}';
+
+bool isIqraMastered(Set<String> mastered, IqraItem item) =>
+    mastered.contains(iqraMasteryKey(item)) || mastered.contains(item.latin);
+
+int iqraMasteredCount(Set<String> mastered, List<IqraItem> items) =>
+    items.where((item) => isIqraMastered(mastered, item)).length;
+
 class SongItem {
   const SongItem(
     this.id,

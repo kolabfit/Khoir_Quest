@@ -7,8 +7,10 @@ class AccountScreen extends ConsumerStatefulWidget {
   ConsumerState<AccountScreen> createState() => _AccountScreenState();
 }
 
+enum _AccountPage { home, profile, security, parent, language, faq, theme }
+
 class _AccountScreenState extends ConsumerState<AccountScreen> {
-  bool themePage = false;
+  _AccountPage page = _AccountPage.home;
 
   Future<void> _confirmLogout() async {
     final confirmed = await showDialog<bool>(
@@ -24,10 +26,39 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   @override
   Widget build(BuildContext context) {
     final app = ref.watch(appStateProvider);
-    if (themePage) {
+    if (page == _AccountPage.theme) {
       return _ThemeSettingsPage(
         app: app,
-        onBack: () => setState(() => themePage = false),
+        onBack: () => setState(() => page = _AccountPage.home),
+      );
+    }
+    if (page == _AccountPage.profile) {
+      return _ProfileSettingsPage(
+        app: app,
+        onBack: () => setState(() => page = _AccountPage.home),
+      );
+    }
+    if (page == _AccountPage.security) {
+      return _SecuritySettingsPage(
+        app: app,
+        onBack: () => setState(() => page = _AccountPage.home),
+      );
+    }
+    if (page == _AccountPage.parent) {
+      return _ParentSettingsPage(
+        app: app,
+        onBack: () => setState(() => page = _AccountPage.home),
+      );
+    }
+    if (page == _AccountPage.language) {
+      return _LanguageSettingsPage(
+        app: app,
+        onBack: () => setState(() => page = _AccountPage.home),
+      );
+    }
+    if (page == _AccountPage.faq) {
+      return _FaqSettingsPage(
+        onBack: () => setState(() => page = _AccountPage.home),
       );
     }
     final tablet = MediaQuery.sizeOf(context).width >= 700;
@@ -58,7 +89,12 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             ],
             _SettingsSection(
               app: app,
-              onThemeTap: () => setState(() => themePage = true),
+              onProfileTap: () => setState(() => page = _AccountPage.profile),
+              onSecurityTap: () => setState(() => page = _AccountPage.security),
+              onParentTap: () => setState(() => page = _AccountPage.parent),
+              onLanguageTap: () => setState(() => page = _AccountPage.language),
+              onThemeTap: () => setState(() => page = _AccountPage.theme),
+              onFaqTap: () => setState(() => page = _AccountPage.faq),
             ),
             const SizedBox(height: 16),
             if (tablet)
@@ -443,9 +479,22 @@ class _LearningStats extends ConsumerWidget {
 }
 
 class _SettingsSection extends StatelessWidget {
-  const _SettingsSection({required this.app, required this.onThemeTap});
+  const _SettingsSection({
+    required this.app,
+    required this.onProfileTap,
+    required this.onSecurityTap,
+    required this.onParentTap,
+    required this.onLanguageTap,
+    required this.onThemeTap,
+    required this.onFaqTap,
+  });
   final AppState app;
+  final VoidCallback onProfileTap;
+  final VoidCallback onSecurityTap;
+  final VoidCallback onParentTap;
+  final VoidCallback onLanguageTap;
   final VoidCallback onThemeTap;
+  final VoidCallback onFaqTap;
 
   @override
   Widget build(BuildContext context) {
@@ -478,13 +527,13 @@ class _SettingsSection extends StatelessWidget {
       _SettingData(
         Icons.language_rounded,
         'Bahasa',
-        'Bahasa Indonesia',
+        app.languageCode == 'en' ? 'English' : 'Bahasa Indonesia',
         const Color(0xff8B55F6),
       ),
       _SettingData(
         Icons.notifications_rounded,
         'Notifikasi',
-        'Atur notifikasi aplikasi',
+        'Dinonaktifkan sementara',
         const Color(0xffFF8A00),
       ),
       _SettingData(
@@ -512,11 +561,545 @@ class _SettingsSection extends StatelessWidget {
           childAspectRatio: tablet ? 5.2 : 4.8,
         ),
         itemCount: settings.length,
-        itemBuilder: (_, i) => _SettingsTile(
-          data: settings[i],
-          onTap: settings[i].title == 'Tema'
-              ? onThemeTap
-              : () => Feedback.forTap(context),
+        itemBuilder: (_, i) {
+          final data = settings[i];
+          final disabled = data.title == 'Notifikasi';
+          final action = switch (data.title) {
+            'Profil Saya' => onProfileTap,
+            'Keamanan' => onSecurityTap,
+            'Orang Tua' => onParentTap,
+            'Bahasa' => onLanguageTap,
+            'Tema' => onThemeTap,
+            'Bantuan & FAQ' => onFaqTap,
+            _ => () => Feedback.forTap(context),
+          };
+          return Opacity(
+            opacity: disabled ? .52 : 1,
+            child: _SettingsTile(data: data, onTap: disabled ? () {} : action),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _AccountMiniHeader extends StatelessWidget {
+  const _AccountMiniHeader({required this.title, required this.onBack});
+  final String title;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _AccountTapCard(
+          compact: true,
+          onTap: onBack,
+          child: const Icon(Icons.arrow_back_rounded, color: Color(0xff343864)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xff343864),
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AccountSubPage extends StatelessWidget {
+  const _AccountSubPage({
+    required this.title,
+    required this.onBack,
+    required this.children,
+  });
+  final String title;
+  final VoidCallback onBack;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final tablet = MediaQuery.sizeOf(context).width >= 700;
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: tablet ? 980 : 520),
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            tablet ? 28 : 18,
+            14,
+            tablet ? 28 : 18,
+            126,
+          ),
+          children: [
+            _AccountMiniHeader(title: title, onBack: onBack),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileSettingsPage extends ConsumerStatefulWidget {
+  const _ProfileSettingsPage({required this.app, required this.onBack});
+  final AppState app;
+  final VoidCallback onBack;
+
+  @override
+  ConsumerState<_ProfileSettingsPage> createState() =>
+      _ProfileSettingsPageState();
+}
+
+class _ProfileSettingsPageState extends ConsumerState<_ProfileSettingsPage> {
+  late final TextEditingController name;
+  late Gender gender;
+
+  @override
+  void initState() {
+    super.initState();
+    name = TextEditingController(text: widget.app.childName);
+    gender = widget.app.gender;
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _AccountSubPage(
+      title: 'Profil Saya',
+      onBack: widget.onBack,
+      children: [
+        _AccountSectionCard(
+          title: 'Data Profil',
+          child: Column(
+            children: [
+              AppField(
+                controller: name,
+                label: 'Nama Anak',
+                icon: Icons.badge_rounded,
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ChoicePill(
+                      label: 'Laki-laki',
+                      active: gender == Gender.boy,
+                      onTap: () => setState(() => gender = Gender.boy),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _ChoicePill(
+                      label: 'Perempuan',
+                      active: gender == Gender.girl,
+                      onTap: () => setState(() => gender = Gender.girl),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                onPressed: () async {
+                  await ref
+                      .read(appStateProvider)
+                      .updateProfile(name: name.text, gender: gender);
+                  if (context.mounted) widget.onBack();
+                },
+                icon: const Icon(Icons.save_rounded),
+                label: const Text('Simpan Profil'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SecuritySettingsPage extends ConsumerStatefulWidget {
+  const _SecuritySettingsPage({required this.app, required this.onBack});
+  final AppState app;
+  final VoidCallback onBack;
+
+  @override
+  ConsumerState<_SecuritySettingsPage> createState() =>
+      _SecuritySettingsPageState();
+}
+
+class _SecuritySettingsPageState extends ConsumerState<_SecuritySettingsPage> {
+  final pass = TextEditingController();
+  final confirm = TextEditingController();
+  String? error;
+  bool loading = false;
+
+  @override
+  void dispose() {
+    pass.dispose();
+    confirm.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _AccountSubPage(
+      title: 'Keamanan',
+      onBack: widget.onBack,
+      children: [
+        _AccountSectionCard(
+          title: 'Ubah Password',
+          child: Column(
+            children: [
+              AppField(
+                controller: pass,
+                label: 'Password Baru',
+                icon: Icons.lock_rounded,
+                obscure: true,
+              ),
+              AppField(
+                controller: confirm,
+                label: 'Konfirmasi Password',
+                icon: Icons.verified_user_rounded,
+                obscure: true,
+              ),
+              if (error != null)
+                _AccountInfoBox(text: error!, color: const Color(0xffEF4444)),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: loading ? null : _submit,
+                icon: loading
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.password_rounded),
+                label: const Text('Ubah Password'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submit() async {
+    if (pass.text.length < 6) {
+      return setState(() => error = 'Password minimal 6 karakter');
+    }
+    if (pass.text != confirm.text) {
+      return setState(() => error = 'Konfirmasi password belum sama');
+    }
+    setState(() {
+      loading = true;
+      error = null;
+    });
+    try {
+      await ref
+          .read(appStateProvider)
+          .resetPassword(
+            username: widget.app.email ?? '',
+            newPassword: pass.text,
+          );
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        barrierColor: Colors.black.withValues(alpha: .22),
+        builder: (_) => const _PasswordChangedDialog(),
+      );
+      if (mounted) widget.onBack();
+    } catch (e) {
+      setState(() => error = ApiErrorMapper.toMessage(e));
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+}
+
+class _ParentSettingsPage extends StatelessWidget {
+  const _ParentSettingsPage({required this.app, required this.onBack});
+  final AppState app;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = _accountTotalProgress(app.progress);
+    return _AccountSubPage(
+      title: 'Orang Tua',
+      onBack: onBack,
+      children: [
+        _AccountSectionCard(
+          title: 'Ringkasan Anak',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _AccountInfoBox(
+                text: 'Progress total: $total%',
+                color: const Color(0xff36A3FF),
+              ),
+              _AccountInfoBox(
+                text: 'Bintang: ${app.stars}',
+                color: const Color(0xffFFB020),
+              ),
+              _AccountInfoBox(
+                text: 'Favorit tersimpan: ${app.favorites.length}',
+                color: const Color(0xffFF6DA8),
+              ),
+              _AccountInfoBox(
+                text: 'Streak Iqra: ${app.iqraStreak}',
+                color: const Color(0xff8B55F6),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LanguageSettingsPage extends ConsumerWidget {
+  const _LanguageSettingsPage({required this.app, required this.onBack});
+  final AppState app;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return _AccountSubPage(
+      title: 'Bahasa',
+      onBack: onBack,
+      children: [
+        _AccountSectionCard(
+          title: 'Pilih Bahasa',
+          child: Column(
+            children: [
+              _ChoicePill(
+                label: 'Bahasa Indonesia',
+                active: app.languageCode == 'id',
+                onTap: () => ref.read(appStateProvider).setLanguage('id'),
+              ),
+              const SizedBox(height: 10),
+              _ChoicePill(
+                label: 'English',
+                active: app.languageCode == 'en',
+                onTap: () => ref.read(appStateProvider).setLanguage('en'),
+              ),
+              const SizedBox(height: 12),
+              const _AccountInfoBox(
+                text:
+                    'Bahasa disimpan di SharedPreferences. Bagian pembelajaran otomatis menyesuaikan.',
+                color: Color(0xff8B55F6),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FaqSettingsPage extends StatelessWidget {
+  const _FaqSettingsPage({required this.onBack});
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    const items = [
+      (
+        'Apa itu aplikasi belajar PAUD ini?',
+        'Aplikasi ini adalah media belajar interaktif untuk anak usia PAUD yang berisi materi dasar seperti huruf, angka, benda dan iqra.',
+      ),
+      (
+        'Untuk usia berapa aplikasi ini digunakan?',
+        'Aplikasi ini ditujukan untuk anak usia 3–6 tahun.',
+      ),
+      (
+        'Bagaimana cara memulai belajar?',
+        'Pilih menu belajar pada halaman utama, lalu pilih materi yang ingin dipelajari.',
+      ),
+      (
+        'Bagaimana cara melihat progress anak?',
+        'Buka menu Progress Anak untuk melihat materi yang sudah dipelajari dan hasil latihan anak.',
+      ),
+      (
+        'Apakah level belajar bisa diubah?',
+        'Ya, level belajar dapat diubah melalui menu Pengaturan Anak.',
+      ),
+      (
+        'Bagaimana cara mengganti tema?',
+        'Masuk ke menu Tema, lalu pilih tampilan yang diinginkan.',
+      ),
+      (
+        'Bagaimana cara mengganti bahasa?',
+        'Masuk ke menu Bahasa, lalu pilih bahasa yang tersedia.',
+      ),
+      (
+        'Bagaimana jika suara tidak muncul?',
+        'Pastikan volume perangkat aktif dan browser mengizinkan pemutaran audio.',
+      ),
+      (
+        'Apakah aplikasi bisa digunakan di HP?',
+        'Ya, aplikasi bisa digunakan melalui browser di HP, tablet, laptop, atau komputer.',
+      ),
+      (
+        'Apa yang harus dilakukan jika lupa password?',
+        'Gunakan fitur Lupa Password pada halaman login untuk mengatur ulang password.',
+      ),
+      (
+        'Apakah data anak aman?',
+        'Data anak digunakan hanya untuk kebutuhan pembelajaran dan pemantauan progress di dalam aplikasi.',
+      ),
+    ];
+    return _AccountSubPage(
+      title: 'Bantuan & FAQ',
+      onBack: onBack,
+      children: [
+        _AccountSectionCard(
+          title: 'Pertanyaan Umum',
+          child: Column(
+            children: items
+                .map((item) => _FaqItem(question: item.$1, answer: item.$2))
+                .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChoicePill extends StatelessWidget {
+  const _ChoicePill({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: Icon(active ? Icons.check_circle_rounded : Icons.circle_outlined),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        foregroundColor: active
+            ? const Color(0xff6C36EF)
+            : const Color(0xff5A5F7D),
+        side: BorderSide(
+          color: active ? const Color(0xff6C36EF) : const Color(0xffD8D7F5),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+    );
+  }
+}
+
+class _AccountInfoBox extends StatelessWidget {
+  const _AccountInfoBox({required this.text, required this.color});
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: .24)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.w900),
+      ),
+    );
+  }
+}
+
+class _FaqItem extends StatelessWidget {
+  const _FaqItem({required this.question, required this.answer});
+  final String question;
+  final String answer;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: Text(
+        question,
+        style: const TextStyle(
+          fontWeight: FontWeight.w900,
+          color: Color(0xff343864),
+        ),
+      ),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(answer),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PasswordChangedDialog extends StatelessWidget {
+  const _PasswordChangedDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 420),
+        padding: const EdgeInsets.all(22),
+        decoration: _accountCardDecoration(context, radius: 30),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xff25C06D),
+              size: 76,
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Password berhasil diganti!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xff343864),
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Gunakan password baru saat login berikutnya.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 18),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Oke'),
+            ),
+          ],
         ),
       ),
     );

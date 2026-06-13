@@ -29,6 +29,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Gender gender = Gender.boy;
   Role? role;
   String themeId = 'default';
+  String languageCode = 'id';
   bool onboardingSeen = false;
   TabItem tab = TabItem.main;
   LearnMode learnMode = LearnMode.menu;
@@ -67,6 +68,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     await _cloudSync.ensureReady();
     _prefs = await SharedPreferences.getInstance();
     onboardingSeen = _prefs?.getBool('onboardingSeen') ?? false;
+    languageCode = _prefs?.getString('languageCode') ?? 'id';
     online = await _cloudSync.isOnline();
     await _migrateSharedPreferencesAccount();
     var account = await _db.currentAccount();
@@ -254,6 +256,22 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
           .firstWhere((t) => t.id == id, orElse: () => appThemes[0])
           .night,
     );
+    await _saveAccount();
+    notifyListeners();
+  }
+
+  Future<void> setLanguage(String code) async {
+    languageCode = code;
+    await _prefs?.setString('languageCode', code);
+    notifyListeners();
+  }
+
+  Future<void> updateProfile({
+    required String name,
+    required Gender gender,
+  }) async {
+    childName = name.trim().isEmpty ? 'Teman' : name.trim();
+    this.gender = gender;
     await _saveAccount();
     notifyListeners();
   }
@@ -830,11 +848,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   };
 
   bool _registerIqraViewed(IqraItem item) {
-    final added = iqraMastered.add(item.latin);
+    final added = iqraMastered.add(iqraMasteryKey(item));
     if (!added) return false;
     progress['iqra'] = min(
       100,
-      (iqraMastered.length / max(1, iqraItems.length) * 100).round(),
+      (iqraMasteredCount(iqraMastered, iqraItems) /
+              max(1, iqraItems.length) *
+              100)
+          .round(),
     );
     return true;
   }
@@ -884,7 +905,10 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     );
     progress['iqra'] = min(
       100,
-      (iqraMastered.length / max(1, iqraItems.length) * 100).round(),
+      (iqraMasteredCount(iqraMastered, iqraItems) /
+              max(1, iqraItems.length) *
+              100)
+          .round(),
     );
   }
 

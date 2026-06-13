@@ -220,6 +220,41 @@ AppThemeData _themeOf(BuildContext context) {
   }
 }
 
+String tr(BuildContext context, String id, [String? en]) {
+  try {
+    final code = ProviderScope.containerOf(
+      context,
+    ).read(appStateProvider).languageCode;
+    if (code == 'en') return en ?? _enText[id] ?? id;
+  } catch (_) {}
+  return id;
+}
+
+const _enText = <String, String>{
+  'Belajar Huruf': 'Learn Letters',
+  'Belajar Angka': 'Learn Numbers',
+  'Belajar Benda': 'Learn Objects',
+  'Belajar Iqra 1': 'Learn Iqra 1',
+  'Pusat Belajar': 'Learning Center',
+  'Ayo mengenal abjad dan contoh bendanya!':
+      'Let?s learn letters and example objects!',
+  'Yuk belajar bilangan dengan gambar pilihan pengajar!':
+      'Let?s learn numbers with teacher-selected pictures!',
+  'Mengenal benda di sekitar kita': 'Learn objects around us',
+  'Cari...': 'Search...',
+  'Cari benda...': 'Search objects...',
+  'Kuis Seru': 'Fun Quiz',
+  'Petualangan Seru': 'Fun Adventure',
+  'Tekan mic pada kartu lalu ucapkan katanya.':
+      'Tap the mic on the card, then say the word.',
+  'Tekan mic pada kartu lalu ucapkan angkanya.':
+      'Tap the mic on the card, then say the number.',
+  'Tekan mic pada kartu lalu ucapkan nama bendanya.':
+      'Tap the mic on the card, then say the object name.',
+  'Belum ada hasil yang cocok.': 'No matching results yet.',
+  'Semua': 'All',
+};
+
 String titleForMode(LearnMode mode) => switch (mode) {
   LearnMode.huruf => 'Belajar Huruf',
   LearnMode.angka => 'Belajar Angka',
