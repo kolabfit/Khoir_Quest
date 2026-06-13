@@ -125,6 +125,10 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   void initState() {
     super.initState();
     _userCountFuture = LocalDatabase.instance.countAccounts();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_syncDashboard(silent: true));
+    });
   }
 
   @override
@@ -216,6 +220,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                               () => _sidebarCollapsed = !_sidebarCollapsed,
                             ),
                       onQuickUpload: () => _openUploadDialog(activeCategory),
+                      onSync: () => _syncDashboard(),
                     ),
                     Expanded(
                       child: SingleChildScrollView(
@@ -288,6 +293,16 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     });
   }
 
+  Future<void> _syncDashboard({bool silent = false}) async {
+    final appState = ref.read(appStateProvider);
+    await appState.syncCloudContent(silent: silent);
+    if (!mounted) return;
+    setState(() {
+      _userCountFuture = LocalDatabase.instance.countAccounts();
+      _storageFuture = _loadStorage();
+    });
+  }
+
   List<_TeacherContentData> _itemsForCategory(
     AppState app,
     _TeacherCategory category,
@@ -349,8 +364,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                 icon: category.icon,
                 badgeText: item.category,
                 actionLabel: MediaSourceHelper.isLocalFilePath(item.img)
-                    ? 'Lokal'
-                    : 'Default',
+                    ? 'Siap Upload'
+                    : 'Cloud',
                 editable: true,
                 object: item,
               ),
@@ -429,7 +444,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _TeacherSummaryCardData(
         title: 'Abjad Aktif',
         value: '${app.letters.length}',
-        subtitle: 'Materi offline siap',
+        subtitle: 'Materi online siap',
         icon: Icons.sort_by_alpha_rounded,
         color: const Color(0xffA855F7),
         background: const [Color(0xffF4ECFF), Color(0xffF8F4FF)],
@@ -445,7 +460,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _TeacherSummaryCardData(
         title: 'Benda Aktif',
         value: '${app.objects.length}',
-        subtitle: 'Konten lokal tersimpan',
+        subtitle: 'Konten cloud tersinkron',
         icon: Icons.category_rounded,
         color: const Color(0xff34D399),
         background: const [Color(0xffECFFF6), Color(0xffF6FFFB)],
@@ -453,7 +468,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _TeacherSummaryCardData(
         title: 'Lagu Anak',
         value: '${app.songs.length}',
-        subtitle: 'Video lokal tersedia',
+        subtitle: 'Video online tersedia',
         icon: Icons.music_video_rounded,
         color: const Color(0xffFB923C),
         background: const [Color(0xffFFF1E8), Color(0xffFFF8F1)],
@@ -461,7 +476,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _TeacherSummaryCardData(
         title: 'Total User',
         valueFuture: _userCountFuture,
-        subtitle: 'Akun lokal terdaftar',
+        subtitle: 'Akun tersinkron',
         icon: Icons.groups_rounded,
         color: const Color(0xffFBBF24),
         background: const [Color(0xffFFF9E7), Color(0xffFFFDF3)],
@@ -818,7 +833,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
         title: existing == null
             ? 'Mengunggah lagu baru: ${result.title}'
             : 'Memperbarui lagu: ${result.title}',
-        subtitle: result.fileName ?? 'Video lokal',
+        subtitle: result.fileName ?? 'Video online',
         icon: Icons.music_note_rounded,
         color: _TeacherCategory.lagu.color,
       );
@@ -898,21 +913,21 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     return [
       _TeacherActivity(
         title: 'Konten benda siap digunakan',
-        subtitle: '${app.objects.length} item lokal tersedia untuk belajar.',
+        subtitle: '${app.objects.length} item online tersedia untuk belajar.',
         timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
         icon: Icons.inventory_2_rounded,
         color: _TeacherCategory.benda.color,
       ),
       _TeacherActivity(
         title: 'Lagu anak siap diputar',
-        subtitle: '${app.songs.length} media lokal tersimpan.',
+        subtitle: '${app.songs.length} media online tersimpan.',
         timestamp: DateTime.now().subtract(const Duration(minutes: 12)),
         icon: Icons.music_video_rounded,
         color: _TeacherCategory.lagu.color,
       ),
       _TeacherActivity(
-        title: 'Dashboard offline aktif',
-        subtitle: 'Semua konten tetap bisa dikelola tanpa internet.',
+        title: 'Dashboard online aktif',
+        subtitle: 'Konten tersinkron dan siap diakses lewat web.',
         timestamp: DateTime.now().subtract(const Duration(hours: 1)),
         icon: Icons.cloud_done_rounded,
         color: const Color(0xff0EA5E9),
@@ -1359,6 +1374,7 @@ class _TeacherTopbar extends StatelessWidget {
     required this.onMenuTap,
     required this.onCollapseTap,
     required this.onQuickUpload,
+    required this.onSync,
   });
 
   final AppState app;
@@ -1367,6 +1383,7 @@ class _TeacherTopbar extends StatelessWidget {
   final VoidCallback onMenuTap;
   final VoidCallback? onCollapseTap;
   final VoidCallback onQuickUpload;
+  final VoidCallback onSync;
 
   @override
   Widget build(BuildContext context) {
@@ -1464,6 +1481,32 @@ class _TeacherTopbar extends StatelessWidget {
                     label: const Text('Quick Upload'),
                   ),
                 if (!mobile) const SizedBox(width: 12),
+                Tooltip(
+                  message: app.syncStatus,
+                  child: IconButton(
+                    onPressed: app.syncInProgress ? null : onSync,
+                    style: IconButton.styleFrom(
+                      backgroundColor: app.online
+                          ? const Color(0xffECFDF5)
+                          : const Color(0xffFFF7ED),
+                      foregroundColor: app.online
+                          ? const Color(0xff059669)
+                          : const Color(0xffEA580C),
+                    ),
+                    icon: app.syncInProgress
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2.4),
+                          )
+                        : Icon(
+                            app.online
+                                ? Icons.cloud_sync_rounded
+                                : Icons.cloud_off_rounded,
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 _TeacherProfilePill(
                   name: teacherName,
                   compact: mobile,
@@ -1918,12 +1961,12 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                           const SizedBox(height: 4),
                           Text(
                             _isSong
-                                ? 'Upload video lagu anak lokal untuk dashboard offline.'
+                                ? 'Upload video lagu anak untuk dashboard online.'
                                 : _isHuruf
                                 ? 'Atur abjad, contoh benda, dan gambar preview secara terpisah.'
                                 : _isAngka
                                 ? 'Atur bilangan, nama bilangan, dan gambar preview.'
-                                : 'Simpan benda baru beserta gambar lokalnya.',
+                                : 'Simpan benda baru beserta gambar untuk cloud.',
                             style: const TextStyle(
                               color: Color(0xff6D6A95),
                               fontWeight: FontWeight.w800,

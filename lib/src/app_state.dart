@@ -390,11 +390,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     letters.removeWhere(
       (entry) => entry.id == item.id || entry.letter == item.letter,
     );
-    if (hurfMastered.remove(item.letter)) {
-      progress['membaca'] = min(
-        100,
-        (hurfMastered.length / max(1, letters.length) * 100).round(),
-      );
+    if (hurfMastered.remove(progressMasteryKey(item.letter))) {
+      _refreshHurfProgress();
       await _saveAccount();
     }
     await _db.removeLetter(item);
@@ -441,11 +438,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     numbers.removeWhere(
       (entry) => entry.id == item.id || entry.number == item.number,
     );
-    if (angkaMastered.remove(item.number)) {
-      progress['angka'] = min(
-        100,
-        (angkaMastered.length / max(1, numbers.length) * 100).round(),
-      );
+    if (angkaMastered.remove(progressMasteryKey(item.number))) {
+      _refreshAngkaProgress();
       await _saveAccount();
     }
     await _db.removeNumber(item);
@@ -574,7 +568,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     } catch (error) {
       syncStatus = ApiErrorMapper.toMessage(
         error,
-        fallback: 'Tersimpan lokal. Sinkron tertunda.',
+        fallback: 'Perubahan tersimpan. Sinkron tertunda.',
       );
     } finally {
       syncInProgress = false;
@@ -601,7 +595,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     } catch (error) {
       syncStatus = ApiErrorMapper.toMessage(
         error,
-        fallback: 'Hapus lokal selesai. Sinkron cloud tertunda.',
+        fallback: 'Hapus selesai. Sinkron cloud tertunda.',
       );
     } finally {
       syncInProgress = false;
@@ -819,59 +813,57 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   bool _registerIqraViewed(IqraItem item) {
     final added = iqraMastered.add(iqraMasteryKey(item));
     if (!added) return false;
-    progress['iqra'] = min(
-      100,
-      (iqraMasteredCount(iqraMastered, iqraItems) /
-              max(1, iqraItems.length) *
-              100)
-          .round(),
-    );
+    _refreshIqraProgress();
     return true;
   }
 
   bool _registerHurfViewed(String letter) {
-    final added = hurfMastered.add(letter);
+    final added = hurfMastered.add(progressMasteryKey(letter));
     if (!added) return false;
-    progress['membaca'] = min(
-      100,
-      (hurfMastered.length / max(1, letters.length) * 100).round(),
-    );
+    _refreshHurfProgress();
     return true;
   }
 
   bool _registerAngkaViewed(String number) {
-    final added = angkaMastered.add(number);
+    final added = angkaMastered.add(progressMasteryKey(number));
     if (!added) return false;
-    progress['angka'] = min(
-      100,
-      (angkaMastered.length / max(1, numbers.length) * 100).round(),
-    );
+    _refreshAngkaProgress();
     return true;
   }
 
   bool _registerBendaViewed(String name) {
-    final added = bendaMastered.add(name);
+    final added = bendaMastered.add(progressMasteryKey(name));
     if (!added) return false;
-    progress['benda'] = min(
-      100,
-      (bendaMastered.length / max(1, objects.length) * 100).round(),
-    );
+    _refreshBendaProgress();
     return true;
   }
 
   void _refreshDerivedProgress() {
-    progress['membaca'] = min(
-      100,
-      (hurfMastered.length / max(1, letters.length) * 100).round(),
-    );
-    progress['angka'] = min(
-      100,
-      (angkaMastered.length / max(1, numbers.length) * 100).round(),
-    );
-    progress['benda'] = min(
-      100,
-      (bendaMastered.length / max(1, objects.length) * 100).round(),
-    );
+    _refreshHurfProgress();
+    _refreshAngkaProgress();
+    _refreshBendaProgress();
+    _refreshIqraProgress();
+  }
+
+  void _refreshHurfProgress() {
+    final valid = _validProgressKeys(letters.map((item) => item.letter));
+    _normalizeMastered(hurfMastered, valid, upperCase: true);
+    progress['membaca'] = _progressPercent(hurfMastered, valid);
+  }
+
+  void _refreshAngkaProgress() {
+    final valid = _validProgressKeys(numbers.map((item) => item.number));
+    _normalizeMastered(angkaMastered, valid);
+    progress['angka'] = _progressPercent(angkaMastered, valid);
+  }
+
+  void _refreshBendaProgress() {
+    final valid = _validProgressKeys(objects.map((item) => item.name));
+    _normalizeMastered(bendaMastered, valid);
+    progress['benda'] = _progressPercent(bendaMastered, valid);
+  }
+
+  void _refreshIqraProgress() {
     progress['iqra'] = min(
       100,
       (iqraMasteredCount(iqraMastered, iqraItems) /
@@ -879,6 +871,32 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
               100)
           .round(),
     );
+  }
+
+  Set<String> _validProgressKeys(Iterable<String> values) =>
+      values.map(progressMasteryKey).where((value) => value.isNotEmpty).toSet();
+
+  void _normalizeMastered(
+    Set<String> mastered,
+    Set<String> valid, {
+    bool upperCase = false,
+  }) {
+    final normalized = mastered
+        .map((value) {
+          final key = progressMasteryKey(value);
+          return upperCase ? key.toUpperCase() : key;
+        })
+        .where((value) => value.isNotEmpty && valid.contains(value))
+        .toSet();
+    mastered
+      ..clear()
+      ..addAll(normalized);
+  }
+
+  int _progressPercent(Set<String> mastered, Set<String> valid) {
+    if (valid.isEmpty) return 0;
+    final count = mastered.where(valid.contains).length;
+    return min(100, (count / valid.length * 100).round());
   }
 
   Future<void> _persistLearningOpen(LearnMode mode) async {

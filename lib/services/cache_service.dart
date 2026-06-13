@@ -18,7 +18,6 @@ class CacheService {
       local_repo.MaterialRepository(IsarDatabaseService.instance);
 
   Future<void> replaceFromCloud(List<LearningMaterialModel> materials) async {
-    if (materials.isEmpty) return;
     if (kIsWeb) return _webReplaceFromCloud(materials);
     final grouped = <String, List<LearningMaterialEntity>>{
       LearningCategories.huruf: [],

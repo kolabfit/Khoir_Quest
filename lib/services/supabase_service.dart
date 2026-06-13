@@ -18,10 +18,6 @@ class SupabaseService {
     await Supabase.initialize(
       url: SupabaseConfig.url,
       anonKey: SupabaseConfig.anonKey,
-      headers: {
-        'apikey': SupabaseConfig.anonKey,
-        'Authorization': 'Bearer ${SupabaseConfig.anonKey}',
-      },
     );
     _initialized = true;
   }
