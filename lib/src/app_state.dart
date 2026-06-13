@@ -148,18 +148,25 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
           cloudError = error;
         }
       }
-      var account = await _db.authenticate(
-        username: nextEmail,
-        password: password,
-        register: register,
-        autoCreate: autoCreate || (!register && cloudProfile != null),
-        role: nextRole,
-        childName: name?.trim().isNotEmpty == true ? name!.trim() : 'Teman',
-        gender: nextGender ?? gender,
-        themeId: themeId,
-        defaultProgress: progress,
-        defaultStars: stars,
-      );
+      UserAccount? account;
+      try {
+        account = await _db.authenticate(
+          username: nextEmail,
+          password: password,
+          register: register,
+          autoCreate: autoCreate || (!register && cloudProfile != null),
+          role: nextRole,
+          childName: name?.trim().isNotEmpty == true ? name!.trim() : 'Teman',
+          gender: nextGender ?? gender,
+          themeId: themeId,
+          defaultProgress: progress,
+          defaultStars: stars,
+        );
+      } catch (localError) {
+        if (cloudError == null || register) rethrow;
+        cloudProfile = await _cloudSync.currentProfile();
+        if (cloudProfile == null) rethrow;
+      }
       if (cloudProfile != null) {
         account = await _db.restoreCloudSession(
           username: cloudProfile.username.isEmpty
@@ -183,7 +190,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       } else if (cloudError != null) {
         // Lanjut pakai akun lokal bila login cloud gagal tetapi data lokal ada.
       }
-      _applyAccount(account);
+      _applyAccount(account!);
       tab = role == Role.teacher ? TabItem.akun : TabItem.main;
       _startAutoSync();
       await syncCloudContent(silent: true);

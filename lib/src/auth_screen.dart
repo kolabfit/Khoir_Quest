@@ -869,6 +869,11 @@ class _AuthInput extends StatelessWidget {
       child: TextField(
         controller: controller,
         obscureText: obscure,
+        cursorColor: const Color(0xff7D45F7),
+        style: const TextStyle(
+          color: Color(0xff2B2850),
+          fontWeight: FontWeight.w900,
+        ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(

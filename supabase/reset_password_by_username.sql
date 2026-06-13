@@ -43,7 +43,7 @@ begin
     email = target_email,
     encrypted_password = extensions.crypt(new_password, extensions.gen_salt('bf')),
     raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('username', normalized_username),
-    recovery_token = null,
+    recovery_token = '',
     recovery_sent_at = null,
     updated_at = timezone('utc', now())
   where id = target_user_id;

@@ -563,7 +563,10 @@ class _SettingsSection extends StatelessWidget {
         itemCount: settings.length,
         itemBuilder: (_, i) {
           final data = settings[i];
-          final disabled = data.title == 'Notifikasi';
+          final disabled =
+              data.title == 'Notifikasi' ||
+              data.title == 'Pengaturan Anak' ||
+              data.title == 'Bahasa';
           final action = switch (data.title) {
             'Profil Saya' => onProfileTap,
             'Keamanan' => onSecurityTap,

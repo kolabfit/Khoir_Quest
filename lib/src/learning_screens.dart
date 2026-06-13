@@ -1,19 +1,5 @@
 part of '../main.dart';
 
-Future<void> speakIndonesian(FlutterTts tts, String text) async {
-  await tts.setLanguage('id-ID');
-  await tts.setSpeechRate(.45);
-  await tts.setPitch(1.05);
-  await tts.speak(text);
-}
-
-Future<void> speakArabic(FlutterTts tts, String text) async {
-  await tts.setLanguage('ar');
-  await tts.setSpeechRate(.35);
-  await tts.setPitch(1.1);
-  await tts.speak(text);
-}
-
 class BelajarScreen extends ConsumerStatefulWidget {
   const BelajarScreen({super.key});
 
@@ -607,47 +593,19 @@ class HurufScreen extends ConsumerStatefulWidget {
 }
 
 class _HurufScreenState extends ConsumerState<HurufScreen> {
-  final tts = FlutterTts();
-  final speech = stt.SpeechToText();
   final search = TextEditingController();
   int pageIndex = 0;
-  bool seru = false;
-  bool speechReady = false;
-  bool listening = false;
-  String heard = '';
-  late String voiceFeedback;
   String category = 'Semua';
-
-  @override
-  void initState() {
-    super.initState();
-    voiceFeedback = tr(context, 'Tekan mic pada kartu lalu ucapkan katanya.');
-    initSpeech();
-  }
-
-  Future<void> initSpeech() async {
-    speechReady = await speech.initialize();
-    if (mounted) setState(() {});
-  }
 
   @override
   void dispose() {
     search.dispose();
-    speech.stop();
-    tts.stop();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final app = ref.watch(appStateProvider);
-    if (seru) {
-      return ModeSeruScreen(
-        category: 'huruf',
-        title: tr(context, 'Kuis Seru'),
-        onClose: () => setState(() => seru = false),
-      );
-    }
     final query = search.text.toLowerCase().trim();
     final letterItems = app.letters;
     final filtered = letterItems.where((item) {
@@ -683,13 +641,9 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
       itemCount: filtered.length,
       pageIndex: pageIndex,
       onPage: (next) => setState(() => pageIndex = next),
-      heard: heard,
-      voiceFeedback: voiceFeedback,
-      listening: listening,
       itemBuilder: (context, itemIndex, color) {
         final item = filtered[itemIndex];
         final obj = item.objects.first;
-        final letterPronunciation = _letterPronunciation(item.letter);
         final mastered = app.hurfMastered.contains(item.letter);
         return _PremiumLearningCard(
           color: color,
@@ -700,92 +654,10 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
           badge: obj.name.toLowerCase(),
           kind: _PremiumCardKind.letter,
           mastered: mastered,
-          onAudio: () async {
-            await ref.read(appStateProvider).markHurfViewed(item.letter);
-            await speakIndonesian(tts, letterPronunciation);
-          },
-          onMic: () => listenForProgress(
-            expected: letterPronunciation,
-            successText: 'Pintar! ${item.letter} cocok.',
-            masteryKey: item.letter,
-            masteryType: 'huruf',
-          ),
-          listening: listening,
+          onTap: () => ref.read(appStateProvider).markHurfViewed(item.letter),
         );
       },
     );
-  }
-
-  Future<void> listenForProgress({
-    required String expected,
-    required String successText,
-    String? masteryKey,
-    String? masteryType,
-  }) async {
-    if (!speechReady) {
-      setState(() => voiceFeedback = 'Mic belum siap. Coba di device Android.');
-      return;
-    }
-    setState(() {
-      listening = true;
-      heard = '';
-      voiceFeedback = 'Mendengarkan... ucapkan "$expected".';
-    });
-
-    bool processed = false;
-    try {
-      await speech.listen(
-        localeId: 'id_ID',
-        listenFor: const Duration(seconds: 5),
-        pauseFor: const Duration(seconds: 2),
-        onResult: (result) async {
-          if (!mounted || processed) return;
-          setState(() => heard = result.recognizedWords);
-          if (!result.finalResult) return;
-
-          processed = true;
-          await speech.stop();
-
-          final ok = _voiceMatches(result.recognizedWords, expected);
-          if (!mounted) return;
-
-          if (ok) {
-            if (masteryKey != null && masteryType == 'huruf') {
-              await ref.read(appStateProvider).markHurfSuccess(masteryKey);
-            }
-            await speakIndonesian(tts, 'Hebat, benar');
-          }
-
-          if (mounted) {
-            setState(() {
-              listening = false;
-              voiceFeedback = ok
-                  ? successText
-                  : 'Hampir benar. Coba ucapkan "$expected" lagi.';
-            });
-          }
-        },
-      );
-
-      // Backup timeout
-      await Future<void>.delayed(const Duration(seconds: 6));
-      if (mounted && !processed) {
-        await speech.stop();
-        setState(() {
-          listening = false;
-          voiceFeedback = 'Timeout. Coba lagi, ucapkan "$expected".';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          listening = false;
-          voiceFeedback = 'Error mic. Coba lagi.';
-        });
-      }
-    } finally {
-      await speech.stop();
-    }
   }
 }
 
@@ -797,47 +669,19 @@ class AngkaScreen extends ConsumerStatefulWidget {
 }
 
 class _AngkaScreenState extends ConsumerState<AngkaScreen> {
-  final tts = FlutterTts();
-  final speech = stt.SpeechToText();
   final search = TextEditingController();
   int pageIndex = 0;
-  bool seru = false;
-  bool speechReady = false;
-  bool listening = false;
-  String heard = '';
-  late String voiceFeedback;
   String category = 'Semua';
-
-  @override
-  void initState() {
-    super.initState();
-    voiceFeedback = tr(context, 'Tekan mic pada kartu lalu ucapkan angkanya.');
-    initSpeech();
-  }
-
-  Future<void> initSpeech() async {
-    speechReady = await speech.initialize();
-    if (mounted) setState(() {});
-  }
 
   @override
   void dispose() {
     search.dispose();
-    speech.stop();
-    tts.stop();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final app = ref.watch(appStateProvider);
-    if (seru) {
-      return ModeSeruScreen(
-        category: 'angka',
-        title: tr(context, 'Kuis Seru'),
-        onClose: () => setState(() => seru = false),
-      );
-    }
     final query = search.text.toLowerCase().trim();
     final numberItems = app.numbers;
     final filtered = numberItems.where((item) {
@@ -875,9 +719,6 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
       itemCount: filtered.length,
       pageIndex: pageIndex,
       onPage: (next) => setState(() => pageIndex = next),
-      heard: heard,
-      voiceFeedback: voiceFeedback,
-      listening: listening,
       itemBuilder: (context, itemIndex, color) {
         final item = filtered[itemIndex];
         final mastered = app.angkaMastered.contains(item.number);
@@ -890,92 +731,10 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
           badge: _numberBadge(item.number),
           kind: _PremiumCardKind.number,
           mastered: mastered,
-          onAudio: () async {
-            await ref.read(appStateProvider).markAngkaViewed(item.number);
-            await speakIndonesian(tts, item.name);
-          },
-          onMic: () => listenForProgress(
-            expected: item.name,
-            successText: 'Mantap! ${item.number} benar.',
-            masteryKey: item.number,
-            masteryType: 'angka',
-          ),
-          listening: listening,
+          onTap: () => ref.read(appStateProvider).markAngkaViewed(item.number),
         );
       },
     );
-  }
-
-  Future<void> listenForProgress({
-    required String expected,
-    required String successText,
-    String? masteryKey,
-    String? masteryType,
-  }) async {
-    if (!speechReady) {
-      setState(() => voiceFeedback = 'Mic belum siap. Coba di device Android.');
-      return;
-    }
-    setState(() {
-      listening = true;
-      heard = '';
-      voiceFeedback = 'Mendengarkan... ucapkan "$expected".';
-    });
-
-    bool processed = false;
-    try {
-      await speech.listen(
-        localeId: 'id_ID',
-        listenFor: const Duration(seconds: 5),
-        pauseFor: const Duration(seconds: 2),
-        onResult: (result) async {
-          if (!mounted || processed) return;
-          setState(() => heard = result.recognizedWords);
-          if (!result.finalResult) return;
-
-          processed = true;
-          await speech.stop();
-
-          final ok = _voiceMatches(result.recognizedWords, expected);
-          if (!mounted) return;
-
-          if (ok) {
-            if (masteryKey != null && masteryType == 'angka') {
-              await ref.read(appStateProvider).markAngkaSuccess(masteryKey);
-            }
-            await speakIndonesian(tts, 'Hebat, benar');
-          }
-
-          if (mounted) {
-            setState(() {
-              listening = false;
-              voiceFeedback = ok
-                  ? successText
-                  : 'Hampir benar. Coba ucapkan "$expected" lagi.';
-            });
-          }
-        },
-      );
-
-      // Backup timeout: stop if not processed after 6 seconds
-      await Future<void>.delayed(const Duration(seconds: 6));
-      if (mounted && !processed) {
-        await speech.stop();
-        setState(() {
-          listening = false;
-          voiceFeedback = 'Timeout. Coba lagi, ucapkan "$expected".';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          listening = false;
-          voiceFeedback = 'Error mic. Coba lagi.';
-        });
-      }
-    } finally {
-      await speech.stop();
-    }
   }
 }
 
@@ -987,50 +746,19 @@ class BendaScreen extends ConsumerStatefulWidget {
 }
 
 class _BendaScreenState extends ConsumerState<BendaScreen> {
-  final tts = FlutterTts();
-  final speech = stt.SpeechToText();
   final search = TextEditingController();
   int pageIndex = 0;
-  bool seru = false;
-  bool speechReady = false;
-  bool listening = false;
-  String heard = '';
-  late String voiceFeedback;
   String category = 'Semua';
-
-  @override
-  void initState() {
-    super.initState();
-    voiceFeedback = tr(
-      context,
-      'Tekan mic pada kartu lalu ucapkan nama bendanya.',
-    );
-    initSpeech();
-  }
-
-  Future<void> initSpeech() async {
-    speechReady = await speech.initialize();
-    if (mounted) setState(() {});
-  }
 
   @override
   void dispose() {
     search.dispose();
-    speech.stop();
-    tts.stop();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final app = ref.watch(appStateProvider);
-    if (seru) {
-      return ModeSeruScreen(
-        category: 'benda',
-        title: tr(context, 'Petualangan Seru'),
-        onClose: () => setState(() => seru = false),
-      );
-    }
     final objects = app.objects;
     final query = search.text.toLowerCase().trim();
     final filtered = objects.where((item) {
@@ -1062,9 +790,6 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
       itemCount: filtered.length,
       pageIndex: pageIndex,
       onPage: (next) => setState(() => pageIndex = next),
-      heard: heard,
-      voiceFeedback: voiceFeedback,
-      listening: listening,
       itemBuilder: (context, itemIndex, color) {
         final item = filtered[itemIndex];
         final favoriteId = item.id.isEmpty ? 'benda:${item.name}' : item.id;
@@ -1082,97 +807,15 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
           favorite: fav,
           onFavorite: () =>
               ref.read(appStateProvider).toggleFavorite(favoriteId),
-          onAudio: () async {
-            await ref.read(appStateProvider).markBendaViewed(item.name);
-            await speakIndonesian(tts, item.name);
-          },
-          onMic: () => listenForProgress(
-            expected: item.name,
-            successText: 'Keren! ${item.name} cocok.',
-            masteryKey: item.name,
-            masteryType: 'benda',
-          ),
-          listening: listening,
+          onTap: () => ref.read(appStateProvider).markBendaViewed(item.name),
         );
       },
     );
   }
-
-  Future<void> listenForProgress({
-    required String expected,
-    required String successText,
-    String? masteryKey,
-    String? masteryType,
-  }) async {
-    if (!speechReady) {
-      setState(() => voiceFeedback = 'Mic belum siap. Coba di device Android.');
-      return;
-    }
-    setState(() {
-      listening = true;
-      heard = '';
-      voiceFeedback = 'Mendengarkan... ucapkan "$expected".';
-    });
-
-    bool processed = false;
-    try {
-      await speech.listen(
-        localeId: 'id_ID',
-        listenFor: const Duration(seconds: 5),
-        pauseFor: const Duration(seconds: 2),
-        onResult: (result) async {
-          if (!mounted || processed) return;
-          setState(() => heard = result.recognizedWords);
-          if (!result.finalResult) return;
-
-          processed = true;
-          await speech.stop();
-
-          final ok = _voiceMatches(result.recognizedWords, expected);
-          if (!mounted) return;
-
-          if (ok) {
-            if (masteryKey != null && masteryType == 'benda') {
-              await ref.read(appStateProvider).markBendaSuccess(masteryKey);
-            }
-            await speakIndonesian(tts, 'Hebat, benar');
-          }
-
-          if (mounted) {
-            setState(() {
-              listening = false;
-              voiceFeedback = ok
-                  ? successText
-                  : 'Hampir benar. Coba ucapkan "$expected" lagi.';
-            });
-          }
-        },
-      );
-
-      // Backup timeout: stop if not processed after 6 seconds
-      await Future<void>.delayed(const Duration(seconds: 6));
-      if (mounted && !processed) {
-        await speech.stop();
-        setState(() {
-          listening = false;
-          voiceFeedback = 'Timeout. Coba lagi, ucapkan "$expected".';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          listening = false;
-          voiceFeedback = 'Error mic. Coba lagi.';
-        });
-      }
-    } finally {
-      await speech.stop();
-    }
-  }
 }
 
 typedef _PremiumItemBuilder =
-    Widget Function(BuildContext context, int index, Color color);
+    Widget Function(BuildContext context, int itemIndex, Color color);
 
 enum _PremiumCardKind { letter, number, object }
 
@@ -1194,9 +837,6 @@ class _PremiumLearningScaffold extends StatelessWidget {
     required this.itemCount,
     required this.pageIndex,
     required this.onPage,
-    required this.heard,
-    required this.voiceFeedback,
-    required this.listening,
     required this.itemBuilder,
   });
 
@@ -1216,9 +856,6 @@ class _PremiumLearningScaffold extends StatelessWidget {
   final int itemCount;
   final int pageIndex;
   final ValueChanged<int> onPage;
-  final String heard;
-  final String voiceFeedback;
-  final bool listening;
   final _PremiumItemBuilder itemBuilder;
 
   static const colors = [
@@ -1270,13 +907,6 @@ class _PremiumLearningScaffold extends StatelessWidget {
               onChip: onChip,
             ),
             const SizedBox(height: 14),
-            _VoiceProgressPanel(
-              heard: heard,
-              feedback: voiceFeedback,
-              listening: listening,
-              accent: accent,
-            ),
-            const SizedBox(height: 14),
             if (visible.isEmpty)
               _PremiumEmptyState(accent: accent)
             else
@@ -1307,8 +937,6 @@ class _PremiumLearningScaffold extends StatelessWidget {
               onPrev: () => onPage(max(0, page - 1)),
               onNext: () => onPage(min(pages - 1, page + 1)),
             ),
-            const SizedBox(height: 16),
-            _LearningMotivationPanel(accent: accent),
           ],
         ),
       ],
@@ -1646,9 +1274,7 @@ class _PremiumLearningCard extends StatelessWidget {
     required this.imageUrl,
     required this.badge,
     required this.kind,
-    required this.onAudio,
-    required this.onMic,
-    required this.listening,
+    required this.onTap,
     this.favorite = false,
     this.onFavorite,
     this.mastered = false,
@@ -1661,9 +1287,7 @@ class _PremiumLearningCard extends StatelessWidget {
   final String imageUrl;
   final String badge;
   final _PremiumCardKind kind;
-  final VoidCallback onAudio;
-  final VoidCallback onMic;
-  final bool listening;
+  final VoidCallback onTap;
   final bool favorite;
   final VoidCallback? onFavorite;
   final bool mastered;
@@ -1681,7 +1305,7 @@ class _PremiumLearningCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onAudio,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(28),
         child: Ink(
           padding: const EdgeInsets.all(12),
@@ -1853,64 +1477,6 @@ class _PremiumLearningCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: onMic,
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: listening
-                                ? Colors.redAccent
-                                : const Color(0xff32C653),
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: listening ? 20 : 12,
-                                color:
-                                    (listening
-                                            ? Colors.redAccent
-                                            : const Color(0xff32C653))
-                                        .withValues(alpha: .28),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            listening
-                                ? Icons.graphic_eq_rounded
-                                : Icons.mic_rounded,
-                            color: Colors.white,
-                            size: 19,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xff1498BD),
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 12,
-                              color: const Color(
-                                0xff1498BD,
-                              ).withValues(alpha: .28),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.volume_up_rounded,
-                          color: Colors.white,
-                          size: 19,
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ],
@@ -1918,102 +1484,6 @@ class _PremiumLearningCard extends StatelessWidget {
         ),
       ),
     ).animate().fadeIn(duration: 250.ms).slideY(begin: .05);
-  }
-}
-
-class _VoiceProgressPanel extends StatelessWidget {
-  const _VoiceProgressPanel({
-    required this.heard,
-    required this.feedback,
-    required this.listening,
-    required this.accent,
-  });
-
-  final String heard;
-  final String feedback;
-  final bool listening;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = _themeOf(context);
-    return AnimatedContainer(
-      duration: 220.ms,
-      padding: const EdgeInsets.all(14),
-      decoration: t.night
-          ? nightGlassDecoration(
-              borderColor: listening ? accent : NightPalette.cyan,
-              radius: 26,
-            )
-          : BoxDecoration(
-              color: Colors.white.withValues(alpha: .90),
-              borderRadius: BorderRadius.circular(26),
-              border: Border.all(
-                color: listening ? accent.withValues(alpha: .45) : Colors.white,
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: listening ? 26 : 18,
-                  offset: const Offset(0, 10),
-                  color: accent.withValues(alpha: listening ? .22 : .10),
-                ),
-              ],
-            ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: listening ? Colors.redAccent : accent,
-            ),
-            child: Icon(
-              listening
-                  ? Icons.graphic_eq_rounded
-                  : Icons.record_voice_over_rounded,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  feedback,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: t.night
-                        ? NightPalette.text
-                        : const Color(0xff293464),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  heard.isEmpty
-                      ? 'Kalimat terdengar akan muncul di sini.'
-                      : 'Terdengar: "$heard"',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: t.night
-                        ? NightPalette.muted
-                        : const Color(0xff66708F),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -2064,137 +1534,6 @@ class _PremiumPagination extends StatelessWidget {
       ),
     ],
   );
-}
-
-class _LearningMotivationPanel extends StatelessWidget {
-  const _LearningMotivationPanel({required this.accent});
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = _themeOf(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: t.night
-          ? nightGlassDecoration(borderColor: accent)
-          : BoxDecoration(
-              color: Colors.white.withValues(alpha: .90),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 22,
-                  offset: const Offset(0, 12),
-                  color: accent.withValues(alpha: .13),
-                ),
-              ],
-            ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Image.asset(
-                'assets/images/Anak_hebat.png',
-                width: 76,
-                height: 76,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Belajar jadi mudah!',
-                      style: TextStyle(
-                        color: t.night
-                            ? NightPalette.text
-                            : const Color(0xff293464),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'Dengarkan suara, lihat gambar, dan ingat materinya!',
-                      style: TextStyle(
-                        color: t.night
-                            ? NightPalette.muted
-                            : const Color(0xff66708F),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _LearningMiniFeature(
-                Icons.volume_up_rounded,
-                'Dengar Suara',
-                accent,
-              ),
-              const SizedBox(width: 8),
-              _LearningMiniFeature(
-                Icons.image_rounded,
-                'Lihat Gambar',
-                const Color(0xffFF8F1F),
-              ),
-              const SizedBox(width: 8),
-              _LearningMiniFeature(
-                Icons.psychology_rounded,
-                'Ingat & Pahami',
-                const Color(0xff32C653),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LearningMiniFeature extends StatelessWidget {
-  const _LearningMiniFeature(this.icon, this.text, this.color);
-  final IconData icon;
-  final String text;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = _themeOf(context);
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: .10),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 5),
-            Text(
-              text,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: t.night ? NightPalette.text : const Color(0xff4B5574),
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _PremiumRoundButton extends StatelessWidget {
@@ -2375,60 +1714,6 @@ String _numberBadge(String number) {
   return n.isEven ? 'genap' : 'ganjil';
 }
 
-bool _voiceMatches(String heard, String expected) {
-  final cleanHeard = _cleanVoiceText(heard);
-  final cleanExpected = _cleanVoiceText(expected);
-  if (cleanHeard.isEmpty || cleanExpected.isEmpty) return false;
-  // Validasi lebih ketat: harus ada pencocokan minimum 50%
-  final expectedWords = cleanExpected
-      .split(' ')
-      .where((w) => w.length > 1)
-      .toList();
-  if (expectedWords.isEmpty) return cleanHeard.contains(cleanExpected);
-  final matchedWords = expectedWords
-      .where((w) => cleanHeard.contains(w))
-      .length;
-  return matchedWords >= (expectedWords.length / 2).ceil();
-}
-
-String _cleanVoiceText(String value) => value
-    .toLowerCase()
-    .replaceAll(RegExp(r'[^a-z0-9 ]'), ' ')
-    .replaceAll(RegExp(r'\s+'), ' ')
-    .trim();
-
-String _letterPronunciation(String letter) {
-  final map = {
-    'A': 'a',
-    'B': 'be',
-    'C': 'ce',
-    'D': 'de',
-    'E': 'e',
-    'F': 'ef',
-    'G': 'ge',
-    'H': 'ha',
-    'I': 'i',
-    'J': 'je',
-    'K': 'ka',
-    'L': 'el',
-    'M': 'em',
-    'N': 'en',
-    'O': 'o',
-    'P': 'pe',
-    'Q': 'ku',
-    'R': 'er',
-    'S': 'es',
-    'T': 'te',
-    'U': 'u',
-    'V': 've',
-    'W': 'dabel yu',
-    'X': 'eks',
-    'Y': 'wai',
-    'Z': 'zet',
-  };
-  return map[letter.toUpperCase()] ?? letter.toLowerCase();
-}
-
 class IqraLesson extends ConsumerStatefulWidget {
   const IqraLesson({
     required this.readingHelp,
@@ -2443,41 +1728,23 @@ class IqraLesson extends ConsumerStatefulWidget {
 }
 
 class _IqraLessonState extends ConsumerState<IqraLesson> {
-  final tts = FlutterTts();
-  final player = AudioPlayer();
-  final page = PageController();
   late final ConfettiController confetti;
   int index = 0;
-  bool seru = false;
-  bool slow = false;
-  bool listening = false;
-  String feedback = '';
 
   @override
   void initState() {
     super.initState();
     confetti = ConfettiController(duration: const Duration(seconds: 2));
-    initTts();
-  }
-
-  Future<void> initTts() async {
-    await tts.setLanguage('ar');
   }
 
   @override
   void dispose() {
-    page.dispose();
     confetti.dispose();
-    player.dispose();
-    tts.stop();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (seru) {
-      return IqraFunMode(onClose: () => setState(() => seru = false));
-    }
     final app = ref.watch(appStateProvider);
     final iqraItems = app.iqraItems;
     final progress = app.progress['iqra'] ?? 0;
@@ -2491,10 +1758,10 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
               _IqraHeroSection(
                 app: app,
                 latinEnabled: widget.readingHelp,
-                slow: slow,
+                slow: false,
                 onBack: () =>
                     ref.read(appStateProvider).openLearn(LearnMode.menu),
-                onSettings: () => setState(() => slow = !slow),
+                onSettings: widget.onToggle,
               ),
               const SizedBox(height: 14),
               _IqraProgressCard(
@@ -2509,27 +1776,11 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
                 selectedIndex: index,
                 latinEnabled: widget.readingHelp,
                 mastered: app.iqraMastered,
-                listening: listening,
-                feedback: feedback,
+                feedback: '',
                 favorites: app.favorites,
                 onSelect: (i) {
-                  setState(() {
-                    index = i;
-                    feedback = '';
-                  });
-                  ref.read(appStateProvider).markIqraViewed(iqraItems[i]);
-                  playIqra(iqraItems[i], autoplay: true);
-                },
-                onAudio: (i) async {
-                  setState(() {
-                    index = i;
-                    feedback = '';
-                  });
-                  await playIqra(iqraItems[i]);
-                },
-                onPractice: (i) async {
                   setState(() => index = i);
-                  await practiceIqra(iqraItems[i]);
+                  ref.read(appStateProvider).markIqraViewed(iqraItems[i]);
                 },
                 onFavorite: (item) {
                   ref
@@ -2549,129 +1800,6 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
           ),
         ),
       ],
-    );
-  }
-
-  void goPage(int target) {
-    final total = ref.read(appStateProvider).iqraItems.length;
-    if (total <= 0) return;
-    final next = (target + total) % total;
-    page.animateToPage(next, duration: 320.ms, curve: Curves.easeOutCubic);
-  }
-
-  Future<void> playIqra(IqraItem item, {bool autoplay = false}) async {
-    await player.setSpeed(slow ? .72 : 1);
-    if (item.audioUrl.isNotEmpty) {
-      try {
-        await player.setUrl(item.audioUrl);
-        await player.play();
-      } catch (_) {
-        await _speakIqra(item.char);
-      }
-    } else {
-      await _speakIqra(item.char);
-    }
-  }
-
-  Future<void> _speakIqra(String text) async {
-    await tts.setLanguage('ar');
-    await tts.setPitch(1.1);
-    await tts.setSpeechRate(slow ? .30 : .35);
-    await tts.speak(text);
-  }
-
-  Future<void> practiceIqra(IqraItem item) async {
-    setState(() {
-      listening = true;
-      feedback = 'Dengarkan suara...';
-    });
-    await _speakIqra(item.char);
-    await Future<void>.delayed(1200.ms);
-
-    if (!mounted) return;
-
-    final speech = stt.SpeechToText();
-    try {
-      final initialized = await speech.initialize(
-        onError: (_) {},
-        onStatus: (_) {},
-      );
-      if (!initialized) throw Exception('Speech init failed');
-
-      setState(() => feedback = 'Mendengarkan...');
-      await speech.listen(
-        localeId: 'ar_SA',
-        listenFor: const Duration(seconds: 6),
-      );
-      await Future<void>.delayed(6500.ms);
-
-      if (!mounted) return;
-      speech.stop();
-      final heard = speech.lastRecognizedWords;
-      final ok = _voiceMatches(heard, item.latin);
-
-      if (ok) {
-        confetti.play();
-        setState(() => feedback = 'MasyaAllah, benar!');
-        await _speakIqra(item.char);
-        await ref.read(appStateProvider).markIqraSuccess(item);
-      } else {
-        setState(
-          () => feedback = heard.isEmpty
-              ? 'Coba lagi, suara kurang jelas.'
-              : 'Coba lagi, dengarkan pelan ya.',
-        );
-        await Future<void>.delayed(800.ms);
-        if (mounted) await playIqra(item);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => feedback = 'Error: ${e.toString().substring(0, 20)}');
-      }
-    } finally {
-      speech.stop();
-      if (mounted) setState(() => listening = false);
-    }
-  }
-}
-
-class _MicButton extends StatelessWidget {
-  const _MicButton({required this.listening, required this.onTap});
-  final bool listening;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = listening ? Colors.redAccent : const Color(0xff7B3FB3);
-    return GestureDetector(
-      onTap: onTap,
-      child:
-          Container(
-                width: 68,
-                height: 68,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color,
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: listening ? 38 : 22,
-                      spreadRadius: listening ? 8 : 0,
-                      color: color.withValues(alpha: .36),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  listening ? Icons.graphic_eq_rounded : Icons.mic_rounded,
-                  color: Colors.white,
-                  size: 34,
-                ),
-              )
-              .animate(target: listening ? 1 : 0)
-              .scale(
-                begin: const Offset(1, 1),
-                end: const Offset(1.08, 1.08),
-                duration: 520.ms,
-              ),
     );
   }
 }
@@ -3185,11 +2313,8 @@ class _IqraCatalogSection extends StatelessWidget {
     required this.latinEnabled,
     required this.mastered,
     required this.favorites,
-    required this.listening,
     required this.feedback,
     required this.onSelect,
-    required this.onAudio,
-    required this.onPractice,
     required this.onFavorite,
   });
 
@@ -3198,11 +2323,8 @@ class _IqraCatalogSection extends StatelessWidget {
   final bool latinEnabled;
   final Set<String> mastered;
   final Set<String> favorites;
-  final bool listening;
   final String feedback;
   final ValueChanged<int> onSelect;
-  final ValueChanged<int> onAudio;
-  final ValueChanged<int> onPractice;
   final ValueChanged<IqraItem> onFavorite;
 
   @override
@@ -3236,10 +2358,7 @@ class _IqraCatalogSection extends StatelessWidget {
                   latinEnabled: latinEnabled,
                   mastered: isIqraMastered(mastered, item),
                   favorite: favorites.contains('iqra:${item.latin}'),
-                  listening: listening && selectedIndex == i,
                   onTap: () => onSelect(i),
-                  onAudio: () => onAudio(i),
-                  onPractice: () => onPractice(i),
                   onFavorite: () => onFavorite(item),
                 );
               },
@@ -3278,10 +2397,7 @@ class _IqraLetterCard extends StatelessWidget {
     required this.latinEnabled,
     required this.mastered,
     required this.favorite,
-    required this.listening,
     required this.onTap,
-    required this.onAudio,
-    required this.onPractice,
     required this.onFavorite,
   });
 
@@ -3291,10 +2407,7 @@ class _IqraLetterCard extends StatelessWidget {
   final bool latinEnabled;
   final bool mastered;
   final bool favorite;
-  final bool listening;
   final VoidCallback onTap;
-  final VoidCallback onAudio;
-  final VoidCallback onPractice;
   final VoidCallback onFavorite;
 
   Color get statusColor {
@@ -3311,7 +2424,7 @@ class _IqraLetterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scale = listening ? 1.04 : 1.0;
+    const scale = 1.0;
     return AnimatedScale(
       scale: scale,
       duration: 220.ms,
@@ -3332,7 +2445,7 @@ class _IqraLetterCard extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  blurRadius: selected || listening ? 26 : 16,
+                  blurRadius: selected ? 26 : 16,
                   offset: const Offset(0, 10),
                   color: statusColor.withValues(alpha: selected ? .24 : .12),
                 ),
@@ -3417,26 +2530,6 @@ class _IqraLetterCard extends StatelessWidget {
                     ),
                   ),
                 const Spacer(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _IqraRoundAction(
-                      icon: Icons.volume_up_rounded,
-                      color: statusColor,
-                      onTap: onAudio,
-                    ),
-                    const SizedBox(width: 8),
-                    _IqraRoundAction(
-                      icon: listening
-                          ? Icons.graphic_eq_rounded
-                          : Icons.mic_rounded,
-                      color: listening
-                          ? Colors.redAccent
-                          : const Color(0xff1498BD),
-                      onTap: onPractice,
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -3444,33 +2537,6 @@ class _IqraLetterCard extends StatelessWidget {
       ),
     ).animate().fadeIn(duration: 260.ms).slideY(begin: .05);
   }
-}
-
-class _IqraRoundAction extends StatelessWidget {
-  const _IqraRoundAction({
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: color,
-    shape: const CircleBorder(),
-    child: InkWell(
-      customBorder: const CircleBorder(),
-      onTap: onTap,
-      child: SizedBox(
-        width: 34,
-        height: 34,
-        child: Icon(icon, color: Colors.white, size: 19),
-      ),
-    ),
-  );
 }
 
 class _IqraSectionCard extends StatelessWidget {
@@ -3558,438 +2624,4 @@ class _IqraSectionCard extends StatelessWidget {
       ],
     ),
   ).animate().fadeIn(duration: 320.ms).slideY(begin: .04);
-}
-
-class IqraFunMode extends ConsumerStatefulWidget {
-  const IqraFunMode({required this.onClose, super.key});
-  final VoidCallback onClose;
-
-  @override
-  ConsumerState<IqraFunMode> createState() => _IqraFunModeState();
-}
-
-class _IqraFunModeState extends ConsumerState<IqraFunMode> {
-  final tts = FlutterTts();
-  late final ConfettiController confetti;
-  int index = 0;
-  bool listening = false;
-  String feedback = 'Tekan mic lalu baca huruf.';
-
-  @override
-  void initState() {
-    super.initState();
-    confetti = ConfettiController(duration: const Duration(seconds: 2));
-    index = 0;
-    tts.setLanguage('ar');
-  }
-
-  @override
-  void dispose() {
-    confetti.dispose();
-    tts.stop();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final app = ref.watch(appStateProvider);
-    final iqraItems = app.iqraItems.isEmpty ? iqraData : app.iqraItems;
-    final safeIndex = index % iqraItems.length;
-    final item = iqraItems[safeIndex];
-    return PagePad(
-      child: Stack(
-        children: [
-          ListView(
-            children: [
-              Row(
-                children: [
-                  IconButton.filledTonal(
-                    onPressed: widget.onClose,
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Mode Seru Iqra',
-                      style: sectionTitle(
-                        context,
-                      ).copyWith(color: const Color(0xff7B3FB3)),
-                    ),
-                  ),
-                  RewardPill(stars: app.stars),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xffDDFBE8),
-                      Color(0xffFFF3CF),
-                      Color(0xffF2E6FF),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(38),
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: softShadow,
-                ),
-                child: Column(
-                  children: [
-                    CircularProgressIndicator(
-                      value: (app.progress['iqra'] ?? 0) / 100,
-                      strokeWidth: 12,
-                      backgroundColor: Colors.white.withValues(alpha: .45),
-                      color: const Color(0xff35C88A),
-                    ),
-                    const SizedBox(height: 18),
-                    Image.asset(
-                          'assets/images/Anak_hebat.png',
-                          width: 118,
-                          height: 118,
-                        )
-                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                        .moveY(begin: -6, end: 6),
-                    const SizedBox(height: 10),
-                    Text(
-                      item.char,
-                      style: const TextStyle(
-                        fontSize: 142,
-                        height: .95,
-                        fontFamily: 'serif',
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xff2E7D61),
-                      ),
-                    ),
-                    Text(
-                      item.latin,
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xff7B3FB3),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      feedback,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(height: 12),
-                    AudioBars(
-                      color: listening
-                          ? Colors.redAccent
-                          : const Color(0xff7B3FB3),
-                    ),
-                    const SizedBox(height: 18),
-                    _MicButton(listening: listening, onTap: listenOffline),
-                    const SizedBox(height: 12),
-                    TextButton.icon(
-                      onPressed: next,
-                      icon: const Icon(Icons.shuffle_rounded),
-                      label: const Text('Huruf lain'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 110),
-            ],
-          ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: confetti,
-              blastDirectionality: BlastDirectionality.explosive,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> listenOffline() async {
-    final iqraItems = ref.read(appStateProvider).iqraItems.isEmpty
-        ? iqraData
-        : ref.read(appStateProvider).iqraItems;
-    final item = iqraItems[index % iqraItems.length];
-    setState(() {
-      listening = true;
-      feedback = 'Validasi offline aktif...';
-    });
-    await Future<void>.delayed(900.ms);
-    final ok = Random().nextInt(6) != 0;
-    if (!mounted) return;
-    if (ok) {
-      confetti.play();
-      setState(() {
-        listening = false;
-        feedback = 'Benar! Badge bertambah.';
-      });
-      await speakArabic(tts, item.char);
-      await ref.read(appStateProvider).markIqraSuccess(item);
-      next(delay: true);
-    } else {
-      setState(() {
-        listening = false;
-        feedback = 'Hampir benar. Dengarkan hint pelan.';
-      });
-      await speakArabic(tts, item.char);
-    }
-  }
-
-  void next({bool delay = false}) async {
-    if (delay) await Future<void>.delayed(700.ms);
-    if (!mounted) return;
-    final iqraItems = ref.read(appStateProvider).iqraItems.isEmpty
-        ? iqraData
-        : ref.read(appStateProvider).iqraItems;
-    setState(() {
-      index = Random().nextInt(iqraItems.length);
-      feedback = 'Tekan mic lalu baca huruf.';
-    });
-  }
-}
-
-class ModeSeruScreen extends ConsumerStatefulWidget {
-  const ModeSeruScreen({
-    required this.onClose,
-    required this.category,
-    required this.title,
-    super.key,
-  });
-  final VoidCallback onClose;
-  final String category;
-  final String title;
-
-  @override
-  ConsumerState<ModeSeruScreen> createState() => _ModeSeruScreenState();
-}
-
-class _ModeSeruScreenState extends ConsumerState<ModeSeruScreen> {
-  final speech = stt.SpeechToText();
-  final tts = FlutterTts();
-  late final ConfettiController confetti;
-  late Challenge challenge;
-  bool available = false;
-  bool listening = false;
-  String heard = '';
-  String? feedback;
-
-  @override
-  void initState() {
-    super.initState();
-    confetti = ConfettiController(duration: const Duration(seconds: 2));
-    challenge = randomChallenge(widget.category);
-    initSpeech();
-  }
-
-  Future<void> initSpeech() async {
-    available = await speech.initialize();
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    confetti.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final app = ref.watch(appStateProvider);
-    final t = app.theme;
-    return PagePad(
-      child: Stack(
-        children: [
-          ListView(
-            children: [
-              Row(
-                children: [
-                  IconButton.filledTonal(
-                    onPressed: widget.onClose,
-                    icon: const Icon(Icons.close),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(widget.title, style: sectionTitle(context)),
-                  ),
-                  RewardPill(stars: app.stars),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: cardDecoration(
-                  context,
-                ).copyWith(borderRadius: BorderRadius.circular(36)),
-                child: Column(
-                  children: [
-                    LinearProgressIndicator(
-                      value: (app.progress['mode_seru'] ?? 0) / 100,
-                      minHeight: 12,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      challenge.prompt,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    AnimatedScale(
-                      scale: listening ? 1.06 : 1,
-                      duration: 220.ms,
-                      child: Container(
-                        height: min(
-                          280,
-                          MediaQuery.sizeOf(context).width * .72,
-                        ),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: t.secondary.withValues(alpha: .2),
-                          borderRadius: BorderRadius.circular(38),
-                        ),
-                        child: challenge.image == null
-                            ? Text(
-                                challenge.display,
-                                style: TextStyle(
-                                  fontSize: challenge.display.length > 2
-                                      ? 72
-                                      : 118,
-                                  fontWeight: FontWeight.w900,
-                                  color: t.primary,
-                                ),
-                              )
-                            : AppImage(
-                                url: challenge.image!,
-                                fit: BoxFit.contain,
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      heard.isEmpty
-                          ? 'Tekan mic lalu jawab'
-                          : 'Terdengar: $heard',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: muted(context),
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (feedback != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        feedback!,
-                        style: TextStyle(
-                          color: feedback!.contains('Pintar')
-                              ? Colors.green
-                              : Colors.orange,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: toggleListen,
-                      child: Container(
-                        width: 112,
-                        height: 112,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: listening ? Colors.redAccent : t.primary,
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 32,
-                              color: (listening ? Colors.redAccent : t.primary)
-                                  .withValues(alpha: .35),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          listening ? Icons.mic : Icons.mic_none,
-                          size: 54,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextButton.icon(
-                      onPressed: next,
-                      icon: const Icon(Icons.shuffle),
-                      label: const Text('Soal berikutnya'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 110),
-            ],
-          ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: confetti,
-              blastDirectionality: BlastDirectionality.explosive,
-              shouldLoop: false,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> toggleListen() async {
-    if (!available) {
-      setState(() => feedback = 'Mic belum tersedia, coba di device Android.');
-      return;
-    }
-    if (listening) {
-      await speech.stop();
-      setState(() => listening = false);
-      checkAnswer(heard);
-      return;
-    }
-    setState(() {
-      heard = '';
-      feedback = null;
-      listening = true;
-    });
-    await speakIndonesian(tts, challenge.prompt);
-    await speech.listen(
-      localeId: 'id_ID',
-      onResult: (result) {
-        setState(() => heard = result.recognizedWords);
-        if (result.finalResult) {
-          setState(() => listening = false);
-          checkAnswer(result.recognizedWords);
-        }
-      },
-    );
-  }
-
-  Future<void> checkAnswer(String value) async {
-    final ok = challenge.answers.any(
-      (a) => value.toLowerCase().contains(a.toLowerCase()),
-    );
-    if (ok) {
-      confetti.play();
-      setState(() => feedback = 'Pintar sekali! Bintang bertambah.');
-      await speakIndonesian(tts, 'Pintar sekali');
-    } else {
-      setState(() => feedback = 'Hampir benar, ayo coba lagi!');
-      await speakIndonesian(tts, 'Ayo coba lagi');
-    }
-  }
-
-  void next() {
-    setState(() {
-      challenge = randomChallenge(widget.category);
-      heard = '';
-      feedback = null;
-    });
-  }
 }

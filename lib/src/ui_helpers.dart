@@ -243,14 +243,6 @@ const _enText = <String, String>{
   'Mengenal benda di sekitar kita': 'Learn objects around us',
   'Cari...': 'Search...',
   'Cari benda...': 'Search objects...',
-  'Kuis Seru': 'Fun Quiz',
-  'Petualangan Seru': 'Fun Adventure',
-  'Tekan mic pada kartu lalu ucapkan katanya.':
-      'Tap the mic on the card, then say the word.',
-  'Tekan mic pada kartu lalu ucapkan angkanya.':
-      'Tap the mic on the card, then say the number.',
-  'Tekan mic pada kartu lalu ucapkan nama bendanya.':
-      'Tap the mic on the card, then say the object name.',
   'Belum ada hasil yang cocok.': 'No matching results yet.',
   'Semua': 'All',
 };
