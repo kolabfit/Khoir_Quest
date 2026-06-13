@@ -1,8 +1,29 @@
+// ignore_for_file: unused_element, unused_field, unused_element_parameter
+
 part of '../main.dart';
 
-enum _TeacherSection { dashboard, huruf, angka, benda, lagu, storage, settings }
+enum _TeacherSection { dashboard, huruf, angka, benda, lagu }
 
 enum _TeacherCategory { huruf, angka, benda, lagu }
+
+const _fixedObjectCategories = <String>[
+  'Hewan',
+  'Buah',
+  'Sayur',
+  'Makanan',
+  'Minuman',
+  'Kendaraan',
+  'Alat Tulis',
+  'Mainan',
+  'Pakaian',
+  'Anggota Tubuh',
+  'Perabot Rumah',
+  'Peralatan Dapur',
+  'Alat Musik',
+  'Benda Sekolah',
+  'Alam',
+  'Warna',
+];
 
 extension on _TeacherCategory {
   String get label => switch (this) {
@@ -55,8 +76,6 @@ extension on _TeacherSection {
     _TeacherSection.angka => 'Bilangan',
     _TeacherSection.benda => 'Benda',
     _TeacherSection.lagu => 'Lagu Anak',
-    _TeacherSection.storage => 'Penyimpanan',
-    _TeacherSection.settings => 'Pengaturan',
   };
 
   IconData get icon => switch (this) {
@@ -65,8 +84,6 @@ extension on _TeacherSection {
     _TeacherSection.angka => Icons.numbers_rounded,
     _TeacherSection.benda => Icons.category_rounded,
     _TeacherSection.lagu => Icons.music_note_rounded,
-    _TeacherSection.storage => Icons.save_rounded,
-    _TeacherSection.settings => Icons.settings_rounded,
   };
 
   Color get color => switch (this) {
@@ -75,8 +92,6 @@ extension on _TeacherSection {
     _TeacherSection.angka => _TeacherCategory.angka.color,
     _TeacherSection.benda => _TeacherCategory.benda.color,
     _TeacherSection.lagu => _TeacherCategory.lagu.color,
-    _TeacherSection.storage => const Color(0xffF59E0B),
-    _TeacherSection.settings => const Color(0xff64748B),
   };
 
   _TeacherCategory? get category => switch (this) {
@@ -103,13 +118,12 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   String _sortMode = 'Terbaru';
   bool _sidebarCollapsed = false;
   Future<_TeacherStorageData>? _storageFuture;
-  Future<int>? _userCountFuture;
   final List<_TeacherActivity> _activities = [];
+  Future<int>? _userCountFuture;
 
   @override
   void initState() {
     super.initState();
-    _storageFuture = _loadStorage();
     _userCountFuture = LocalDatabase.instance.countAccounts();
   }
 
@@ -135,7 +149,6 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     final tablet = width >= 720 && width < 1180;
     final desktop = width >= 1180;
     final activeCategory = _section.category ?? _category;
-    final notificationCount = _activityFeed(app).take(5).length;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -155,6 +168,10 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                     onSelected: (section) {
                       Navigator.of(context).pop();
                       _selectSection(section);
+                    },
+                    onLogout: () {
+                      Navigator.of(context).pop();
+                      _confirmLogout();
                     },
                   ),
                 ),
@@ -182,6 +199,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                     onToggleCollapse: () =>
                         setState(() => _sidebarCollapsed = !_sidebarCollapsed),
                     onSelected: _selectSection,
+                    onLogout: _confirmLogout,
                   ),
                 ),
               Expanded(
@@ -190,7 +208,6 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                     _TeacherTopbar(
                       app: app,
                       mobile: mobile,
-                      notificationCount: notificationCount,
                       activeCategory: activeCategory,
                       onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
                       onCollapseTap: mobile
@@ -228,37 +245,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                                 tablet: tablet,
                                 desktop: desktop,
                               ),
-                              const SizedBox(height: 18),
-                              desktop
-                                  ? Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          flex: 7,
-                                          child: _buildActivityPanel(app),
-                                        ),
-                                        const SizedBox(width: 18),
-                                        Expanded(
-                                          flex: 6,
-                                          child: _buildStoragePanel(app),
-                                        ),
-                                      ],
-                                    )
-                                  : Column(
-                                      children: [
-                                        _buildActivityPanel(app),
-                                        const SizedBox(height: 18),
-                                        _buildStoragePanel(app),
-                                      ],
-                                    ),
-                            ] else if (_section == _TeacherSection.storage) ...[
-                              _buildStoragePanel(app, expanded: true),
-                              const SizedBox(height: 18),
-                              _buildActivityPanel(app),
-                            ] else ...[
-                              _buildSettingsPanel(app, mobile: mobile),
-                            ],
+                            ] else
+                              ...[],
                           ],
                         ),
                       ),
@@ -369,20 +357,17 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
             )
             .toList(),
       _TeacherCategory.lagu => app.songs.map((item) {
-        final remote = MediaSourceHelper.isRemoteUrl(item.videoUrl);
         return _TeacherContentData(
           id: item.id,
           title: item.title,
-          subtitle:
-              item.fileName ??
-              (remote ? 'Tersinkron ke database' : 'Video lagu lokal'),
+          subtitle: item.fileName ?? 'Video lagu',
           category: 'Lagu Anak',
-          statusLabel: remote ? 'Sinkron' : 'Lokal',
+          statusLabel: 'Aktif',
           mediaPath: DefaultLearningCatalog.laguPlaceholderAsset,
           color: category.color,
           icon: category.icon,
-          badgeText: remote ? 'Database' : 'Video',
-          actionLabel: remote ? 'Database' : (item.fileName ?? 'Lokal'),
+          badgeText: 'Video',
+          actionLabel: item.fileName ?? 'Lagu',
           editable: true,
           song: item,
         );
@@ -714,271 +699,6 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     );
   }
 
-  Widget _buildActivityPanel(AppState app) {
-    final entries = _activityFeed(app);
-    return _TeacherSurfaceCard(
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _TeacherSectionTitle(
-            title: 'Aktivitas Terbaru',
-            subtitle: 'Perubahan konten dan progres yang baru terjadi.',
-          ),
-          const SizedBox(height: 10),
-          ...entries
-              .take(6)
-              .map((activity) => _TeacherActivityTile(activity: activity)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStoragePanel(AppState app, {bool expanded = false}) {
-    return FutureBuilder<_TeacherStorageData>(
-      future: _storageFuture,
-      builder: (context, snapshot) {
-        final data = snapshot.data ?? const _TeacherStorageData.loading();
-        final maxSegment = data.segments.fold<int>(
-          1,
-          (value, item) => max(value, item.bytes),
-        );
-        return _TeacherSurfaceCard(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _TeacherSectionTitle(
-                title: 'Penyimpanan',
-                subtitle:
-                    'Semua media disimpan lokal agar dashboard tetap offline.',
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${_formatBytes(data.totalBytes)} / ${_formatBytes(data.capacityBytes)}',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xff2F2A66),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xffFFF7E8),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      '${(data.usage * 100).round()}%',
-                      style: const TextStyle(
-                        color: Color(0xffB7791F),
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: data.usage,
-                  minHeight: 12,
-                  backgroundColor: const Color(0xffEEE8FF),
-                  color: const Color(0xff8B5CF6),
-                ),
-              ),
-              const SizedBox(height: 18),
-              if (expanded)
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: data.segments.map((segment) {
-                    return _TeacherStorageChip(segment: segment);
-                  }).toList(),
-                )
-              else
-                Column(
-                  children: data.segments
-                      .map(
-                        (segment) => _TeacherStorageRow(
-                          segment: segment,
-                          maxBytes: maxSegment,
-                        ),
-                      )
-                      .toList(),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSettingsPanel(AppState app, {required bool mobile}) {
-    return _TeacherSurfaceCard(
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _TeacherSectionTitle(
-            title: 'Pengaturan Dashboard',
-            subtitle:
-                'Atur tampilan, mode kerja pengajar, dan akses keluar akun.',
-          ),
-          const SizedBox(height: 16),
-          _TeacherSurfaceCard(
-            padding: const EdgeInsets.all(18),
-            inner: true,
-            child: Wrap(
-              spacing: 14,
-              runSpacing: 14,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xffEEE8FF),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Image.asset(
-                      app.gender == Gender.girl
-                          ? 'assets/images/profil_perempuan.png'
-                          : 'assets/images/profil_lakilaki.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: mobile ? 180 : 260,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        app.childName.trim().isEmpty
-                            ? 'Pengajar'
-                            : app.childName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xff2E2963),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        app.email ?? 'akun lokal',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xff6F6A95),
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const _TeacherRolePill(),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Tema Cepat',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: const Color(0xff2E2963),
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: appThemes.take(mobile ? 4 : appThemes.length).map((
-              theme,
-            ) {
-              final selected = theme.id == app.themeId;
-              return GestureDetector(
-                onTap: () => ref.read(appStateProvider).setTheme(theme.id),
-                child: AnimatedContainer(
-                  duration: 220.ms,
-                  width: mobile ? 142 : 168,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? theme.primary.withValues(alpha: .12)
-                        : Colors.white.withValues(alpha: .72),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: selected ? theme.primary : const Color(0xffE7E2FF),
-                      width: selected ? 2 : 1.2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        blurRadius: 16,
-                        offset: const Offset(0, 10),
-                        color: theme.primary.withValues(alpha: .10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: Image.asset(
-                          theme.asset,
-                          height: 76,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        theme.name,
-                        style: TextStyle(
-                          color: selected
-                              ? theme.primary
-                              : const Color(0xff302B64),
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-          OutlinedButton.icon(
-            onPressed: _confirmLogout,
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(56),
-              side: const BorderSide(color: Color(0xffFF6B81)),
-              foregroundColor: const Color(0xffFF4D6D),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-            ),
-            icon: const Icon(Icons.logout_rounded),
-            label: const Text('Keluar dari Dashboard Pengajar'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _openUploadDialog(
     _TeacherCategory category, {
     _TeacherContentData? existing,
@@ -1290,6 +1010,7 @@ class _TeacherSidebar extends StatelessWidget {
     required this.collapsed,
     required this.onToggleCollapse,
     required this.onSelected,
+    required this.onLogout,
   });
 
   final AppState app;
@@ -1297,6 +1018,7 @@ class _TeacherSidebar extends StatelessWidget {
   final bool collapsed;
   final VoidCallback? onToggleCollapse;
   final ValueChanged<_TeacherSection> onSelected;
+  final VoidCallback onLogout;
 
   @override
   Widget build(BuildContext context) {
@@ -1306,8 +1028,6 @@ class _TeacherSidebar extends StatelessWidget {
       _TeacherSection.angka,
       _TeacherSection.benda,
       _TeacherSection.lagu,
-      _TeacherSection.storage,
-      _TeacherSection.settings,
     ];
 
     return AnimatedContainer(
@@ -1403,6 +1123,11 @@ class _TeacherSidebar extends StatelessWidget {
                     },
                   ),
                 ),
+                const SizedBox(height: 12),
+                _TeacherLogoutSidebarButton(
+                  collapsed: collapsed,
+                  onTap: onLogout,
+                ),
                 if (onToggleCollapse != null) ...[
                   const SizedBox(height: 12),
                   Align(
@@ -1427,6 +1152,105 @@ class _TeacherSidebar extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TeacherLogoutSidebarButton extends StatelessWidget {
+  const _TeacherLogoutSidebarButton({
+    required this.collapsed,
+    required this.onTap,
+  });
+
+  final bool collapsed;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: collapsed ? 0 : 14,
+          vertical: 13,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xffFFF1F2),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xffFECDD3)),
+        ),
+        child: collapsed
+            ? const Center(
+                child: Icon(Icons.logout_rounded, color: Color(0xffE11D48)),
+              )
+            : const Row(
+                children: [
+                  Icon(Icons.logout_rounded, color: Color(0xffE11D48)),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Color(0xffE11D48),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _ObjectCategoryDropdown extends StatelessWidget {
+  const _ObjectCategoryDropdown({required this.value, required this.onChanged});
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = _fixedObjectCategories.contains(value)
+        ? value
+        : _fixedObjectCategories.first;
+    return DropdownButtonFormField<String>(
+      initialValue: selected,
+      items: _fixedObjectCategories
+          .map(
+            (category) => DropdownMenuItem<String>(
+              value: category,
+              child: Text(category),
+            ),
+          )
+          .toList(),
+      onChanged: (value) {
+        if (value != null) onChanged(value);
+      },
+      decoration: InputDecoration(
+        labelText: 'Kategori',
+        prefixIcon: const Icon(Icons.category_rounded),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xffE6E0FF)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xffE6E0FF)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xff8B5CF6), width: 1.8),
+        ),
+      ),
+      style: const TextStyle(
+        color: Color(0xff2F2966),
+        fontWeight: FontWeight.w800,
       ),
     );
   }
@@ -1531,7 +1355,6 @@ class _TeacherTopbar extends StatelessWidget {
   const _TeacherTopbar({
     required this.app,
     required this.mobile,
-    required this.notificationCount,
     required this.activeCategory,
     required this.onMenuTap,
     required this.onCollapseTap,
@@ -1540,7 +1363,6 @@ class _TeacherTopbar extends StatelessWidget {
 
   final AppState app;
   final bool mobile;
-  final int notificationCount;
   final _TeacherCategory activeCategory;
   final VoidCallback onMenuTap;
   final VoidCallback? onCollapseTap;
@@ -1642,8 +1464,6 @@ class _TeacherTopbar extends StatelessWidget {
                     label: const Text('Quick Upload'),
                   ),
                 if (!mobile) const SizedBox(width: 12),
-                _TeacherNotificationButton(count: notificationCount),
-                const SizedBox(width: 12),
                 _TeacherProfilePill(
                   name: teacherName,
                   compact: mobile,
@@ -2008,6 +1828,7 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
   bool get _isSong => widget.category == _TeacherCategory.lagu;
   bool get _isHuruf => widget.category == _TeacherCategory.huruf;
   bool get _isAngka => widget.category == _TeacherCategory.angka;
+  bool get _isBenda => widget.category == _TeacherCategory.benda;
 
   @override
   void initState() {
@@ -2026,6 +1847,9 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                 widget.existing?.object?.category ??
                 '',
     );
+    if (_isBenda && !_fixedObjectCategories.contains(_subtitle.text)) {
+      _subtitle.text = _fixedObjectCategories.first;
+    }
     _fileName = widget.existing?.song?.fileName;
     _mediaPath = widget.existing?.letter?.objects.isNotEmpty == true
         ? widget.existing!.letter!.objects.first.img
@@ -2128,24 +1952,23 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                   readOnly: _isHuruf || _isAngka,
                 ),
                 if (!_isSong)
-                  AppField(
-                    controller: _subtitle,
-                    label: _isHuruf
-                        ? 'Contoh Benda'
-                        : _isAngka
-                        ? 'Nama Bilangan'
-                        : 'Kategori',
-                    icon: _isHuruf
-                        ? Icons.lightbulb_outline_rounded
-                        : _isAngka
-                        ? Icons.record_voice_over_rounded
-                        : Icons.category_rounded,
-                    hint: _isHuruf
-                        ? 'contoh: Apel, Bola, Cicak'
-                        : _isAngka
-                        ? 'contoh: Satu, Dua, Tiga'
-                        : 'contoh: makanan, hewan, sekolah',
-                  ),
+                  _isBenda
+                      ? _ObjectCategoryDropdown(
+                          value: _subtitle.text,
+                          onChanged: (value) => setState(() {
+                            _subtitle.text = value;
+                          }),
+                        )
+                      : AppField(
+                          controller: _subtitle,
+                          label: _isHuruf ? 'Contoh Benda' : 'Nama Bilangan',
+                          icon: _isHuruf
+                              ? Icons.lightbulb_outline_rounded
+                              : Icons.record_voice_over_rounded,
+                          hint: _isHuruf
+                              ? 'contoh: Apel, Bola, Cicak'
+                              : 'contoh: Satu, Dua, Tiga',
+                        ),
                 const SizedBox(height: 4),
                 GestureDetector(
                   onTap: _pickMedia,
@@ -2333,54 +2156,6 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
         mediaPath: _mediaPath!.trim(),
         fileName: _fileName,
       ),
-    );
-  }
-}
-
-class _TeacherNotificationButton extends StatelessWidget {
-  const _TeacherNotificationButton({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .85),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xffEBE5FF)),
-          ),
-          child: const Icon(
-            Icons.notifications_none_rounded,
-            color: Color(0xff7C3AED),
-          ),
-        ),
-        if (count > 0)
-          Positioned(
-            right: -2,
-            top: -4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-              decoration: const BoxDecoration(
-                color: Color(0xffFF5D73),
-                borderRadius: BorderRadius.all(Radius.circular(999)),
-              ),
-              child: Text(
-                '$count',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ),
-      ],
     );
   }
 }
