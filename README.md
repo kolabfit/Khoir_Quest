@@ -1,4 +1,4 @@
-<p align="center">
+﻿<p align="center">
    <img width="300" height="300" alt="Logo_Aplikasi" src="https://github.com/user-attachments/assets/0a147627-fd09-469d-95ab-9c4895498e52"/>
 <p>
 <h1 align="center">
@@ -10,512 +10,290 @@
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-4CAF50)
-![Supabase](https://img.shields.io/badge/Supabase-Optional-3ECF8E?logo=supabase&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Enabled-3ECF8E?logo=supabase&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-F59E0B)
-![License](https://img.shields.io/badge/License-TBD-lightgrey)
 
-## Daftar Isi
+## Ringkasan
 
-- [Ringkasan Aplikasi](#ringkasan-aplikasi)
-- [Fitur Utama](#fitur-utama)
-- [Teknologi yang Digunakan](#teknologi-yang-digunakan)
-- [Arsitektur Aplikasi](#arsitektur-aplikasi)
-- [Struktur Folder](#struktur-folder)
-- [Instalasi dan Menjalankan Proyek](#instalasi-dan-menjalankan-proyek)
-- [Konfigurasi Environment](#konfigurasi-environment)
-- [Fitur Aplikasi Secara Detail](#fitur-aplikasi-secara-detail)
-- [Role Pengguna](#role-pengguna)
-- [Database dan Penyimpanan](#database-dan-penyimpanan)
-- [Screenshot / Preview](#screenshot--preview)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
-- [Kontak / Author](#kontak--author)
+Khoir Quest menyediakan pengalaman belajar anak usia dini dengan tampilan ramah anak, animasi, tema, badge, progress, materi bergambar, Iqra, serta lagu anak. Pengajar dapat mengelola konten dari dashboard pengajar dan menyinkronkannya ke Supabase agar materi tersedia untuk pengguna lain.
 
-## Ringkasan Aplikasi
+Target pengguna:
 
-**Khoir Quest** adalah aplikasi pembelajaran PAUD berbasis Flutter yang membawa pengalaman belajar ke dalam nuansa petualangan edukatif. Anak tidak hanya melihat materi, tetapi juga diajak berinteraksi melalui visual, suara, progress, badge, serta mode bermain yang mendorong rasa penasaran.
-
-Tujuan utama aplikasi ini adalah membuat proses belajar menjadi:
-
-- lebih menyenangkan untuk anak usia dini,
-- lebih mudah dipantau oleh orang tua,
-- lebih mudah dikelola oleh pengajar,
-- dan tetap dapat berjalan stabil walau koneksi internet terbatas.
-
-Target pengguna aplikasi:
-
-- **Anak usia dini / PAUD** untuk belajar huruf, angka, benda, Iqra 1, dan lagu anak.
-- **Pengajar** untuk mengelola materi belajar, media, serta pengalaman belajar anak.
-- **Orang tua** untuk mendampingi dan memantau progres belajar anak.
-
-Konsep yang diusung adalah **belajar sambil bermain**: materi disajikan dengan tampilan ramah anak, audio interaktif, mode seru berbasis suara, sistem progres, dan badge pencapaian agar belajar terasa seperti petualangan yang menyenangkan.
+- **Anak / user biasa**: belajar huruf, angka, benda, Iqra, lagu anak, mengumpulkan bintang, badge, dan progress.
+- **Pengajar**: mengelola materi, upload media, sinkronisasi cloud, dan memantau ringkasan konten.
 
 ## Fitur Utama
 
-- 🔐 **Login & Registrasi** untuk memulai sesi belajar secara personal.
-- 👤 **Role-based access** untuk membedakan akses anak/user biasa dan pengajar.
-- 🧭 **Pusat Belajar** sebagai hub utama untuk memilih materi pembelajaran.
-- 🔤 **Belajar Huruf A-Z** dengan tampilan visual dan bantuan suara.
-- 🔢 **Belajar Angka 1-10** dengan interaksi yang sederhana dan mudah dipahami.
-- 🧸 **Belajar Benda** untuk mengenal objek di sekitar anak.
-- 📖 **Belajar Iqra 1** untuk pengenalan dasar membaca huruf hijaiyah.
-- 🎵 **Lagu Anak** dengan dukungan audio/video pembelajaran.
-- 🎙️ **Mode Seru** berbasis suara/mikrofon untuk latihan interaktif.
-- 📈 **Progress Belajar** untuk memantau perkembangan setiap kategori.
-- 🏅 **Badge & Achievement** untuk meningkatkan motivasi belajar anak.
-- 🎨 **Ganti Tema Aplikasi** termasuk dukungan mode malam.
-- 🧑‍🏫 **Dashboard Pengajar** untuk kelola materi, media, dan tampilan.
-- ⬆️ **Upload Materi** gambar, audio, dan video pembelajaran.
-- 💾 **Offline-first experience** dengan local storage untuk penggunaan harian.
-- ☁️ **Integrasi Cloud Opsional** melalui Supabase untuk sinkronisasi akun, profil, materi, dan media.
+- **Auth online** via Supabase Auth dengan username internal berbasis email hash.
+- **Role user**: `child` dan `teacher`.
+- **Belajar Huruf A-Z** dengan gambar contoh dan progress kategori membaca.
+- **Belajar Angka 1-10** dengan visual bilangan dan progress angka.
+- **Belajar Benda** dengan kategori objek dan progress benda.
+- **Belajar Iqra** dengan huruf hijaiyah dasar, bantuan latin, favorit, histori, dan streak.
+- **Lagu Anak** dengan daftar lagu, durasi media, mini player animasi dari bawah, tombol play/pause, next/previous, repeat, dan progress playback.
+- **Progress belajar** dihitung dari key materi yang valid dan unik agar nilai 100% konsisten.
+- **Badge & achievement** untuk motivasi belajar.
+- **Tema aplikasi** termasuk mode malam dan profil anak.
+- **Dashboard Pengajar** untuk tambah/edit/hapus materi huruf, angka, benda, lagu, upload media, ringkasan konten, status sync, dan tombol sync manual.
+- **Supabase Storage** bucket `learning-assets` untuk gambar/audio/video materi.
+- **Local cache** memakai Isar/SharedPreferences agar data yang sudah disinkron tetap tersimpan di perangkat.
 
-## Teknologi yang Digunakan
-
-Berikut stack utama yang digunakan di proyek ini beserta perannya:
+## Stack Teknologi
 
 | Teknologi | Fungsi |
 | --- | --- |
-| **Flutter** | Framework UI utama untuk membangun aplikasi mobile dari satu codebase. |
-| **Dart** | Bahasa pemrograman yang digunakan untuk seluruh logika aplikasi. |
-| **flutter_riverpod** | State management untuk mengelola state aplikasi secara lebih rapi dan terukur. |
-| **go_router** | Navigasi modern untuk pengelolaan route dan alur halaman. |
-| **Isar Database** | Database lokal utama untuk menyimpan akun, progres, badge, tema, histori, dan materi penting. |
-| **Sembast / sembast_web** | Penyimpanan lokal tambahan/legacy untuk kompatibilitas data dan kebutuhan migrasi/cache. |
-| **Shared Preferences** | Menyimpan preferensi ringan seperti status onboarding dan tema. |
-| **Supabase** | Backend opsional untuk autentikasi, database Postgres, dan sinkronisasi cloud. |
-| **Supabase Storage** | Penyimpanan file media seperti gambar, audio, dan video pembelajaran di cloud. |
-| **just_audio** | Memutar audio pembelajaran dan lagu anak. |
-| **flutter_tts** | Text-to-speech untuk membacakan huruf, angka, kata benda, dan Iqra. |
-| **speech_to_text** | Pengenalan suara untuk Mode Seru berbasis mikrofon. |
-| **vosk_flutter** | Dependensi pendukung untuk pengembangan speech recognition offline/lokal. |
-| **image_picker** | Mengambil gambar dari galeri saat pengajar mengelola materi. |
-| **file_picker** | Memilih file media seperti gambar/video dari perangkat. |
-| **cached_network_image** | Menampilkan dan meng-cache gambar dari sumber remote. |
-| **path_provider** | Menentukan lokasi penyimpanan file lokal aplikasi. |
-| **video_player** | Memutar video materi, terutama untuk lagu anak. |
-| **flutter_animate** | Menambahkan animasi UI agar pengalaman lebih hidup dan ramah anak. |
-| **confetti** | Efek visual saat anak mencapai progress atau pencapaian tertentu. |
-| **connectivity_plus** | Memantau koneksi internet untuk kebutuhan sync cloud. |
+| Flutter | UI aplikasi multi-platform. |
+| Dart | Bahasa utama aplikasi. |
+| flutter_riverpod | State management. |
+| go_router | Navigasi aplikasi. |
+| Isar | Database lokal untuk akun, materi, progress, badge, histori, cache. |
+| Shared Preferences | Preferensi ringan seperti onboarding dan tema. |
+| Supabase Auth | Login/register akun. |
+| Supabase Postgres | Profil, materi, dan histori belajar. |
+| Supabase Storage | Upload media pembelajaran. |
+| connectivity_plus | Deteksi koneksi untuk sinkronisasi. |
+| file_picker / image_picker | Pilih media dari perangkat. |
+| video_player / just_audio | Pemutar media lagu dan durasi. |
+| flutter_animate / confetti | Animasi UI dan reward. |
+| vosk_flutter | Dependensi pendukung mode suara. |
 
-## Arsitektur Aplikasi
-
-Khoir Quest dirancang dengan pendekatan **offline-first**, sehingga aplikasi tetap nyaman digunakan walau perangkat sedang tidak terhubung internet.
-
-Gambaran arsitektur umumnya:
+## Arsitektur Singkat
 
 ```text
-UI / Screen
-   -> AppState / Riverpod
-   -> Repository Layer
-   -> Local DB (Isar) + Local File Storage
-   -> Cloud Sync Service (opsional)
-   -> Supabase Auth + Postgres + Storage
+Flutter UI
+  -> AppState (Riverpod ChangeNotifier)
+  -> LocalDatabase / Isar cache
+  -> CloudSyncService
+      -> AuthService / AuthRepository
+      -> LearningMaterialRepository
+      -> StorageRepository / UploadService
+  -> Supabase Auth + Postgres + Storage
 ```
 
-Prinsip utama arsitektur:
+Prinsip utama:
 
-- **Offline-first**: data penting tetap tersedia secara lokal.
-- **Local database**: akun lokal, progres, badge, tema, histori, dan katalog materi disimpan di perangkat.
-- **Local storage**: file gambar, audio, dan video dapat disimpan ke direktori aplikasi agar tetap bisa dipakai offline.
-- **Cloud sync bila tersedia**: jika Supabase dikonfigurasi, profil, histori, materi, dan media dapat disinkronkan.
-- **Role-based UI**: tampilan dan akses dibedakan antara anak/user biasa dan pengajar.
-- **Separation of responsibility**: repository dan service memisahkan logika data, sync, auth, dan penyimpanan media dari layer UI.
+- Aplikasi berjalan dengan akun Supabase aktif.
+- Data materi ditarik dari cloud lalu disimpan ke cache lokal.
+- Perubahan pengajar disimpan lokal, di-upload ke Supabase, lalu cache direfresh.
+- Media lokal/asset yang diupload pengajar dikirim ke Supabase Storage dan disimpan sebagai public URL.
+- RLS Supabase membatasi profil sendiri, histori sendiri, dan write materi hanya untuk teacher.
 
 ## Struktur Folder
 
-Berikut struktur folder utama proyek:
-
 ```text
-.
-├── assets/
-│   ├── fonts/
-│   └── images/
-├── lib/
-│   ├── core/
-│   │   ├── config/
-│   │   ├── constants/
-│   │   └── utils/
-│   ├── database/
-│   │   ├── collections/
-│   │   └── isar_database_service.dart
-│   ├── features/
-│   │   └── offline/
-│   ├── models/
-│   ├── repositories/
-│   ├── services/
-│   ├── src/
-│   ├── storage/
-│   └── main.dart
-├── supabase/
-│   └── schema.sql
-└── test/
+lib/
+  core/
+    config/              # konfigurasi Supabase
+    constants/           # katalog default, identitas app
+    utils/               # helper media, file, error mapper
+  database/              # koleksi Isar dan service database
+  models/                # model cloud/lokal
+  repositories/          # repository auth, materi, storage, history, badge
+  services/              # auth, sync cloud, upload, cache, migrasi, bootstrap
+  src/                   # UI screen, app state, data, model part
+  storage/               # local storage service
+supabase/
+  schema.sql             # tabel, trigger, RLS, bucket storage
+  seed_learning_materials_basic.sql
+  reset_password_by_username.sql
+  repair_auth_emails.sql
+assets/
+  images/
+  fonts/
 ```
 
-Penjelasan singkat:
+## Setup Project
 
-- `assets/`  
-  Menyimpan aset statis seperti gambar ilustrasi, ikon, background, dan font aplikasi.
-
-- `lib/core/`  
-  Berisi konfigurasi inti, konstanta aplikasi, dan utilitas umum.
-
-- `lib/database/`  
-  Lapisan database lokal berbasis Isar, termasuk definisi collection/entity.
-
-- `lib/features/offline/`  
-  Provider dan alur pendukung untuk pengalaman offline-first.
-
-- `lib/models/`  
-  Model data domain seperti profil cloud, badge, dan materi pembelajaran.
-
-- `lib/repositories/`  
-  Lapisan akses data untuk auth, progress, badge, user, materi, tema, dan storage.
-
-- `lib/services/`  
-  Service untuk auth, upload, cache, konektivitas, bootstrap offline, migrasi, dan sinkronisasi cloud.
-
-- `lib/src/`  
-  Saat ini menjadi layer presentasi utama yang berisi screen, widget, theme, state aplikasi, dashboard pengajar, dan modul pembelajaran.
-
-- `lib/storage/`  
-  Service penyimpanan file lokal untuk gambar, audio, video, dan cache.
-
-- `supabase/schema.sql`  
-  Skema SQL untuk tabel, bucket storage, trigger, dan policy Supabase.
-
-- `test/`  
-  Berisi pengujian dasar aplikasi.
-
-## Instalasi dan Menjalankan Proyek
-
-### 1. Clone repository
-
-```bash
-git clone https://github.com/kolabfit/Khoir_Quest
-cd App_Paud_Sentrakreasi
-```
-
-### 2. Install dependencies
+### 1. Install dependency
 
 ```bash
 flutter pub get
 ```
 
-### 3. Siapkan konfigurasi cloud (opsional)
+### 2. Konfigurasi Supabase
 
-Jika ingin memakai Supabase, siapkan URL dan anon key saat menjalankan aplikasi.
+Aplikasi membaca config via `String.fromEnvironment` di `lib/core/config/supabase_config.dart`.
+
+Default project sudah ada di source, tapi untuk project lain jalankan dengan:
 
 ```bash
 flutter run \
-  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=your-anon-key
+  --dart-define=SUPABASE_URL=https://PROJECT.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=YOUR_ANON_KEY
 ```
 
-Jika ingin menjalankan aplikasi dalam mode lokal/offline saja, aplikasi tetap bisa dijalankan tanpa setup cloud tambahan.
-
-### 4. Setup schema Supabase (opsional)
-
-Import file SQL berikut ke Supabase SQL Editor:
-
-```text
-supabase/schema.sql
-```
-
-Schema ini mencakup:
-
-- tabel `profiles`
-- tabel `learning_histories`
-- tabel `learning_materials`
-- trigger bootstrap profil
-- RLS policy
-- bucket storage `learning-assets`
-
-### 5. Setup database lokal
-
-Database lokal akan dibangun otomatis saat aplikasi pertama kali dijalankan. Tidak ada langkah manual wajib untuk penggunaan normal.
-
-Jika ada perubahan model Isar di masa pengembangan, jalankan:
+Atau build web:
 
 ```bash
-flutter pub run build_runner build --delete-conflicting-outputs
+flutter build web \
+  --dart-define=SUPABASE_URL=https://PROJECT.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=YOUR_ANON_KEY
 ```
 
-### 6. Pastikan asset tersedia
+### 3. Setup database Supabase
 
-Asset gambar dan font sudah dideklarasikan di `pubspec.yaml`. Setelah menambah asset baru, jalankan:
+Jalankan SQL berikut di Supabase SQL Editor:
 
-```bash
-flutter pub get
-```
+1. `supabase/schema.sql`
+2. `supabase/reset_password_by_username.sql` jika fitur reset password via username diperlukan
+3. `supabase/seed_learning_materials_basic.sql` jika ingin seed materi awal ke cloud
+4. `supabase/repair_auth_emails.sql` hanya bila perlu perbaikan akun lama
 
-### 7. Jalankan di emulator atau device
+Schema utama membuat:
+
+- extension `pgcrypto`
+- table `profiles`
+- table `learning_histories`
+- table `learning_materials`
+- trigger bootstrap profile dari `auth.users`
+- trigger `updated_at`
+- RLS policy untuk profil, histori, materi
+- function `public.is_teacher()`
+- storage bucket public `learning-assets`
+- storage policy read public dan write teacher
+
+### 4. Jalankan aplikasi
 
 ```bash
 flutter run
 ```
 
-Contoh command tambahan:
+Untuk web:
 
 ```bash
-flutter devices
+flutter run -d chrome
+```
+
+## Role dan Login
+
+### Anak / Child
+
+- Login/register sebagai user biasa.
+- Mengakses menu belajar, lagu anak, badge, tema, profil, favorit, dan progress.
+- Progress tersimpan ke profil Supabase saat sync berjalan.
+
+### Pengajar / Teacher
+
+Role teacher dikenali dari profil Supabase `profiles.role = 'teacher'`.
+
+Username yang diawali `pengajar` atau `guru` juga dibootstrap sebagai teacher oleh trigger `handle_profile_bootstrap()`.
+
+Pengajar dapat:
+
+- membuka dashboard pengajar,
+- menambah/mengedit materi benda dan lagu,
+- mengganti gambar materi huruf dan angka,
+- menghapus materi,
+- upload gambar/audio/video ke `learning-assets`,
+- melakukan sync manual dari topbar dashboard.
+
+## Data Supabase
+
+### `profiles`
+
+Menyimpan identitas dan state user:
+
+- `username`
+- `role`
+- `avatar_url`
+- `child_name`
+- `gender`
+- `theme_id`
+- `stars`
+- `iqra_streak`
+- `progress`
+- mastered set per kategori
+- favorite material ids
+
+### `learning_materials`
+
+Menyimpan metadata materi:
+
+- `id`
+- `category`: `huruf`, `angka`, `benda`, `iqra`, `lagu`
+- `symbol`
+- `label`
+- `image_path`
+- `audio_path`
+- `video_path`
+- `created_by`
+
+### `learning_histories`
+
+Menyimpan riwayat belajar user:
+
+- `user_id`
+- `material_id`
+- `category`
+- `duration`
+- `score`
+- `played_at`
+
+### Storage `learning-assets`
+
+Bucket public untuk media pembelajaran. Read bersifat public, write/update/delete hanya user authenticated dengan role teacher.
+
+## Catatan Sinkronisasi
+
+- Supabase SDK tidak boleh dipaksa memakai `Authorization: Bearer anonKey`; session user harus dikelola SDK agar `auth.uid()` terbaca oleh RLS.
+- Dashboard pengajar auto-sync saat dibuka dan punya tombol sync manual.
+- Jika sync gagal karena RLS, cek session login, `profiles.role`, dan pastikan `schema.sql` terbaru sudah dijalankan.
+- Jika materi cloud kosong, cache lokal kategori ikut dikosongkan agar delete dari Supabase konsisten.
+
+## Progress Belajar
+
+Progress kategori dihitung dari item valid unik:
+
+- `membaca`: huruf unik dari katalog aktif
+- `angka`: angka unik dari katalog aktif
+- `benda`: nama benda unik dari katalog aktif
+- `iqra`: pasangan huruf/latin Iqra aktif
+
+Key progress dinormalisasi uppercase agar `a`, `A`, dan spasi tidak membuat perhitungan meleset. Ini menjaga A-Z dan 1-10 mencapai 100% setelah semua item dibuka.
+
+## Lagu Anak
+
+Bagian lagu anak saat ini:
+
+- menampilkan nama lagu dan durasi media,
+- tidak menampilkan judul/file video di kartu,
+- mini player hanya muncul setelah lagu dipilih,
+- mini player muncul dengan animasi dari bawah ke atas,
+- saat pause, player tetap terlihat,
+- durasi dibaca dari controller video agar sesuai media.
+
+## Perintah Berguna
+
+```bash
 flutter analyze
+```
+
+```bash
 flutter test
 ```
 
-## Konfigurasi Environment
+```bash
+dart format lib test
+```
 
-Proyek ini **saat ini membaca konfigurasi Supabase melalui compile-time environment** dengan `String.fromEnvironment`, bukan paket `.env` runtime.
-
-### Konfigurasi yang dibutuhkan
-
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-
-### Opsi 1 - Langsung via `--dart-define`
+Regenerate Isar jika koleksi berubah:
 
 ```bash
-flutter run \
-  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=your-anon-key
+dart run build_runner build --delete-conflicting-outputs
 ```
 
-### Opsi 2 - Via file environment JSON
+## Status
 
-```json
-{
-  "SUPABASE_URL": "https://your-project.supabase.co",
-  "SUPABASE_ANON_KEY": "your-anon-key"
-}
-```
+Aktif dikembangkan untuk kebutuhan aplikasi PAUD Sentrakreasi / Belajar Yuk.
 
-Jalankan dengan:
+Fokus saat ini:
 
-```bash
-flutter run --dart-define-from-file=.env.json
-```
-
-### Supabase config
-
-Pastikan project Supabase memiliki:
-
-- Auth **tidak** aktif untuk email/password
-- tabel dan policy dari `supabase/schema.sql`
-- bucket storage `learning-assets`
-
-### Setup assets
-
-Asset utama berada di:
-
-- `assets/images/`
-- `assets/fonts/`
-
-Jika menambah asset baru, daftarkan juga di `pubspec.yaml`.
-
-### Permission Android
-
-Permission yang saat ini dipakai:
-
-- `android.permission.INTERNET`
-- `android.permission.RECORD_AUDIO`
-
-### Permission iOS
-
-Permission yang saat ini dipakai:
-
-- `NSMicrophoneUsageDescription`
-- `NSSpeechRecognitionUsageDescription`
-
-Catatan:
-
-- jika menambah upload kamera, izin kamera/photo library mungkin perlu ditambahkan,
-- jika hanya memakai konfigurasi lokal, bagian cloud bisa dilewati.
-
-## Fitur Aplikasi Secara Detail
-
-### 1. Pusat Belajar
-
-Pusat Belajar adalah hub utama petualangan anak. Dari sini anak bisa memilih jalur materi yang ingin dipelajari tanpa navigasi yang rumit. Manfaatnya adalah membuat anak lebih mandiri saat mulai belajar.
-
-### 2. Huruf
-
-Modul huruf membantu anak mengenal huruf A-Z melalui tampilan visual yang cerah, bantuan suara, dan interaksi sederhana. Fitur ini mendukung pengenalan alfabet secara bertahap dan menyenangkan.
-
-### 3. Angka
-
-Modul angka mengenalkan angka 1-10 dengan pendekatan yang ringan untuk anak usia dini. Cocok untuk membangun dasar berhitung dan pengenalan simbol angka sejak awal.
-
-### 4. Benda
-
-Modul benda membantu anak mengenali objek di sekitar mereka. Materi ini memperkuat kosakata, pengamatan visual, dan keterhubungan antara gambar dengan nama benda.
-
-### 5. Iqra
-
-Modul Iqra 1 difokuskan pada pengenalan dasar huruf hijaiyah dan pembacaan awal. Fitur ini bermanfaat untuk membangun kebiasaan belajar mengaji secara santai namun konsisten.
-
-### 6. Lagu Anak
-
-Bagian lagu anak menyediakan media audio/video yang membuat proses belajar lebih hidup. Lagu membantu meningkatkan fokus, daya ingat, dan keterlibatan emosional anak saat belajar.
-
-### 7. Mode Seru
-
-Mode Seru memanfaatkan mikrofon dan pengenalan suara agar anak bisa menjawab materi dengan suara mereka sendiri. Ini membuat pengalaman belajar terasa seperti permainan interaktif, sekaligus melatih keberanian dan respon aktif.
-
-### 8. Badge
-
-Sistem badge memberi penghargaan atas pencapaian belajar tertentu. Badge membantu menjaga motivasi anak karena setiap progress terasa dihargai.
-
-### 9. Progress
-
-Progress belajar menampilkan perkembangan anak pada tiap kategori materi. Orang tua dan pengajar bisa lebih mudah melihat bagian mana yang sudah dikuasai dan mana yang masih perlu pendampingan.
-
-### 10. Dashboard Pengajar
-
-Dashboard pengajar memberi ruang khusus untuk mengelola materi pembelajaran, media, storage, dan pengaturan tampilan. Dengan dashboard ini, pengajar dapat menyesuaikan isi aplikasi agar tetap relevan dengan kebutuhan belajar anak.
-
-### 11. Tema Aplikasi
-
-Khoir Quest mendukung pergantian tema agar pengalaman belajar terasa lebih personal dan nyaman. Implementasi saat ini sudah menyediakan **tema default** dan **mode malam**, serta mudah diperluas untuk varian tema lain.
-
-## Role Pengguna
-
-Khoir Quest membedakan dua role utama:
-
-### User Biasa / Anak
-
-User biasa berfokus pada pengalaman belajar, yaitu:
-
-- mengakses pusat belajar,
-- membuka materi huruf, angka, benda, Iqra, dan lagu anak,
-- menjalankan mode seru,
-- melihat progress,
-- mengumpulkan badge.
-
-### Pengajar
-
-Role pengajar memiliki akses tambahan untuk:
-
-- mengelola konten pembelajaran,
-- menambah atau memperbarui gambar,
-- mengunggah audio dan video,
-- mengelola materi huruf, angka, benda, dan lagu,
-- memantau storage media,
-- mengatur tema dan pengalaman penggunaan.
-
-## Database dan Penyimpanan
-
-Penyimpanan data di Khoir Quest dibagi menjadi beberapa lapisan:
-
-### Data akun
-
-- akun dan sesi lokal dapat disimpan di database perangkat,
-- jika Supabase aktif, autentikasi dilakukan melalui Supabase Auth,
-- metadata profil pengguna disimpan pada tabel `profiles`.
-
-### Progress belajar
-
-- progress kategori belajar disimpan lokal agar tetap tersedia offline,
-- jika cloud aktif, progress dapat ikut disinkronkan ke profil cloud.
-
-### Badge
-
-- status badge disimpan di database lokal,
-- badge dibuka berdasarkan perkembangan belajar anak.
-
-### Materi pembelajaran
-
-- metadata materi seperti kategori, label, simbol, dan referensi media disimpan lokal,
-- bila Supabase aktif, metadata materi dapat disimpan pada tabel `learning_materials`.
-
-### Gambar / audio / video
-
-- file media dapat disimpan di local storage aplikasi untuk akses offline,
-- jika Supabase digunakan, file media dapat diunggah ke **Supabase Storage** bucket `learning-assets`,
-- metadata file tetap direlasikan ke data materi.
-
-### Cache offline
-
-- cache lokal membantu aplikasi memuat konten lebih cepat,
-- media yang sudah pernah diunduh atau disalin ke storage lokal tetap bisa dipakai saat offline.
-
-### Catatan Supabase
-
-Jika Supabase digunakan:
-
-- **gambar/audio/video** disimpan di **Supabase Storage**,
-- **metadata** seperti profil, histori, dan materi disimpan di **Postgres**,
-- akses data dilindungi oleh **Row Level Security (RLS)**.
-
-## Screenshot / Preview
-
--
-
-## Roadmap
-
-- [x] **Tahap 1 - Fondasi offline-first**  
-  Materi dasar, auth lokal, progress, badge, tema, dan dashboard pengajar lokal.
-
-- [ ] **Tahap 2 - Sinkronisasi cloud yang lebih matang**  
-  Penyempurnaan sync akun, progress, materi, dan media melalui Supabase.
-
-- [ ] **Tahap 3 - Realtime update materi**  
-  Perubahan materi dari pengajar langsung tersinkron ke perangkat pengguna.
-
-- [ ] **Tahap 4 - Analytics dan laporan belajar**  
-  Ringkasan performa anak, histori aktivitas, dan insight untuk pendamping belajar.
-
-- [ ] **Tahap 5 - Fitur pengajar lanjutan**  
-  Manajemen kelas, kurasi materi, rekomendasi belajar, dan pengelolaan konten yang lebih kaya.
-
-## Contributing
-
-Kontribusi sangat terbuka untuk pengembangan Khoir Quest. Jika ingin membantu:
-
-1. Fork repository ini.
-2. Buat branch baru:
-
-   ```bash
-   git checkout -b feature/nama-fitur
-   ```
-
-3. Lakukan perubahan yang diperlukan.
-4. Commit perubahan:
-
-   ```bash
-   git commit -m "feat: tambah nama fitur"
-   ```
-
-5. Push branch:
-
-   ```bash
-   git push origin feature/nama-fitur
-   ```
-
-6. Buka Pull Request dan jelaskan perubahan yang dibuat.
-
-Agar proses review lebih mudah, usahakan:
-
-- perubahan fokus pada satu tujuan,
-- mengikuti struktur kode yang sudah ada,
-- menambahkan catatan pengujian bila relevan.
+- stabilisasi sync Supabase,
+- dashboard pengajar online,
+- konsistensi progress belajar,
+- pemutaran lagu anak,
+- penyempurnaan UX anak dan pengajar.
 
 ## License
 
-Saat ini proyek ini **belum memiliki lisensi publik resmi**.
-
-## Kontak / Author
-
-- **Nama**: `Andi Bayu Hanggoro`
-- **Email**: `andibayuhanggoro28@gmail.com`
-- **GitHub**: `https://github.com/adbayu`
-
----
-
-Jika README ini dipakai untuk presentasi, demo, atau publikasi GitHub, Anda bisa menambahkan:
-
-- logo aplikasi di bagian atas,
-- GIF demo penggunaan,
-- link APK / TestFlight / web preview,
-- changelog versi,
-- dan dokumentasi API/backend bila integrasi cloud dipakai penuh.
+Belum ditentukan.
