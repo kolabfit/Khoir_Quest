@@ -615,12 +615,13 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
   bool speechReady = false;
   bool listening = false;
   String heard = '';
-  String voiceFeedback = 'Tekan mic pada kartu lalu ucapkan katanya.';
+  late String voiceFeedback;
   String category = 'Semua';
 
   @override
   void initState() {
     super.initState();
+    voiceFeedback = tr(context, 'Tekan mic pada kartu lalu ucapkan katanya.');
     initSpeech();
   }
 
@@ -643,7 +644,7 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
     if (seru) {
       return ModeSeruScreen(
         category: 'huruf',
-        title: 'Kuis Seru',
+        title: tr(context, 'Kuis Seru'),
         onClose: () => setState(() => seru = false),
       );
     }
@@ -666,7 +667,7 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
       titleAsset: 'assets/images/Belajar_huruf.png',
       mascotAsset: 'assets/images/Anak_Belajar_Huruf.png',
       fallbackTitle: 'Belajar',
-      subtitle: 'Ayo mengenal abjad dan contoh bendanya!',
+      subtitle: tr(context, 'Ayo mengenal abjad dan contoh bendanya!'),
       accent: const Color(0xffFF8F1F),
       stars: app.stars,
       onBack: () => ref.read(appStateProvider).openLearn(LearnMode.menu),
@@ -677,7 +678,7 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
         pageIndex = 0;
       }),
       search: search,
-      searchHint: 'Cari...',
+      searchHint: tr(context, 'Cari...'),
       onSearch: () => setState(() => pageIndex = 0),
       itemCount: filtered.length,
       pageIndex: pageIndex,
@@ -804,12 +805,13 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
   bool speechReady = false;
   bool listening = false;
   String heard = '';
-  String voiceFeedback = 'Tekan mic pada kartu lalu ucapkan angkanya.';
+  late String voiceFeedback;
   String category = 'Semua';
 
   @override
   void initState() {
     super.initState();
+    voiceFeedback = tr(context, 'Tekan mic pada kartu lalu ucapkan angkanya.');
     initSpeech();
   }
 
@@ -832,7 +834,7 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
     if (seru) {
       return ModeSeruScreen(
         category: 'angka',
-        title: 'Kuis Seru',
+        title: tr(context, 'Kuis Seru'),
         onClose: () => setState(() => seru = false),
       );
     }
@@ -854,7 +856,10 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
       titleAsset: 'assets/images/Belajar_Angka.png',
       mascotAsset: 'assets/images/Anak_Belajar_Angka.png',
       fallbackTitle: 'Belajar',
-      subtitle: 'Yuk belajar bilangan dengan gambar pilihan pengajar!',
+      subtitle: tr(
+        context,
+        'Yuk belajar bilangan dengan gambar pilihan pengajar!',
+      ),
       accent: const Color(0xff4E8BFF),
       stars: app.stars,
       onBack: () => ref.read(appStateProvider).openLearn(LearnMode.menu),
@@ -865,7 +870,7 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
         pageIndex = 0;
       }),
       search: search,
-      searchHint: 'Cari...',
+      searchHint: tr(context, 'Cari...'),
       onSearch: () => setState(() => pageIndex = 0),
       itemCount: filtered.length,
       pageIndex: pageIndex,
@@ -990,12 +995,16 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
   bool speechReady = false;
   bool listening = false;
   String heard = '';
-  String voiceFeedback = 'Tekan mic pada kartu lalu ucapkan nama bendanya.';
+  late String voiceFeedback;
   String category = 'Semua';
 
   @override
   void initState() {
     super.initState();
+    voiceFeedback = tr(
+      context,
+      'Tekan mic pada kartu lalu ucapkan nama bendanya.',
+    );
     initSpeech();
   }
 
@@ -1018,7 +1027,7 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
     if (seru) {
       return ModeSeruScreen(
         category: 'benda',
-        title: 'Petualangan Seru',
+        title: tr(context, 'Petualangan Seru'),
         onClose: () => setState(() => seru = false),
       );
     }
@@ -1037,7 +1046,7 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
       titleAsset: 'assets/images/Belajar_Benda.png',
       mascotAsset: 'assets/images/Anak_Belajar_Benda.png',
       fallbackTitle: 'Belajar Benda',
-      subtitle: 'Mengenal benda di sekitar kita',
+      subtitle: tr(context, 'Mengenal benda di sekitar kita'),
       accent: const Color(0xff32C653),
       stars: app.stars,
       onBack: () => ref.read(appStateProvider).openLearn(LearnMode.menu),
@@ -1048,7 +1057,7 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
         pageIndex = 0;
       }),
       search: search,
-      searchHint: 'Cari benda...',
+      searchHint: tr(context, 'Cari benda...'),
       onSearch: () => setState(() => pageIndex = 0),
       itemCount: filtered.length,
       pageIndex: pageIndex,
@@ -1606,7 +1615,7 @@ class _PremiumSearchAndChips extends StatelessWidget {
                           : null,
                     ),
                     child: Text(
-                      chip,
+                      tr(context, chip),
                       style: TextStyle(
                         color: active
                             ? Colors.white
@@ -2288,7 +2297,7 @@ class _PremiumEmptyState extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
       ),
       child: Text(
-        'Belum ada hasil yang cocok.',
+        tr(context, 'Belum ada hasil yang cocok.'),
         textAlign: TextAlign.center,
         style: TextStyle(color: accent, fontWeight: FontWeight.w900),
       ),
@@ -2490,7 +2499,7 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
               const SizedBox(height: 14),
               _IqraProgressCard(
                 progress: progress,
-                mastered: app.iqraMastered.length,
+                mastered: iqraMasteredCount(app.iqraMastered, iqraItems),
                 total: iqraItems.length,
                 streak: app.iqraStreak,
               ),
@@ -3225,7 +3234,7 @@ class _IqraCatalogSection extends StatelessWidget {
                   item: item,
                   selected: selectedIndex == i,
                   latinEnabled: latinEnabled,
-                  mastered: mastered.contains(item.latin),
+                  mastered: isIqraMastered(mastered, item),
                   favorite: favorites.contains('iqra:${item.latin}'),
                   listening: listening && selectedIndex == i,
                   onTap: () => onSelect(i),
