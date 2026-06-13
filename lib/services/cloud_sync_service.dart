@@ -42,6 +42,17 @@ class CloudSyncService {
 
   Future<CloudAuthProfile?> currentProfile() => _auth.currentProfile();
 
+  Future<void> resetPassword({
+    required String username,
+    required String newPassword,
+  }) async {
+    if (!isConfigured || !await isOnline()) return;
+    await _auth.resetPasswordByUsername(
+      username: username,
+      newPassword: newPassword,
+    );
+  }
+
   Future<CloudAuthProfile> authenticate({
     required String username,
     required String password,

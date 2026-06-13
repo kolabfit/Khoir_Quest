@@ -156,6 +156,21 @@ class UserRepository {
     );
   }
 
+  Future<void> resetPassword({
+    required String username,
+    required String newPassword,
+  }) async {
+    final normalized = _normalizeUsername(username);
+    final saved = await _profileByUsername(normalized);
+    if (saved == null) throw 'Akun belum terdaftar';
+    saved
+      ..passwordHash = _hash(newPassword)
+      ..updatedAt = DateTime.now();
+    await _database.write((isar) async {
+      await isar.userProfileEntitys.put(saved);
+    });
+  }
+
   Future<void> saveAccount(UserAccount account) async {
     final username = _normalizeUsername(account.username);
     final existing = await _profileByUsername(username);

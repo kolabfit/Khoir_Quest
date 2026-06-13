@@ -1,6 +1,6 @@
 part of '../main.dart';
 
-enum _AuthMode { login, register }
+enum _AuthMode { login, register, resetPassword }
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -162,6 +162,7 @@ class AuthScreen extends ConsumerStatefulWidget {
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   final username = TextEditingController();
   final pass = TextEditingController();
+  final confirmPass = TextEditingController();
   _AuthMode mode = _AuthMode.login;
   Gender gender = Gender.boy;
   bool showPass = false;
@@ -172,21 +173,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   void dispose() {
     username.dispose();
     pass.dispose();
+    confirmPass.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final register = mode == _AuthMode.register;
+    final resetPassword = mode == _AuthMode.resetPassword;
     final size = MediaQuery.sizeOf(context);
     final tablet = size.width >= 900;
     final panel = _AuthPanelCard(
       register: register,
       username: username,
       password: pass,
+      confirmPassword: confirmPass,
       gender: gender,
       showPass: showPass,
       loading: loading,
+      resetPassword: resetPassword,
       error: error,
       onTogglePassword: () => setState(() => showPass = !showPass),
       onSelectGender: (value) => setState(() => gender = value),
@@ -195,7 +200,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         mode = register ? _AuthMode.login : _AuthMode.register;
         error = null;
       }),
-      onForgotPassword: _showForgotPasswordHint,
+      onBackToLogin: () => setState(() {
+        mode = _AuthMode.login;
+        error = null;
+      }),
+      onForgotPassword: () => setState(() {
+        mode = _AuthMode.resetPassword;
+        pass.clear();
+        confirmPass.clear();
+        error = null;
+      }),
     );
     return Scaffold(
       body: Container(
@@ -292,11 +306,32 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     if (pass.text.length < 6) {
       return setState(() => error = 'Password minimal 6 karakter');
     }
+    if (mode == _AuthMode.resetPassword && pass.text != confirmPass.text) {
+      return setState(() => error = 'Konfirmasi password belum sama');
+    }
     setState(() {
       loading = true;
       error = null;
     });
     try {
+      if (mode == _AuthMode.resetPassword) {
+        await ref
+            .read(appStateProvider)
+            .resetPassword(username: username.text, newPassword: pass.text);
+        if (!mounted) return;
+        await showDialog<void>(
+          context: context,
+          barrierColor: Colors.black.withValues(alpha: .22),
+          builder: (_) => const _PasswordResetSuccessDialog(),
+        );
+        if (!mounted) return;
+        setState(() {
+          mode = _AuthMode.login;
+          pass.clear();
+          confirmPass.clear();
+        });
+        return;
+      }
       await ref
           .read(appStateProvider)
           .login(
@@ -312,12 +347,133 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (mounted) setState(() => loading = false);
     }
   }
+}
 
-  void _showForgotPasswordHint() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Silakan hubungi pengajar atau orang tua untuk reset akun.',
+class _PasswordResetSuccessDialog extends StatelessWidget {
+  const _PasswordResetSuccessDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = _themeOf(context);
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 420),
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .86),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: .75),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 28,
+                  offset: const Offset(0, 14),
+                  color: const Color(0xff6E49E9).withValues(alpha: .14),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 78,
+                  height: 78,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xff7BE495), Color(0xff25C06D)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 18,
+                        offset: const Offset(0, 10),
+                        color: const Color(0xff25C06D).withValues(alpha: .26),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 38,
+                  ),
+                ).animate().scale(
+                  begin: const Offset(.82, .82),
+                  duration: 360.ms,
+                  curve: Curves.easeOutBack,
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Password berhasil diganti!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xff343864),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Silakan login kembali memakai username dan password baru kamu.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: t.night
+                        ? const Color(0xffB8C0D8)
+                        : const Color(0xff6E7391),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xffB15DFF), Color(0xff6C36EF)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 18,
+                        offset: const Offset(0, 10),
+                        color: const Color(0xff7E48F7).withValues(alpha: .24),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () => Navigator.of(context).pop(),
+                      child: const SizedBox(
+                        height: 52,
+                        width: double.infinity,
+                        child: Center(
+                          child: Text(
+                            'Login sekarang',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -349,28 +505,34 @@ class _AuthPanelCard extends StatelessWidget {
     required this.register,
     required this.username,
     required this.password,
+    required this.confirmPassword,
     required this.gender,
     required this.showPass,
     required this.loading,
+    required this.resetPassword,
     required this.error,
     required this.onTogglePassword,
     required this.onSelectGender,
     required this.onSubmit,
     required this.onToggleMode,
+    required this.onBackToLogin,
     required this.onForgotPassword,
   });
 
   final bool register;
   final TextEditingController username;
   final TextEditingController password;
+  final TextEditingController confirmPassword;
   final Gender gender;
   final bool showPass;
   final bool loading;
+  final bool resetPassword;
   final String? error;
   final VoidCallback onTogglePassword;
   final ValueChanged<Gender> onSelectGender;
   final VoidCallback? onSubmit;
   final VoidCallback onToggleMode;
+  final VoidCallback onBackToLogin;
   final VoidCallback onForgotPassword;
 
   @override
@@ -409,7 +571,11 @@ class _AuthPanelCard extends StatelessWidget {
                 size: 28,
               ),
               Text(
-                register ? 'Buat Akun Baru!' : 'Selamat Datang!',
+                resetPassword
+                    ? 'Ganti Password'
+                    : register
+                    ? 'Buat Akun Baru!'
+                    : 'Selamat Datang!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: const Color(0xff3E318E),
@@ -426,7 +592,9 @@ class _AuthPanelCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            register
+            resetPassword
+                ? 'Masukkan username dan password baru.'
+                : register
                 ? 'Daftar untuk memulai petualangan belajar bersama Khoir Quest'
                 : 'Masuk untuk melanjutkan petualangan belajar bersama Khoir Quest',
             textAlign: TextAlign.center,
@@ -446,7 +614,7 @@ class _AuthPanelCard extends StatelessWidget {
           const SizedBox(height: 16),
           _AuthInput(
             controller: password,
-            hint: 'Password',
+            hint: resetPassword ? 'Password Baru' : 'Password',
             icon: Icons.lock_rounded,
             obscure: !showPass,
             suffix: IconButton(
@@ -459,7 +627,16 @@ class _AuthPanelCard extends StatelessWidget {
               ),
             ),
           ),
-          if (!register) ...[
+          if (resetPassword) ...[
+            const SizedBox(height: 16),
+            _AuthInput(
+              controller: confirmPassword,
+              hint: 'Konfirmasi Password Baru',
+              icon: Icons.lock_reset_rounded,
+              obscure: !showPass,
+            ),
+          ],
+          if (!register && !resetPassword) ...[
             const SizedBox(height: 10),
             Align(
               alignment: Alignment.centerRight,
@@ -478,7 +655,7 @@ class _AuthPanelCard extends StatelessWidget {
               ),
             ),
           ],
-          if (register) ...[
+          if (register && !resetPassword) ...[
             const SizedBox(height: 18),
             const Text(
               'Pilih profil anak',
@@ -513,23 +690,39 @@ class _AuthPanelCard extends StatelessWidget {
           if (error != null) ...[const SizedBox(height: 16), _ErrorBox(error!)],
           const SizedBox(height: 22),
           _PrimaryAuthButton(
-            label: register ? 'Buat Akun' : 'Login',
+            label: resetPassword
+                ? 'Ganti Password'
+                : register
+                ? 'Buat Akun'
+                : 'Login',
             loading: loading,
             onTap: onSubmit,
           ),
           const SizedBox(height: 22),
           _DividerLabel(
-            label: register ? 'Sudah punya akun?' : 'Belum punya akun?',
+            label: resetPassword
+                ? 'Ingat password?'
+                : register
+                ? 'Sudah punya akun?'
+                : 'Belum punya akun?',
           ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
-            onPressed: onToggleMode,
+            onPressed: resetPassword ? onBackToLogin : onToggleMode,
             icon: Icon(
-              register ? Icons.login_rounded : Icons.person_add_alt_1_rounded,
+              resetPassword
+                  ? Icons.login_rounded
+                  : register
+                  ? Icons.login_rounded
+                  : Icons.person_add_alt_1_rounded,
               color: const Color(0xff7A3FF3),
             ),
             label: Text(
-              register ? 'Masuk ke Login' : 'Buat Akun Baru',
+              resetPassword
+                  ? 'Kembali ke Login'
+                  : register
+                  ? 'Masuk ke Login'
+                  : 'Buat Akun Baru',
               style: const TextStyle(
                 color: Color(0xff7A3FF3),
                 fontWeight: FontWeight.w900,

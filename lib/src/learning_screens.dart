@@ -1041,7 +1041,7 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
       accent: const Color(0xff32C653),
       stars: app.stars,
       onBack: () => ref.read(appStateProvider).openLearn(LearnMode.menu),
-      chips: const ['Semua', 'Rumah', 'Sekolah', 'Alam', 'Transportasi'],
+      chips: const ['Semua', ..._fixedObjectCategories],
       selectedChip: category,
       onChip: (value) => setState(() {
         category = value;
@@ -2296,14 +2296,37 @@ class _PremiumEmptyState extends StatelessWidget {
   }
 }
 
-String _objectFamily(LearningObject item) {
-  final c = item.category.toLowerCase();
-  if (c.contains('kendaraan')) return 'Transportasi';
-  if (c.contains('sekolah')) return 'Sekolah';
-  if (c.contains('buah') || c.contains('hewan') || c.contains('alam')) {
-    return 'Alam';
+String _objectFamily(LearningObject item) =>
+    _standardObjectCategory(item.category);
+
+String _standardObjectCategory(String rawCategory) {
+  final category = rawCategory.toLowerCase().trim();
+  if (category.isEmpty || category == 'benda') return 'Perabot Rumah';
+  if (category.contains('hewan')) return 'Hewan';
+  if (category.contains('buah')) return 'Buah';
+  if (category.contains('sayur')) return 'Sayur';
+  if (category.contains('makanan')) return 'Makanan';
+  if (category.contains('minuman')) return 'Minuman';
+  if (category.contains('kendaraan') || category.contains('transportasi')) {
+    return 'Kendaraan';
   }
-  return 'Rumah';
+  if (category.contains('tulis')) return 'Alat Tulis';
+  if (category.contains('mainan')) return 'Mainan';
+  if (category.contains('pakaian')) return 'Pakaian';
+  if (category.contains('tubuh')) return 'Anggota Tubuh';
+  if (category.contains('perabot') || category.contains('rumah')) {
+    return 'Perabot Rumah';
+  }
+  if (category.contains('dapur')) return 'Peralatan Dapur';
+  if (category.contains('musik')) return 'Alat Musik';
+  if (category.contains('sekolah')) return 'Benda Sekolah';
+  if (category.contains('alam')) return 'Alam';
+  if (category.contains('warna')) return 'Warna';
+
+  for (final fixed in _fixedObjectCategories) {
+    if (fixed.toLowerCase() == category) return fixed;
+  }
+  return 'Perabot Rumah';
 }
 
 String _englishName(String value) {

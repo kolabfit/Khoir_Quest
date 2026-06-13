@@ -191,6 +191,28 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  Future<void> resetPassword({
+    required String username,
+    required String newPassword,
+  }) async {
+    if (username.trim().length < 3) throw 'Username minimal 3 karakter';
+    if (newPassword.length < 6) throw 'Password minimal 6 karakter';
+    if (!AuthService.instance.isValidUsername(username)) {
+      throw 'Username hanya boleh huruf kecil, angka, titik, underscore, atau strip.';
+    }
+    try {
+      if (_cloudSync.isConfigured) {
+        await _cloudSync.resetPassword(
+          username: username,
+          newPassword: newPassword,
+        );
+      }
+      await _db.resetPassword(username: username, newPassword: newPassword);
+    } catch (error) {
+      throw ApiErrorMapper.toMessage(error);
+    }
+  }
+
   Role _resolveRole(String identity) {
     final id = identity.toLowerCase().trim();
     if (id == adminEmail ||

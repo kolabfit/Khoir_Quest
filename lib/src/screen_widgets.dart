@@ -891,7 +891,7 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.cloud_upload_outlined, size: 52, color: muted(context)),
+          Icon(Icons.info_outline_rounded, size: 52, color: muted(context)),
           const SizedBox(height: 8),
           Text(
             text,

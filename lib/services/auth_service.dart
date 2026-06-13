@@ -78,6 +78,22 @@ class AuthService {
     );
   }
 
+  Future<void> resetPasswordByUsername({
+    required String username,
+    required String newPassword,
+  }) async {
+    await ensureReady();
+    final normalizedUsername = _repository.normalizeUsername(username);
+    if (!_repository.isValidUsername(normalizedUsername)) {
+      throw 'Username tidak valid.';
+    }
+    if (newPassword.length < 6) throw 'Password minimal 6 karakter';
+    await _repository.resetPasswordByUsername(
+      username: normalizedUsername,
+      newPassword: newPassword,
+    );
+  }
+
   Future<CloudAuthProfile> authenticate({
     required String username,
     required String password,
@@ -158,7 +174,9 @@ class AuthService {
     }
 
     final currentUsername = (existing['username'] as String? ?? '').trim();
-    final currentRole = (existing['role'] as String? ?? '').trim().toLowerCase();
+    final currentRole = (existing['role'] as String? ?? '')
+        .trim()
+        .toLowerCase();
     final nextRole = currentRole == 'teacher' || preferredRole == 'teacher'
         ? 'teacher'
         : (currentRole.isEmpty ? preferredRole : currentRole);
@@ -170,9 +188,7 @@ class AuthService {
       Map<String, dynamic>.from(
         existing['progress'] as Map<String, dynamic>? ??
             const {'membaca': 0, 'angka': 0, 'benda': 0, 'iqra': 0},
-      ).map(
-        (key, value) => MapEntry(key, (value as num?)?.toInt() ?? 0),
-      ),
+      ).map((key, value) => MapEntry(key, (value as num?)?.toInt() ?? 0)),
     );
 
     return _repository.upsertProfile(

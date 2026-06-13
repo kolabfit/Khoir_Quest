@@ -243,7 +243,7 @@ class OfflineRequiredScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Aplikasi web ini berjalan online-only supaya semua data selalu sinkron ke Supabase. Sambungkan internet lalu muat ulang halaman.',
+                          'Aplikasi web ini berjalan online-only. Sambungkan internet lalu muat ulang halaman.',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             height: 1.5,

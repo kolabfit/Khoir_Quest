@@ -311,6 +311,27 @@ class LocalDatabase {
     return _withProgress(account, progress);
   }
 
+  Future<void> resetPassword({
+    required String username,
+    required String newPassword,
+  }) async {
+    await ensureReady();
+    final normalized = username.toLowerCase().trim();
+    if (kIsWeb) {
+      final existing = _webLoadAccount(normalized);
+      if (existing == null) throw 'Akun belum terdaftar';
+      await _webPrefs!.setString(
+        _webPasswordKey(normalized),
+        _hashPassword(newPassword),
+      );
+      return;
+    }
+    await _userRepository.resetPassword(
+      username: normalized,
+      newPassword: newPassword,
+    );
+  }
+
   Future<void> saveAccount(UserAccount account) async {
     await ensureReady();
     if (kIsWeb) {

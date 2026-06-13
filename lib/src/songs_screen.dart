@@ -1174,7 +1174,8 @@ class _SongDurationPill extends StatelessWidget {
       builder: (context, snapshot) {
         final duration = snapshot.data;
         return _DurationPill(
-          text: duration == null ? '--:--' : _formatMiniDuration(duration),
+          text:
+              "Durasi ${duration == null ? '--:--' : _formatMiniDuration(duration)}",
         );
       },
     );
@@ -1237,9 +1238,7 @@ class _MiniControl extends StatelessWidget {
 String _songSourceLabel(SongItem song) {
   final fileName = song.fileName?.trim();
   if (fileName != null && fileName.isNotEmpty) return fileName;
-  return MediaSourceHelper.isRemoteUrl(song.videoUrl)
-      ? 'Tersinkron ke database'
-      : 'Video lokal';
+  return 'Video lagu';
 }
 
 final Map<String, Future<Duration?>> _songDurationFutures = {};

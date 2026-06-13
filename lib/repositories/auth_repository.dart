@@ -50,6 +50,19 @@ class AuthRepository {
     );
   }
 
+  Future<void> resetPasswordByUsername({
+    required String username,
+    required String newPassword,
+  }) async {
+    await _client.rpc(
+      'reset_password_by_username',
+      params: {
+        'target_username': normalizeUsername(username),
+        'new_password': newPassword,
+      },
+    );
+  }
+
   Future<Map<String, dynamic>?> fetchProfileByUserId(String userId) async {
     final data = await _client
         .from('profiles')
