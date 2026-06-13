@@ -28,13 +28,19 @@ class LearningMaterialModel {
   final DateTime updatedAt;
 
   factory LearningMaterialModel.fromMap(Map<String, dynamic> map) {
+    final category = MediaSourceHelper.normalizeCategory(
+      map['category'] as String? ?? LearningCategories.benda,
+    );
+    final symbol = _normalizeSymbol(map['symbol'] as String? ?? '', category);
     return LearningMaterialModel(
       id: (map['id'] as String? ?? '').trim(),
-      category: MediaSourceHelper.normalizeCategory(
-        map['category'] as String? ?? LearningCategories.benda,
+      category: category,
+      symbol: symbol,
+      label: _normalizeLabel(
+        map['label'] as String? ?? '',
+        category,
+        fallbackSymbol: symbol,
       ),
-      symbol: (map['symbol'] as String? ?? '').trim(),
-      label: (map['label'] as String? ?? '').trim(),
       imagePath: (map['image_path'] as String? ?? '').trim(),
       audioPath: (map['audio_path'] as String? ?? '').trim(),
       videoPath: (map['video_path'] as String? ?? '').trim(),
@@ -46,18 +52,24 @@ class LearningMaterialModel {
 
   factory LearningMaterialModel.fromEntity(LearningMaterialEntity entity) {
     final category = MediaSourceHelper.normalizeCategory(entity.category);
+    final normalizedTitle = _normalizeSymbol(entity.title, category);
+    final normalizedLabel = _normalizeLabel(
+      entity.subcategory,
+      category,
+      fallbackSymbol: normalizedTitle,
+    );
     return LearningMaterialModel(
       id: entity.materialId,
       category: category,
       symbol: switch (category) {
         LearningCategories.benda => entity.subcategory,
         LearningCategories.lagu => '',
-        _ => entity.title,
+        _ => normalizedTitle,
       },
       label: switch (category) {
         LearningCategories.benda => entity.title,
         LearningCategories.lagu => entity.title,
-        _ => entity.subcategory,
+        _ => normalizedLabel,
       },
       imagePath: entity.imagePath,
       audioPath: entity.audioPath,
@@ -139,5 +151,47 @@ class LearningMaterialModel {
       return DateTime.tryParse(value)?.toUtc();
     }
     return null;
+  }
+
+  static String _normalizeSymbol(String value, String category) {
+    final text = value.trim();
+    return switch (category) {
+      LearningCategories.huruf =>
+        text
+            .replaceFirst(RegExp(r'^huruf\s+', caseSensitive: false), '')
+            .trim()
+            .toUpperCase(),
+      LearningCategories.angka =>
+        text
+            .replaceFirst(RegExp(r'^angka\s+', caseSensitive: false), '')
+            .trim(),
+      _ => text,
+    };
+  }
+
+  static String _normalizeLabel(
+    String value,
+    String category, {
+    required String fallbackSymbol,
+  }) {
+    final text = value.trim();
+    if (category == LearningCategories.angka) {
+      final cleaned = text
+          .replaceFirst(RegExp(r'^angka\s+', caseSensitive: false), '')
+          .trim();
+      if (cleaned.isNotEmpty && cleaned != fallbackSymbol) return cleaned;
+      return DefaultLearningCatalog.angkaLabels[fallbackSymbol] ??
+          fallbackSymbol;
+    }
+    if (category == LearningCategories.huruf) {
+      final cleaned = text
+          .replaceFirst(RegExp(r'^huruf\s+', caseSensitive: false), '')
+          .trim();
+      if (cleaned.isNotEmpty && cleaned.toUpperCase() != fallbackSymbol) {
+        return cleaned;
+      }
+      return DefaultLearningCatalog.hurufExamples[fallbackSymbol] ?? cleaned;
+    }
+    return text;
   }
 }

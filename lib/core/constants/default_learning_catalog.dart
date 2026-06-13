@@ -87,6 +87,48 @@ class DefaultLearningCatalog {
     '10',
   ];
 
+  static const hurufExamples = <String, String>{
+    'A': 'Apel',
+    'B': 'Bola',
+    'C': 'Cicak',
+    'D': 'Domba',
+    'E': 'Elang',
+    'F': 'Foto',
+    'G': 'Gajah',
+    'H': 'Harimau',
+    'I': 'Ikan',
+    'J': 'Jeruk',
+    'K': 'Kucing',
+    'L': 'Lampu',
+    'M': 'Mobil',
+    'N': 'Nanas',
+    'O': 'Obeng',
+    'P': 'Pisang',
+    'Q': 'Quran',
+    'R': 'Rumah',
+    'S': 'Sepeda',
+    'T': 'Tomat',
+    'U': 'Ular',
+    'V': 'Vas',
+    'W': 'Wortel',
+    'X': 'Xylophone',
+    'Y': 'Yo-yo',
+    'Z': 'Zebra',
+  };
+
+  static const angkaLabels = <String, String>{
+    '1': 'Satu',
+    '2': 'Dua',
+    '3': 'Tiga',
+    '4': 'Empat',
+    '5': 'Lima',
+    '6': 'Enam',
+    '7': 'Tujuh',
+    '8': 'Delapan',
+    '9': 'Sembilan',
+    '10': 'Sepuluh',
+  };
+
   static const iqraSeed = <String>[
     'Alif',
     'Ba',

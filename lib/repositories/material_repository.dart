@@ -17,7 +17,8 @@ class MaterialRepository {
         ...DefaultLearningCatalog.hurufSeed.map(
           (letter) => LearningMaterialEntity()
             ..materialId = 'huruf_$letter'
-            ..title = 'Huruf $letter'
+            ..title = letter
+            ..subcategory = DefaultLearningCatalog.hurufExamples[letter] ?? ''
             ..category = LearningCategories.huruf
             ..imagePath =
                 seededPaths[DefaultStorageFiles.hurufImage] ??
@@ -28,7 +29,8 @@ class MaterialRepository {
         ...DefaultLearningCatalog.angkaSeed.map(
           (number) => LearningMaterialEntity()
             ..materialId = 'angka_$number'
-            ..title = 'Angka $number'
+            ..title = number
+            ..subcategory = DefaultLearningCatalog.angkaLabels[number] ?? number
             ..category = LearningCategories.angka
             ..imagePath =
                 seededPaths[DefaultStorageFiles.angkaImage] ??
@@ -62,6 +64,54 @@ class MaterialRepository {
         ),
       ];
       await isar.learningMaterialEntitys.putAll(entities);
+    });
+  }
+
+  Future<void> normalizeLearningDefaults() async {
+    await _database.write((isar) async {
+      final items = (await isar.learningMaterialEntitys.where().findAll())
+          .where(
+            (item) =>
+                item.category == LearningCategories.huruf ||
+                item.category == LearningCategories.angka,
+          )
+          .toList();
+      final changed = <LearningMaterialEntity>[];
+      for (final item in items) {
+        final title = switch (item.category) {
+          LearningCategories.huruf => _normalizePrefix(
+            item.title,
+            'huruf',
+          ).toUpperCase(),
+          LearningCategories.angka => _normalizePrefix(item.title, 'angka'),
+          _ => item.title,
+        };
+        final subcategory = switch (item.category) {
+          LearningCategories.huruf => _normalizeLearningLabel(
+            value: item.subcategory,
+            prefix: 'huruf',
+            symbol: title,
+            fallback: DefaultLearningCatalog.hurufExamples[title] ?? '',
+          ),
+          LearningCategories.angka => _normalizeLearningLabel(
+            value: item.subcategory,
+            prefix: 'angka',
+            symbol: title,
+            fallback: DefaultLearningCatalog.angkaLabels[title] ?? title,
+          ),
+          _ => item.subcategory,
+        };
+        if (item.title != title || item.subcategory != subcategory) {
+          item
+            ..title = title
+            ..subcategory = subcategory
+            ..updatedAt = DateTime.now();
+          changed.add(item);
+        }
+      }
+      if (changed.isNotEmpty) {
+        await isar.learningMaterialEntitys.putAll(changed);
+      }
     });
   }
 
@@ -222,5 +272,25 @@ class MaterialRepository {
       }
       await isar.learningMaterialEntitys.putAll(items);
     });
+  }
+
+  String _normalizePrefix(String value, String prefix) {
+    return value
+        .trim()
+        .replaceFirst(RegExp('^$prefix\\s+', caseSensitive: false), '')
+        .trim();
+  }
+
+  String _normalizeLearningLabel({
+    required String value,
+    required String prefix,
+    required String symbol,
+    required String fallback,
+  }) {
+    final cleaned = _normalizePrefix(value, prefix);
+    if (cleaned.isNotEmpty && cleaned.toUpperCase() != symbol.toUpperCase()) {
+      return cleaned;
+    }
+    return fallback;
   }
 }

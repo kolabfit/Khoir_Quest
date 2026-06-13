@@ -28,6 +28,7 @@ class OfflineBootstrapService {
     await database.initDatabase();
     final seededPaths = await _seedDefaultStorage();
     await materialRepository.seedDefaults(seededPaths: seededPaths);
+    await materialRepository.normalizeLearningDefaults();
     await legacyMigrationService.migrateIfNeeded();
     final guestTheme = await themeRepository.loadThemeId('guest');
     if (guestTheme == null) {

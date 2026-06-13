@@ -251,11 +251,12 @@ class OfflineRequiredScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         FilledButton.icon(
-                          onPressed: () => Navigator.of(context).pushReplacement(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const SplashScreen(),
-                            ),
-                          ),
+                          onPressed: () =>
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const SplashScreen(),
+                                ),
+                              ),
                           icon: const Icon(Icons.refresh_rounded),
                           label: const Text('Coba Lagi'),
                         ),
