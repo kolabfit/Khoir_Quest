@@ -36,7 +36,7 @@ class AuthService {
             user.userMetadata?['username'] as String? ??
             user.email?.split('@').first ??
             '',
-        role: 'child',
+        role: _normalizeRole(user.userMetadata?['role'] as String? ?? 'child'),
       );
     }
     final progressMap = Map<String, dynamic>.from(
@@ -166,61 +166,16 @@ class AuthService {
   }) async {
     final existing = await _repository.fetchProfileByUserId(userId);
     if (existing == null) {
-      return _repository.upsertProfile(
-        userId: userId,
-        username: username,
-        role: preferredRole,
-      );
+      return {'id': userId, 'username': username, 'role': preferredRole};
     }
+    return existing;
+  }
 
-    final currentUsername = (existing['username'] as String? ?? '').trim();
-    final currentRole = (existing['role'] as String? ?? '')
-        .trim()
-        .toLowerCase();
-    final nextRole = currentRole == 'teacher' || preferredRole == 'teacher'
+  String _normalizeRole(String value) {
+    final role = value.trim().toLowerCase();
+    return role == 'teacher' || role == 'pengajar' || role == 'guru'
         ? 'teacher'
-        : (currentRole.isEmpty ? preferredRole : currentRole);
-    if (currentUsername == username && currentRole == nextRole) {
-      return existing;
-    }
-
-    final progress = Map<String, int>.from(
-      Map<String, dynamic>.from(
-        existing['progress'] as Map<String, dynamic>? ??
-            const {'membaca': 0, 'angka': 0, 'benda': 0, 'iqra': 0},
-      ).map((key, value) => MapEntry(key, (value as num?)?.toInt() ?? 0)),
-    );
-
-    return _repository.upsertProfile(
-      userId: userId,
-      username: username,
-      role: nextRole,
-      avatarUrl: existing['avatar_url'] as String? ?? '',
-      childName: existing['child_name'] as String? ?? 'Teman',
-      gender: existing['gender'] as String? ?? 'boy',
-      themeId: existing['theme_id'] as String? ?? 'default',
-      stars: (existing['stars'] as num?)?.toInt() ?? 12,
-      iqraStreak: (existing['iqra_streak'] as num?)?.toInt() ?? 0,
-      progress: progress,
-      iqraMastered: List<String>.from(
-        existing['iqra_mastered'] as List? ?? const [],
-      ),
-      iqraHistory: List<String>.from(
-        existing['iqra_history'] as List? ?? const [],
-      ),
-      hurfMastered: List<String>.from(
-        existing['hurf_mastered'] as List? ?? const [],
-      ),
-      angkaMastered: List<String>.from(
-        existing['angka_mastered'] as List? ?? const [],
-      ),
-      bendaMastered: List<String>.from(
-        existing['benda_mastered'] as List? ?? const [],
-      ),
-      favoriteMaterialIds: List<String>.from(
-        existing['favorite_material_ids'] as List? ?? const [],
-      ),
-    );
+        : (role.isEmpty ? 'child' : role);
   }
 
   Future<Map<String, dynamic>> upsertProfileState({

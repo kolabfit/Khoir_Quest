@@ -1188,8 +1188,12 @@ class LocalDatabase {
   Gender _parseGender(String value) =>
       value == 'girl' ? Gender.girl : Gender.boy;
 
-  Role _parseRole(String value) =>
-      value == 'teacher' ? Role.teacher : Role.child;
+  Role _parseRole(String value) {
+    final role = value.trim().toLowerCase();
+    return role == 'teacher' || role == 'pengajar' || role == 'guru'
+        ? Role.teacher
+        : Role.child;
+  }
 
   String _enumName(dynamic value, {required String fallback}) {
     if (value == null) return fallback;

@@ -112,7 +112,7 @@ class CloudSyncService {
     if (!isConfigured || !hasSession || !await isOnline()) return;
     final profile = await _auth.currentProfile();
     if (profile == null) return;
-    if (role == 'teacher') {
+    if (role == 'teacher' || role == 'pengajar' || role == 'guru') {
       await pushLocalTeacherCatalog(createdBy: profile.userId);
     }
     await pullCloudToLocal();

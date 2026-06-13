@@ -70,29 +70,31 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     onboardingSeen = _prefs?.getBool('onboardingSeen') ?? false;
     languageCode = _prefs?.getString('languageCode') ?? 'id';
     online = await _cloudSync.isOnline();
-    await _migrateSharedPreferencesAccount();
-    var account = await _db.currentAccount();
-    if (_cloudSync.isConfigured) {
-      final profile = await _cloudSync.currentProfile();
-      if (profile != null) {
-        account = await _db.restoreCloudSession(
-          username: profile.username,
-          role: _roleFromString(profile.role),
-          childName: profile.childName,
-          gender: profile.gender == 'girl' ? Gender.girl : Gender.boy,
-          themeId: profile.themeId,
-          avatarPath: profile.avatarUrl,
-          stars: profile.stars,
-          iqraStreak: profile.iqraStreak,
-          progress: profile.progress,
-          iqraMastered: profile.iqraMastered,
-          iqraHistory: profile.iqraHistory,
-          hurfMastered: profile.hurfMastered,
-          angkaMastered: profile.angkaMastered,
-          bendaMastered: profile.bendaMastered,
-          favoriteMaterialIds: profile.favoriteMaterialIds,
-        );
-      }
+    UserAccount? account;
+    final profile = _cloudSync.isConfigured
+        ? await _cloudSync.currentProfile()
+        : null;
+    if (profile != null) {
+      final profileRole = _resolveRole(profile.username) == Role.teacher
+          ? Role.teacher
+          : _roleFromString(profile.role);
+      account = await _db.restoreCloudSession(
+        username: profile.username,
+        role: profileRole,
+        childName: profile.childName,
+        gender: profile.gender == 'girl' ? Gender.girl : Gender.boy,
+        themeId: profile.themeId,
+        avatarPath: profile.avatarUrl,
+        stars: profile.stars,
+        iqraStreak: profile.iqraStreak,
+        progress: profile.progress,
+        iqraMastered: profile.iqraMastered,
+        iqraHistory: profile.iqraHistory,
+        hurfMastered: profile.hurfMastered,
+        angkaMastered: profile.angkaMastered,
+        bendaMastered: profile.bendaMastered,
+        favoriteMaterialIds: profile.favoriteMaterialIds,
+      );
     }
     if (account == null) {
       final savedTheme =
@@ -108,7 +110,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     await _startConnectivityWatch();
     _startAutoSync();
     if (email != null && role != null) {
-      await syncCloudContent(silent: true);
+      unawaited(_safeSyncCloudContent(silent: true));
     }
     ready = true;
     notifyListeners();
@@ -129,72 +131,43 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       throw 'Username hanya boleh huruf kecil, angka, titik, underscore, atau strip.';
     }
     try {
-      var nextRole = teacherMode || _resolveRole(nextEmail) == Role.teacher
+      final usernameIsTeacher =
+          teacherMode || _resolveRole(nextEmail) == Role.teacher;
+      var nextRole = usernameIsTeacher ? Role.teacher : Role.child;
+      if (!_cloudSync.isConfigured) throw 'Supabase belum dikonfigurasi.';
+      final cloudProfile = await _cloudSync.authenticate(
+        username: nextEmail,
+        password: password,
+        register: register,
+        preferredRole: nextRole.name,
+      );
+      nextRole = usernameIsTeacher
           ? Role.teacher
-          : Role.child;
-      CloudAuthProfile? cloudProfile;
-      Object? cloudError;
-      if (_cloudSync.isConfigured) {
-        try {
-          cloudProfile = await _cloudSync.authenticate(
-            username: nextEmail,
-            password: password,
-            register: register,
-            preferredRole: nextRole.name,
-          );
-          nextRole = _roleFromString(cloudProfile.role);
-        } catch (error) {
-          if (register) rethrow;
-          cloudError = error;
-        }
-      }
-      UserAccount? account;
-      try {
-        account = await _db.authenticate(
-          username: nextEmail,
-          password: password,
-          register: register,
-          autoCreate: autoCreate || (!register && cloudProfile != null),
-          role: nextRole,
-          childName: name?.trim().isNotEmpty == true ? name!.trim() : 'Teman',
-          gender: nextGender ?? gender,
-          themeId: themeId,
-          defaultProgress: progress,
-          defaultStars: stars,
-        );
-      } catch (localError) {
-        if (cloudError == null || register) rethrow;
-        cloudProfile = await _cloudSync.currentProfile();
-        if (cloudProfile == null) rethrow;
-      }
-      if (cloudProfile != null) {
-        account = await _db.restoreCloudSession(
-          username: cloudProfile.username.isEmpty
-              ? nextEmail
-              : cloudProfile.username,
-          role: _roleFromString(cloudProfile.role),
-          childName: cloudProfile.childName,
-          gender: cloudProfile.gender == 'girl' ? Gender.girl : Gender.boy,
-          themeId: cloudProfile.themeId,
-          avatarPath: cloudProfile.avatarUrl,
-          stars: cloudProfile.stars,
-          iqraStreak: cloudProfile.iqraStreak,
-          progress: cloudProfile.progress,
-          iqraMastered: cloudProfile.iqraMastered,
-          iqraHistory: cloudProfile.iqraHistory,
-          hurfMastered: cloudProfile.hurfMastered,
-          angkaMastered: cloudProfile.angkaMastered,
-          bendaMastered: cloudProfile.bendaMastered,
-          favoriteMaterialIds: cloudProfile.favoriteMaterialIds,
-        );
-      } else if (cloudError != null) {
-        // Lanjut pakai akun lokal bila login cloud gagal tetapi data lokal ada.
-      }
-      _applyAccount(account!);
+          : _roleFromString(cloudProfile.role);
+      final account = await _db.restoreCloudSession(
+        username: cloudProfile.username.isEmpty
+            ? nextEmail
+            : cloudProfile.username,
+        role: nextRole,
+        childName: cloudProfile.childName,
+        gender: cloudProfile.gender == 'girl' ? Gender.girl : Gender.boy,
+        themeId: cloudProfile.themeId,
+        avatarPath: cloudProfile.avatarUrl,
+        stars: cloudProfile.stars,
+        iqraStreak: cloudProfile.iqraStreak,
+        progress: cloudProfile.progress,
+        iqraMastered: cloudProfile.iqraMastered,
+        iqraHistory: cloudProfile.iqraHistory,
+        hurfMastered: cloudProfile.hurfMastered,
+        angkaMastered: cloudProfile.angkaMastered,
+        bendaMastered: cloudProfile.bendaMastered,
+        favoriteMaterialIds: cloudProfile.favoriteMaterialIds,
+      );
+      _applyAccount(account);
       tab = role == Role.teacher ? TabItem.akun : TabItem.main;
       _startAutoSync();
-      await syncCloudContent(silent: true);
       notifyListeners();
+      unawaited(_safeSyncCloudContent(silent: true));
     } catch (error) {
       throw ApiErrorMapper.toMessage(error);
     }
@@ -227,7 +200,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (id == adminEmail ||
         id == 'pengajar' ||
         id == 'guru' ||
+        id.startsWith('pengajar') ||
         id.startsWith('guru_') ||
+        id.startsWith('guru') ||
         id.contains('@guru')) {
       return Role.teacher;
     }
@@ -527,32 +502,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> _migrateSharedPreferencesAccount() async {
-    final savedEmail = _prefs?.getString('email');
-    if (savedEmail == null) return;
-    final savedTheme = _prefs?.getString('themeId') ?? 'default';
-    final savedProgress = Map<String, int>.from(progress);
-    for (final key in savedProgress.keys) {
-      savedProgress[key] =
-          _prefs?.getInt('progress_$key') ?? savedProgress[key]!;
-    }
-    final roleName = _prefs?.getString('role');
-    await _db.migrateAccount(
-      username: savedEmail,
-      childName: _prefs?.getString('childName') ?? 'Teman',
-      gender: _prefs?.getString('gender') == 'girl' ? Gender.girl : Gender.boy,
-      role: roleName == 'teacher' ? Role.teacher : Role.child,
-      themeId: appThemes.any((t) => t.id == savedTheme)
-          ? savedTheme
-          : 'default',
-      stars: _prefs?.getInt('stars') ?? stars,
-      iqraStreak: _prefs?.getInt('iqra_streak') ?? 0,
-      progress: savedProgress,
-      iqraMastered: _prefs?.getStringList('iqra_mastered') ?? const [],
-      iqraHistory: _prefs?.getStringList('iqra_history') ?? const [],
-    );
-  }
-
   Future<void> syncCloudContent({bool silent = false}) async {
     final username = email;
     final currentRole = role;
@@ -587,6 +536,15 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     } finally {
       syncInProgress = false;
       if (ready) notifyListeners();
+    }
+  }
+
+  Future<void> _safeSyncCloudContent({bool silent = false}) async {
+    try {
+      await syncCloudContent(silent: silent);
+    } catch (_) {
+      syncStatus = 'Sinkronisasi ditunda';
+      if (!silent && ready) notifyListeners();
     }
   }
 
@@ -723,8 +681,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Role _roleFromString(String value) =>
-      value.trim().toLowerCase() == 'teacher' ? Role.teacher : Role.child;
+  Role _roleFromString(String value) {
+    final role = value.trim().toLowerCase();
+    return role == 'teacher' || role == 'pengajar' || role == 'guru'
+        ? Role.teacher
+        : Role.child;
+  }
 
   String _formatSyncTime(DateTime value) {
     final hour = value.hour.toString().padLeft(2, '0');

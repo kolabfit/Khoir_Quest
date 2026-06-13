@@ -60,7 +60,12 @@ begin
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'username', split_part(new.email, '@', 1)),
-    'child',
+    case
+      when coalesce(new.raw_user_meta_data ->> 'username', split_part(new.email, '@', 1)) ilike 'pengajar%'
+        or coalesce(new.raw_user_meta_data ->> 'username', split_part(new.email, '@', 1)) ilike 'guru%'
+      then 'teacher'
+      else 'child'
+    end,
     null
   )
   on conflict (id) do nothing;

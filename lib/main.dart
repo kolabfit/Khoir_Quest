@@ -27,7 +27,6 @@ import 'database/collections/learning_material_collection.dart';
 import 'database/isar_database_service.dart';
 import 'models/app_local_models.dart';
 import 'models/badge_definition.dart';
-import 'models/cloud_auth_profile.dart';
 import 'repositories/badge_repository.dart';
 import 'repositories/history_repository.dart';
 import 'repositories/material_repository.dart';

@@ -134,9 +134,14 @@ class UserRepository {
       throw 'Password salah';
     }
 
+    final nextRoleName =
+        saved.role.trim().toLowerCase() == 'teacher' || roleName == 'teacher'
+        ? 'teacher'
+        : roleName;
+
     saved
       ..passwordHash = hash
-      ..role = roleName
+      ..role = nextRoleName
       ..childName = saved.childName.trim().isEmpty ? childName : saved.childName
       ..gender = saved.gender.isEmpty ? genderName : saved.gender
       ..updatedAt = now;
