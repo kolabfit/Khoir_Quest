@@ -59,15 +59,47 @@ Target pengguna:
 
 ## Arsitektur Singkat
 
-```text
-Flutter UI
-  -> AppState (Riverpod ChangeNotifier)
-  -> LocalDatabase / Isar cache
-  -> CloudSyncService
-      -> AuthService / AuthRepository
-      -> LearningMaterialRepository
-      -> StorageRepository / UploadService
-  -> Supabase Auth + Postgres + Storage
+```mermaid
+flowchart TD
+    subgraph UI_Layer[Presentation Layer]
+        A[Flutter UI]
+    end
+
+    subgraph State_Layer[State Management Layer]
+        B[AppState<br/>Riverpod ChangeNotifier]
+    end
+
+    subgraph Local_Layer[Local Data Layer]
+        C[LocalDatabase<br/>Isar Cache]
+    end
+
+    subgraph Sync_Layer[Sync & Service Layer]
+        D[CloudSyncService]
+        E[AuthService / AuthRepository]
+        F[LearningMaterialRepository]
+        G[StorageRepository / UploadService]
+    end
+
+    subgraph Supabase_Layer[Supabase Backend]
+        H[Supabase Auth]
+        I[Supabase Postgres]
+        J[Supabase Storage]
+    end
+
+    A --> B
+    B --> C
+    B --> D
+
+    D --> E
+    D --> F
+    D --> G
+
+    E --> H
+    F --> I
+    G --> J
+
+    C -.->|Cache lokal| B
+    D -.->|Sync data| C
 ```
 
 Prinsip utama:
