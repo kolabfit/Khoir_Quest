@@ -524,7 +524,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
             crossAxisCount: columns,
             crossAxisSpacing: 14,
             mainAxisSpacing: 14,
-            childAspectRatio: desktop ? 2.25 : 1.95,
+            childAspectRatio: desktop ? 2.25 : 1.62,
           ),
           itemCount: stats.length,
           itemBuilder: (_, i) => _TeacherSummaryCard(data: stats[i]),
@@ -549,7 +549,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     final columns = desktop
         ? 5
         : tablet
-        ? 3
+        ? 2
         : screenWidth < 430
         ? 1
         : 2;
@@ -1425,9 +1425,7 @@ class _TeacherTopbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final teacherName = app.childName.trim().isEmpty
-        ? 'Pengajar'
-        : app.childName;
+    const teacherName = 'Pengajar';
     return Padding(
       padding: EdgeInsets.fromLTRB(mobile ? 16 : 20, 18, mobile ? 16 : 24, 12),
       child: _TeacherSurfaceCard(
@@ -1566,93 +1564,109 @@ class _TeacherSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: data.background,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white, width: 1.8),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 18,
-            offset: const Offset(0, 12),
-            color: data.color.withValues(alpha: .12),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Colors.white, data.color.withValues(alpha: .20)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 360;
+        final padding = compact ? 14.0 : 18.0;
+        final iconSize = compact ? 52.0 : 60.0;
+        final valueSize = compact ? 24.0 : 28.0;
+        return Container(
+          padding: EdgeInsets.all(padding),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: data.background,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white, width: 1.8),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 18,
+                offset: const Offset(0, 12),
+                color: data.color.withValues(alpha: .12),
               ),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 16,
-                  color: data.color.withValues(alpha: .18),
-                ),
-              ],
-            ),
-            child: Icon(data.icon, color: data.color, size: 30),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                data.value != null
-                    ? Text(
-                        data.value!,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xff2F2966),
-                        ),
-                      )
-                    : FutureBuilder<int>(
-                        future: data.valueFuture,
-                        builder: (_, snapshot) => Text(
-                          '${snapshot.data ?? 0}',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xff2F2966),
+          child: Row(
+            children: [
+              Container(
+                width: iconSize,
+                height: iconSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Colors.white, data.color.withValues(alpha: .20)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 16,
+                      color: data.color.withValues(alpha: .18),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  data.icon,
+                  color: data.color,
+                  size: compact ? 26 : 30,
+                ),
+              ),
+              SizedBox(width: compact ? 10 : 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    data.value != null
+                        ? Text(
+                            data.value!,
+                            style: TextStyle(
+                              fontSize: valueSize,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xff2F2966),
+                            ),
+                          )
+                        : FutureBuilder<int>(
+                            future: data.valueFuture,
+                            builder: (_, snapshot) => Text(
+                              '${snapshot.data ?? 0}',
+                              style: TextStyle(
+                                fontSize: valueSize,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xff2F2966),
+                              ),
+                            ),
                           ),
-                        ),
+                    const SizedBox(height: 4),
+                    Text(
+                      data.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xff342D6B),
                       ),
-                const SizedBox(height: 4),
-                Text(
-                  data.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xff342D6B),
-                  ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      data.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: compact ? 11 : 12,
+                        color: const Color(0xff6D6A95),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  data.subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xff6D6A95),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
