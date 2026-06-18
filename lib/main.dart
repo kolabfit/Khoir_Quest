@@ -37,6 +37,7 @@ import 'services/auth_service.dart';
 import 'services/cloud_sync_service.dart';
 import 'services/legacy_migration_service.dart';
 import 'services/offline_bootstrap_service.dart';
+import 'services/upload_service.dart';
 import 'storage/local_storage_service.dart';
 
 part 'src/models.dart';
