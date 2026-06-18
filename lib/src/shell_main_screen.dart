@@ -263,7 +263,7 @@ class MainMenuScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 18),
                   SizedBox(
-                    height: 172,
+                    height: 196,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -276,8 +276,11 @@ class MainMenuScreen extends ConsumerWidget {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _BadgeHomeCard(
-                            onTap: () =>
-                                ref.read(appStateProvider).go(TabItem.akun),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const BadgeCollectionScreen(),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -297,7 +300,11 @@ class MainMenuScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 18),
               _BadgeHomeCard(
-                onTap: () => ref.read(appStateProvider).go(TabItem.akun),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const BadgeCollectionScreen(),
+                  ),
+                ),
               ),
             ],
           ],

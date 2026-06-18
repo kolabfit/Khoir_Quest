@@ -2168,7 +2168,14 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
     }
     if (bytes == null || (pickedName ?? '').trim().isEmpty) return;
 
-    final savedPath = _isSong
+    final savedPath = _isSong && kIsWeb
+        ? (await UploadService.instance.uploadLearningAssetBytes(
+            category: LearningCategories.lagu,
+            type: UploadedAssetType.video,
+            bytes: bytes,
+            fileName: pickedName!,
+          )).publicUrl
+        : _isSong
         ? await LocalDatabase.instance.saveVideoBytes(
             bytes: bytes,
             fileName: pickedName!,
