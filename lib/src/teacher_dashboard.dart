@@ -842,6 +842,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   }
 
   Future<void> _deleteContent(_TeacherContentData item) async {
+    final confirmed = await _confirmDeleteContent(item);
+    if (!confirmed || !mounted) return;
     final appState = ref.read(appStateProvider);
     if (item.letter != null) {
       await appState.removeLetter(item.letter!);
@@ -877,6 +879,42 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       );
     }
     _refreshStorage();
+  }
+
+  Future<bool> _confirmDeleteContent(_TeacherContentData item) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierColor: Colors.black.withValues(alpha: .20),
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            title: const Text(
+              'Hapus Materi?',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+            content: Text(
+              'Materi "${item.title}" akan dihapus permanen dari dashboard dan cloud.',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Batal'),
+              ),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xffF43F5E),
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.delete_outline_rounded),
+                label: const Text('Hapus'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   void _showReadOnlyMessage(_TeacherCategory category) {
@@ -1866,6 +1904,7 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
   late final TextEditingController _subtitle;
   String? _fileName;
   String? _mediaPath;
+  Uint8List? _pickedMediaBytes;
   bool _saving = false;
 
   bool get _isSong => widget.category == _TeacherCategory.lagu;
@@ -2168,18 +2207,13 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
     }
     if (bytes == null || (pickedName ?? '').trim().isEmpty) return;
 
-    final savedPath = _isSong && kIsWeb
-        ? (await UploadService.instance.uploadLearningAssetBytes(
-            category: LearningCategories.lagu,
-            type: UploadedAssetType.video,
-            bytes: bytes,
-            fileName: pickedName!,
-          )).publicUrl
-        : _isSong
-        ? await LocalDatabase.instance.saveVideoBytes(
-            bytes: bytes,
-            fileName: pickedName!,
-          )
+    final savedPath = _isSong
+        ? kIsWeb
+              ? 'pending-web-song:${DateTime.now().microsecondsSinceEpoch}'
+              : await LocalDatabase.instance.saveVideoBytes(
+                  bytes: bytes,
+                  fileName: pickedName!,
+                )
         : await LocalDatabase.instance.saveImageBytes(
             bytes: bytes,
             fileName: pickedName!,
@@ -2190,6 +2224,7 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
     if (!mounted) return;
     setState(() {
       _fileName = pickedName;
+      _pickedMediaBytes = _isSong && kIsWeb ? bytes : null;
       _mediaPath = savedPath;
     });
   }
@@ -2199,14 +2234,31 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
     if (!_isSong && _subtitle.text.trim().isEmpty) return;
     if ((_mediaPath ?? '').trim().isEmpty) return;
     setState(() => _saving = true);
-    Navigator.of(context).pop(
-      _TeacherDraftResult(
-        title: _title.text.trim(),
-        subtitle: _subtitle.text.trim(),
-        mediaPath: _mediaPath!.trim(),
-        fileName: _fileName,
-      ),
-    );
+    try {
+      var mediaPath = _mediaPath!.trim();
+      final pickedBytes = _pickedMediaBytes;
+      if (_isSong && kIsWeb && pickedBytes != null) {
+        final baseName = (_fileName ?? 'lagu.mp4').trim();
+        final uniqueName = '${DateTime.now().microsecondsSinceEpoch}_$baseName';
+        mediaPath = (await UploadService.instance.uploadLearningAssetBytes(
+          category: LearningCategories.lagu,
+          type: UploadedAssetType.video,
+          bytes: pickedBytes,
+          fileName: uniqueName,
+        )).publicUrl;
+      }
+      if (!mounted) return;
+      Navigator.of(context).pop(
+        _TeacherDraftResult(
+          title: _title.text.trim(),
+          subtitle: _subtitle.text.trim(),
+          mediaPath: mediaPath,
+          fileName: _fileName,
+        ),
+      );
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 }
 
