@@ -1252,12 +1252,23 @@ class LocalDatabase {
   }
 
   int _compareIqraItems(IqraItem a, IqraItem b) {
-    final order = {
+    final orderBySymbol = {
       for (var i = 0; i < DefaultLearningCatalog.iqraPairs.length; i++)
-        DefaultLearningCatalog.iqraPairs[i]['label']!.toLowerCase(): i,
+        DefaultLearningCatalog.iqraPairs[i]['symbol']!: i,
     };
-    final aIndex = order[a.latin.toLowerCase()] ?? 999;
-    final bIndex = order[b.latin.toLowerCase()] ?? 999;
+    final orderByLabel = {
+      for (var i = 0; i < DefaultLearningCatalog.iqraPairs.length; i++)
+        '${DefaultLearningCatalog.iqraPairs[i]['symbol']}:${DefaultLearningCatalog.iqraPairs[i]['label']!.toLowerCase()}':
+            i,
+    };
+    final aIndex =
+        orderBySymbol[a.char] ??
+        orderByLabel['${a.char}:${a.latin.toLowerCase()}'] ??
+        999;
+    final bIndex =
+        orderBySymbol[b.char] ??
+        orderByLabel['${b.char}:${b.latin.toLowerCase()}'] ??
+        999;
     if (aIndex != bIndex) return aIndex.compareTo(bIndex);
     return a.latin.toLowerCase().compareTo(b.latin.toLowerCase());
   }
