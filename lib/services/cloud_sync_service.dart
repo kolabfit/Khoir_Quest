@@ -110,11 +110,6 @@ class CloudSyncService {
 
   Future<void> syncForRole({required String role}) async {
     if (!isConfigured || !hasSession || !await isOnline()) return;
-    final profile = await _auth.currentProfile();
-    if (profile == null) return;
-    if (role == 'teacher' || role == 'pengajar' || role == 'guru') {
-      await pushLocalTeacherCatalog(createdBy: profile.userId);
-    }
     await pullCloudToLocal();
   }
 
@@ -154,15 +149,13 @@ class CloudSyncService {
 
   Future<void> deleteMaterial(String materialId) async {
     if (!isConfigured || !hasSession || !await isOnline()) return;
-    final remote = await _materials.findById(materialId);
-    await _materials.deleteMaterial(materialId);
-    if (remote != null) {
-      final storage = StorageRepository(_supabase);
-      await storage.deletePublicUrl(remote.imagePath);
-      await storage.deletePublicUrl(remote.audioPath);
-      await storage.deletePublicUrl(remote.videoPath);
-    }
-    await _cache.delete(materialId);
+    final local = await _cache.findById(materialId);
+    final expectedVersion = local?.cloudVersion ?? 0;
+    final deleted = await _materials.softDeleteMaterial(
+      materialId,
+      expectedVersion: expectedVersion,
+    );
+    await _cache.upsert(deleted);
   }
 
   Future<LearningMaterialModel> _pushEntity(
@@ -170,43 +163,88 @@ class CloudSyncService {
     required String createdBy,
   }) async {
     final model = LearningMaterialModel.fromEntity(entity);
-    final imageUrl = await _resolveCloudUrl(
+    final image = await _resolveCloudAsset(
       path: model.imagePath,
+      existingStoragePath: model.imageStoragePath,
       category: model.category,
       type: UploadedAssetType.image,
     );
-    final audioUrl = await _resolveCloudUrl(
+    final audio = await _resolveCloudAsset(
       path: model.audioPath,
+      existingStoragePath: model.audioStoragePath,
       category: model.category,
       type: UploadedAssetType.audio,
     );
-    final videoUrl = await _resolveCloudUrl(
+    final video = await _resolveCloudAsset(
       path: model.videoPath,
+      existingStoragePath: model.videoStoragePath,
       category: model.category,
       type: UploadedAssetType.video,
     );
+    final mediaChanged =
+        image.storagePath != model.imageStoragePath ||
+        audio.storagePath != model.audioStoragePath ||
+        video.storagePath != model.videoStoragePath;
+    final nextMediaVersion = mediaChanged
+        ? (model.mediaVersion <= 0 ? 1 : model.mediaVersion + 1)
+        : (model.mediaVersion <= 0 ? 1 : model.mediaVersion);
+    final storage = StorageRepository(_supabase);
     final synced = await _materials.upsertMaterial(
       model.copyWith(
-        imagePath: imageUrl,
-        audioPath: audioUrl,
-        videoPath: videoUrl,
+        imagePath: image.storagePath.isEmpty
+            ? image.publicUrl
+            : storage.getVersionedPublicUrl(
+                image.storagePath,
+                nextMediaVersion,
+              ),
+        audioPath: audio.storagePath.isEmpty
+            ? audio.publicUrl
+            : storage.getVersionedPublicUrl(
+                audio.storagePath,
+                nextMediaVersion,
+              ),
+        videoPath: video.storagePath.isEmpty
+            ? video.publicUrl
+            : storage.getVersionedPublicUrl(
+                video.storagePath,
+                nextMediaVersion,
+              ),
+        imageStoragePath: image.storagePath,
+        audioStoragePath: audio.storagePath,
+        videoStoragePath: video.storagePath,
         createdBy: createdBy,
         createdAt: model.createdAt,
+        mediaVersion: nextMediaVersion,
         updatedAt: DateTime.now().toUtc(),
       ),
+      expectedVersion: model.version,
     );
     await _cache.upsert(synced);
     return synced;
   }
 
-  Future<String> _resolveCloudUrl({
+  Future<_ResolvedCloudAsset> _resolveCloudAsset({
     required String path,
+    required String existingStoragePath,
     required String category,
     required UploadedAssetType type,
   }) async {
     final value = path.trim();
-    if (value.isEmpty) return '';
-    if (MediaSourceHelper.isRemoteUrl(value)) return value;
+    final storage = StorageRepository(_supabase);
+    if (value.isEmpty && existingStoragePath.trim().isEmpty) {
+      return const _ResolvedCloudAsset(storagePath: '', publicUrl: '');
+    }
+    if (value.isEmpty && existingStoragePath.trim().isNotEmpty) {
+      final storagePath = existingStoragePath.trim();
+      return _ResolvedCloudAsset(
+        storagePath: storagePath,
+        publicUrl: storage.getPublicUrl(storagePath),
+      );
+    }
+    if (MediaSourceHelper.isRemoteUrl(value)) {
+      final storagePath = storage.relativePathFromPublicUrl(value) ?? '';
+      return _ResolvedCloudAsset(storagePath: storagePath, publicUrl: value);
+    }
     if (MediaSourceHelper.isAssetPath(value)) {
       final fileName = value.split('/').last;
       final bytes = (await rootBundle.load(value)).buffer.asUint8List();
@@ -216,13 +254,29 @@ class CloudSyncService {
         bytes: bytes,
         fileName: fileName,
       );
-      return asset.publicUrl;
+      return _ResolvedCloudAsset(
+        storagePath: asset.path,
+        publicUrl: asset.publicUrl,
+      );
     }
     final uploaded = await _upload.uploadLearningAssetFromSource(
       category: category,
       type: type,
       sourcePath: value,
     );
-    return uploaded.publicUrl;
+    return _ResolvedCloudAsset(
+      storagePath: uploaded.path,
+      publicUrl: uploaded.publicUrl,
+    );
   }
+}
+
+class _ResolvedCloudAsset {
+  const _ResolvedCloudAsset({
+    required this.storagePath,
+    required this.publicUrl,
+  });
+
+  final String storagePath;
+  final String publicUrl;
 }

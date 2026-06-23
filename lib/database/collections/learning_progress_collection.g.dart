@@ -14,9 +14,9 @@ extension GetLearningProgressEntityCollection on Isar {
       this.collection();
 }
 
-final LearningProgressEntitySchema = CollectionSchema(
+const LearningProgressEntitySchema = CollectionSchema(
   name: r'LearningProgressEntity',
-  id: int.parse('-226150867204275572'),
+  id: -226150867204275572,
   properties: {
     r'category': PropertySchema(
       id: 0,
@@ -52,7 +52,7 @@ final LearningProgressEntitySchema = CollectionSchema(
       id: 6,
       name: r'updatedAt',
       type: IsarType.dateTime,
-    ),
+    )
   },
   estimateSize: _learningProgressEntityEstimateSize,
   serialize: _learningProgressEntitySerialize,
@@ -61,7 +61,7 @@ final LearningProgressEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'ownerUsername_category': IndexSchema(
-      id: int.parse('7870599218042869831'),
+      id: 7870599218042869831,
       name: r'ownerUsername_category',
       unique: true,
       replace: true,
@@ -75,9 +75,9 @@ final LearningProgressEntitySchema = CollectionSchema(
           name: r'category',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
-    ),
+    )
   },
   links: {},
   embeddedSchemas: {},
@@ -169,61 +169,43 @@ Id _learningProgressEntityGetId(LearningProgressEntity object) {
 }
 
 List<IsarLinkBase<dynamic>> _learningProgressEntityGetLinks(
-  LearningProgressEntity object,
-) {
+    LearningProgressEntity object) {
   return [];
 }
 
 void _learningProgressEntityAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  LearningProgressEntity object,
-) {
+    IsarCollection<dynamic> col, Id id, LearningProgressEntity object) {
   object.id = id;
 }
 
 extension LearningProgressEntityByIndex
     on IsarCollection<LearningProgressEntity> {
   Future<LearningProgressEntity?> getByOwnerUsernameCategory(
-    String ownerUsername,
-    String category,
-  ) {
+      String ownerUsername, String category) {
     return getByIndex(r'ownerUsername_category', [ownerUsername, category]);
   }
 
   LearningProgressEntity? getByOwnerUsernameCategorySync(
-    String ownerUsername,
-    String category,
-  ) {
+      String ownerUsername, String category) {
     return getByIndexSync(r'ownerUsername_category', [ownerUsername, category]);
   }
 
   Future<bool> deleteByOwnerUsernameCategory(
-    String ownerUsername,
-    String category,
-  ) {
+      String ownerUsername, String category) {
     return deleteByIndex(r'ownerUsername_category', [ownerUsername, category]);
   }
 
   bool deleteByOwnerUsernameCategorySync(
-    String ownerUsername,
-    String category,
-  ) {
-    return deleteByIndexSync(r'ownerUsername_category', [
-      ownerUsername,
-      category,
-    ]);
+      String ownerUsername, String category) {
+    return deleteByIndexSync(
+        r'ownerUsername_category', [ownerUsername, category]);
   }
 
   Future<List<LearningProgressEntity?>> getAllByOwnerUsernameCategory(
-    List<String> ownerUsernameValues,
-    List<String> categoryValues,
-  ) {
+      List<String> ownerUsernameValues, List<String> categoryValues) {
     final len = ownerUsernameValues.length;
-    assert(
-      categoryValues.length == len,
-      'All index values must have the same length',
-    );
+    assert(categoryValues.length == len,
+        'All index values must have the same length');
     final values = <List<dynamic>>[];
     for (var i = 0; i < len; i++) {
       values.add([ownerUsernameValues[i], categoryValues[i]]);
@@ -233,14 +215,10 @@ extension LearningProgressEntityByIndex
   }
 
   List<LearningProgressEntity?> getAllByOwnerUsernameCategorySync(
-    List<String> ownerUsernameValues,
-    List<String> categoryValues,
-  ) {
+      List<String> ownerUsernameValues, List<String> categoryValues) {
     final len = ownerUsernameValues.length;
-    assert(
-      categoryValues.length == len,
-      'All index values must have the same length',
-    );
+    assert(categoryValues.length == len,
+        'All index values must have the same length');
     final values = <List<dynamic>>[];
     for (var i = 0; i < len; i++) {
       values.add([ownerUsernameValues[i], categoryValues[i]]);
@@ -250,14 +228,10 @@ extension LearningProgressEntityByIndex
   }
 
   Future<int> deleteAllByOwnerUsernameCategory(
-    List<String> ownerUsernameValues,
-    List<String> categoryValues,
-  ) {
+      List<String> ownerUsernameValues, List<String> categoryValues) {
     final len = ownerUsernameValues.length;
-    assert(
-      categoryValues.length == len,
-      'All index values must have the same length',
-    );
+    assert(categoryValues.length == len,
+        'All index values must have the same length');
     final values = <List<dynamic>>[];
     for (var i = 0; i < len; i++) {
       values.add([ownerUsernameValues[i], categoryValues[i]]);
@@ -267,14 +241,10 @@ extension LearningProgressEntityByIndex
   }
 
   int deleteAllByOwnerUsernameCategorySync(
-    List<String> ownerUsernameValues,
-    List<String> categoryValues,
-  ) {
+      List<String> ownerUsernameValues, List<String> categoryValues) {
     final len = ownerUsernameValues.length;
-    assert(
-      categoryValues.length == len,
-      'All index values must have the same length',
-    );
+    assert(categoryValues.length == len,
+        'All index values must have the same length');
     final values = <List<dynamic>>[];
     for (var i = 0; i < len; i++) {
       values.add([ownerUsernameValues[i], categoryValues[i]]);
@@ -287,69 +257,49 @@ extension LearningProgressEntityByIndex
     return putByIndex(r'ownerUsername_category', object);
   }
 
-  Id putByOwnerUsernameCategorySync(
-    LearningProgressEntity object, {
-    bool saveLinks = true,
-  }) {
-    return putByIndexSync(
-      r'ownerUsername_category',
-      object,
-      saveLinks: saveLinks,
-    );
+  Id putByOwnerUsernameCategorySync(LearningProgressEntity object,
+      {bool saveLinks = true}) {
+    return putByIndexSync(r'ownerUsername_category', object,
+        saveLinks: saveLinks);
   }
 
   Future<List<Id>> putAllByOwnerUsernameCategory(
-    List<LearningProgressEntity> objects,
-  ) {
+      List<LearningProgressEntity> objects) {
     return putAllByIndex(r'ownerUsername_category', objects);
   }
 
   List<Id> putAllByOwnerUsernameCategorySync(
-    List<LearningProgressEntity> objects, {
-    bool saveLinks = true,
-  }) {
-    return putAllByIndexSync(
-      r'ownerUsername_category',
-      objects,
-      saveLinks: saveLinks,
-    );
+      List<LearningProgressEntity> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'ownerUsername_category', objects,
+        saveLinks: saveLinks);
   }
 }
 
 extension LearningProgressEntityQueryWhereSort
     on QueryBuilder<LearningProgressEntity, LearningProgressEntity, QWhere> {
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterWhere>
-  anyId() {
+      anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension LearningProgressEntityQueryWhere
-    on
-        QueryBuilder<
-          LearningProgressEntity,
-          LearningProgressEntity,
-          QWhereClause
-        > {
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterWhereClause
-  >
-  idEqualTo(Id id) {
+extension LearningProgressEntityQueryWhere on QueryBuilder<
+    LearningProgressEntity, LearningProgressEntity, QWhereClause> {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterWhereClause
-  >
-  idNotEqualTo(Id id) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterWhereClause> idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -371,12 +321,8 @@ extension LearningProgressEntityQueryWhere
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterWhereClause
-  >
-  idGreaterThan(Id id, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterWhereClause> idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -384,12 +330,8 @@ extension LearningProgressEntityQueryWhere
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterWhereClause
-  >
-  idLessThan(Id id, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterWhereClause> idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -397,233 +339,168 @@ extension LearningProgressEntityQueryWhere
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterWhereClause
-  >
-  idBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterWhereClause> idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterWhereClause
-  >
-  ownerUsernameEqualToAnyCategory(String ownerUsername) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterWhereClause> ownerUsernameEqualToAnyCategory(String ownerUsername) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'ownerUsername_category',
-          value: [ownerUsername],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'ownerUsername_category',
+        value: [ownerUsername],
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterWhereClause
-  >
-  ownerUsernameNotEqualToAnyCategory(String ownerUsername) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+          QAfterWhereClause>
+      ownerUsernameNotEqualToAnyCategory(String ownerUsername) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername_category',
-                lower: [],
-                upper: [ownerUsername],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername_category',
-                lower: [ownerUsername],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername_category',
+              lower: [],
+              upper: [ownerUsername],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername_category',
+              lower: [ownerUsername],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername_category',
-                lower: [ownerUsername],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername_category',
-                lower: [],
-                upper: [ownerUsername],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername_category',
+              lower: [ownerUsername],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername_category',
+              lower: [],
+              upper: [ownerUsername],
+              includeUpper: false,
+            ));
       }
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterWhereClause
-  >
-  ownerUsernameCategoryEqualTo(String ownerUsername, String category) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+          QAfterWhereClause>
+      ownerUsernameCategoryEqualTo(String ownerUsername, String category) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'ownerUsername_category',
-          value: [ownerUsername, category],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'ownerUsername_category',
+        value: [ownerUsername, category],
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterWhereClause
-  >
-  ownerUsernameEqualToCategoryNotEqualTo(
-    String ownerUsername,
-    String category,
-  ) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+          QAfterWhereClause>
+      ownerUsernameEqualToCategoryNotEqualTo(
+          String ownerUsername, String category) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername_category',
-                lower: [ownerUsername],
-                upper: [ownerUsername, category],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername_category',
-                lower: [ownerUsername, category],
-                includeLower: false,
-                upper: [ownerUsername],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername_category',
+              lower: [ownerUsername],
+              upper: [ownerUsername, category],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername_category',
+              lower: [ownerUsername, category],
+              includeLower: false,
+              upper: [ownerUsername],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername_category',
-                lower: [ownerUsername, category],
-                includeLower: false,
-                upper: [ownerUsername],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername_category',
-                lower: [ownerUsername],
-                upper: [ownerUsername, category],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername_category',
+              lower: [ownerUsername, category],
+              includeLower: false,
+              upper: [ownerUsername],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername_category',
+              lower: [ownerUsername],
+              upper: [ownerUsername, category],
+              includeUpper: false,
+            ));
       }
     });
   }
 }
 
-extension LearningProgressEntityQueryFilter
-    on
-        QueryBuilder<
-          LearningProgressEntity,
-          LearningProgressEntity,
-          QFilterCondition
-        > {
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryEqualTo(String value, {bool caseSensitive = true}) {
+extension LearningProgressEntityQueryFilter on QueryBuilder<
+    LearningProgressEntity, LearningProgressEntity, QFilterCondition> {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> categoryEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'category',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryGreaterThan(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> categoryGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'category',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryLessThan(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> categoryLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'category',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> categoryBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -631,251 +508,193 @@ extension LearningProgressEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'category',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'category',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> categoryStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'category',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> categoryEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'category',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+          QAfterFilterCondition>
+      categoryContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'category',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+          QAfterFilterCondition>
+      categoryMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'category',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'category',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryIsEmpty() {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> categoryIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'category', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  categoryIsNotEmpty() {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> categoryIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'category', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'category',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedItemsEqualTo(int value) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedItemsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'completedItems', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'completedItems',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedItemsGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedItemsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'completedItems',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'completedItems',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedItemsLessThan(int value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedItemsLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'completedItems',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'completedItems',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedItemsBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedItemsBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'completedItems',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'completedItems',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'completedKeys',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'completedKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementGreaterThan(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'completedKeys',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'completedKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementLessThan(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysElementLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'completedKeys',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'completedKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -883,174 +702,162 @@ extension LearningProgressEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'completedKeys',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'completedKeys',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'completedKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'completedKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+          QAfterFilterCondition>
+      completedKeysElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'completedKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+          QAfterFilterCondition>
+      completedKeysElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'completedKeys',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'completedKeys',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'completedKeys',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedKeys',
+        length,
+        true,
+        length,
+        true,
       );
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'completedKeys',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+      return query.listLength(
+        r'completedKeys',
+        0,
+        true,
+        0,
+        true,
       );
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'completedKeys',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+      return query.listLength(
+        r'completedKeys',
+        0,
+        false,
+        999999,
+        true,
       );
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'completedKeys',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+      return query.listLength(
+        r'completedKeys',
+        0,
+        true,
+        length,
+        include,
       );
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'completedKeys',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
+      return query.listLength(
+        r'completedKeys',
+        length,
+        include,
+        999999,
+        true,
       );
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'completedKeys', value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysElementIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'completedKeys', value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysLengthEqualTo(int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'completedKeys', length, true, length, true);
-    });
-  }
-
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'completedKeys', 0, true, 0, true);
-    });
-  }
-
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'completedKeys', 0, false, 999999, true);
-    });
-  }
-
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysLengthLessThan(int length, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'completedKeys', 0, true, length, include);
-    });
-  }
-
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysLengthGreaterThan(int length, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'completedKeys', length, include, 999999, true);
-    });
-  }
-
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  completedKeysLengthBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> completedKeysLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -1067,144 +874,110 @@ extension LearningProgressEntityQueryFilter
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  idEqualTo(Id value) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  idGreaterThan(Id value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  idLessThan(Id value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  idBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> ownerUsernameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameGreaterThan(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> ownerUsernameGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameLessThan(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> ownerUsernameLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> ownerUsernameBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1212,530 +985,446 @@ extension LearningProgressEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'ownerUsername',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerUsername',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> ownerUsernameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> ownerUsernameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+          QAfterFilterCondition>
+      ownerUsernameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+          QAfterFilterCondition>
+      ownerUsernameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'ownerUsername',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerUsername',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameIsEmpty() {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> ownerUsernameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'ownerUsername', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUsername',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  ownerUsernameIsNotEmpty() {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> ownerUsernameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'ownerUsername', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerUsername',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  progressPercentEqualTo(int value) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> progressPercentEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'progressPercent', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'progressPercent',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  progressPercentGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> progressPercentGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'progressPercent',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'progressPercent',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  progressPercentLessThan(int value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> progressPercentLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'progressPercent',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'progressPercent',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  progressPercentBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> progressPercentBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'progressPercent',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'progressPercent',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  totalItemsEqualTo(int value) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> totalItemsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'totalItems', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalItems',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  totalItemsGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> totalItemsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'totalItems',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalItems',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  totalItemsLessThan(int value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> totalItemsLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'totalItems',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalItems',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  totalItemsBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> totalItemsBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'totalItems',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalItems',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  updatedAtEqualTo(DateTime value) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'updatedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> updatedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  updatedAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> updatedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    LearningProgressEntity,
-    LearningProgressEntity,
-    QAfterFilterCondition
-  >
-  updatedAtBetween(
+  QueryBuilder<LearningProgressEntity, LearningProgressEntity,
+      QAfterFilterCondition> updatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'updatedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
 
-extension LearningProgressEntityQueryObject
-    on
-        QueryBuilder<
-          LearningProgressEntity,
-          LearningProgressEntity,
-          QFilterCondition
-        > {}
+extension LearningProgressEntityQueryObject on QueryBuilder<
+    LearningProgressEntity, LearningProgressEntity, QFilterCondition> {}
 
-extension LearningProgressEntityQueryLinks
-    on
-        QueryBuilder<
-          LearningProgressEntity,
-          LearningProgressEntity,
-          QFilterCondition
-        > {}
+extension LearningProgressEntityQueryLinks on QueryBuilder<
+    LearningProgressEntity, LearningProgressEntity, QFilterCondition> {}
 
 extension LearningProgressEntityQuerySortBy
     on QueryBuilder<LearningProgressEntity, LearningProgressEntity, QSortBy> {
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByCategory() {
+      sortByCategory() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'category', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByCategoryDesc() {
+      sortByCategoryDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'category', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByCompletedItems() {
+      sortByCompletedItems() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completedItems', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByCompletedItemsDesc() {
+      sortByCompletedItemsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completedItems', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByOwnerUsername() {
+      sortByOwnerUsername() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByOwnerUsernameDesc() {
+      sortByOwnerUsernameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByProgressPercent() {
+      sortByProgressPercent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'progressPercent', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByProgressPercentDesc() {
+      sortByProgressPercentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'progressPercent', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByTotalItems() {
+      sortByTotalItems() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalItems', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByTotalItemsDesc() {
+      sortByTotalItemsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalItems', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByUpdatedAt() {
+      sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  sortByUpdatedAtDesc() {
+      sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 }
 
-extension LearningProgressEntityQuerySortThenBy
-    on
-        QueryBuilder<
-          LearningProgressEntity,
-          LearningProgressEntity,
-          QSortThenBy
-        > {
+extension LearningProgressEntityQuerySortThenBy on QueryBuilder<
+    LearningProgressEntity, LearningProgressEntity, QSortThenBy> {
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByCategory() {
+      thenByCategory() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'category', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByCategoryDesc() {
+      thenByCategoryDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'category', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByCompletedItems() {
+      thenByCompletedItems() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completedItems', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByCompletedItemsDesc() {
+      thenByCompletedItemsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completedItems', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenById() {
+      thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByIdDesc() {
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByOwnerUsername() {
+      thenByOwnerUsername() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByOwnerUsernameDesc() {
+      thenByOwnerUsernameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByProgressPercent() {
+      thenByProgressPercent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'progressPercent', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByProgressPercentDesc() {
+      thenByProgressPercentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'progressPercent', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByTotalItems() {
+      thenByTotalItems() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalItems', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByTotalItemsDesc() {
+      thenByTotalItemsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalItems', Sort.desc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByUpdatedAt() {
+      thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QAfterSortBy>
-  thenByUpdatedAtDesc() {
+      thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -1745,65 +1434,58 @@ extension LearningProgressEntityQuerySortThenBy
 extension LearningProgressEntityQueryWhereDistinct
     on QueryBuilder<LearningProgressEntity, LearningProgressEntity, QDistinct> {
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QDistinct>
-  distinctByCategory({bool caseSensitive = true}) {
+      distinctByCategory({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'category', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QDistinct>
-  distinctByCompletedItems() {
+      distinctByCompletedItems() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'completedItems');
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QDistinct>
-  distinctByCompletedKeys() {
+      distinctByCompletedKeys() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'completedKeys');
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QDistinct>
-  distinctByOwnerUsername({bool caseSensitive = true}) {
+      distinctByOwnerUsername({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'ownerUsername',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'ownerUsername',
+          caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QDistinct>
-  distinctByProgressPercent() {
+      distinctByProgressPercent() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'progressPercent');
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QDistinct>
-  distinctByTotalItems() {
+      distinctByTotalItems() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'totalItems');
     });
   }
 
   QueryBuilder<LearningProgressEntity, LearningProgressEntity, QDistinct>
-  distinctByUpdatedAt() {
+      distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
     });
   }
 }
 
-extension LearningProgressEntityQueryProperty
-    on
-        QueryBuilder<
-          LearningProgressEntity,
-          LearningProgressEntity,
-          QQueryProperty
-        > {
+extension LearningProgressEntityQueryProperty on QueryBuilder<
+    LearningProgressEntity, LearningProgressEntity, QQueryProperty> {
   QueryBuilder<LearningProgressEntity, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
@@ -1811,49 +1493,49 @@ extension LearningProgressEntityQueryProperty
   }
 
   QueryBuilder<LearningProgressEntity, String, QQueryOperations>
-  categoryProperty() {
+      categoryProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'category');
     });
   }
 
   QueryBuilder<LearningProgressEntity, int, QQueryOperations>
-  completedItemsProperty() {
+      completedItemsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'completedItems');
     });
   }
 
   QueryBuilder<LearningProgressEntity, List<String>, QQueryOperations>
-  completedKeysProperty() {
+      completedKeysProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'completedKeys');
     });
   }
 
   QueryBuilder<LearningProgressEntity, String, QQueryOperations>
-  ownerUsernameProperty() {
+      ownerUsernameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ownerUsername');
     });
   }
 
   QueryBuilder<LearningProgressEntity, int, QQueryOperations>
-  progressPercentProperty() {
+      progressPercentProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'progressPercent');
     });
   }
 
   QueryBuilder<LearningProgressEntity, int, QQueryOperations>
-  totalItemsProperty() {
+      totalItemsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'totalItems');
     });
   }
 
   QueryBuilder<LearningProgressEntity, DateTime, QQueryOperations>
-  updatedAtProperty() {
+      updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'updatedAt');
     });

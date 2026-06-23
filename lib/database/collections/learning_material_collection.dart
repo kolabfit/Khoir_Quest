@@ -20,9 +20,17 @@ class LearningMaterialEntity {
   String imagePath = '';
   String audioPath = '';
   String videoPath = '';
+  String imageStoragePath = '';
+  String audioStoragePath = '';
+  String videoStoragePath = '';
   String thumbnailPath = '';
   String fileName = '';
   String sourceUrl = '';
+  int cloudVersion = 0;
+  DateTime? cloudUpdatedAt;
+  String syncState = 'clean';
+  DateTime? deletedAt;
+  int mediaVersion = 1;
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
 }

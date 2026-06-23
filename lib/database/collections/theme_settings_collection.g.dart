@@ -14,11 +14,15 @@ extension GetThemeSettingsEntityCollection on Isar {
       this.collection();
 }
 
-final ThemeSettingsEntitySchema = CollectionSchema(
+const ThemeSettingsEntitySchema = CollectionSchema(
   name: r'ThemeSettingsEntity',
-  id: int.parse('7886392070402085114'),
+  id: 7886392070402085114,
   properties: {
-    r'darkMode': PropertySchema(id: 0, name: r'darkMode', type: IsarType.bool),
+    r'darkMode': PropertySchema(
+      id: 0,
+      name: r'darkMode',
+      type: IsarType.bool,
+    ),
     r'ownerUsername': PropertySchema(
       id: 1,
       name: r'ownerUsername',
@@ -33,7 +37,7 @@ final ThemeSettingsEntitySchema = CollectionSchema(
       id: 3,
       name: r'updatedAt',
       type: IsarType.dateTime,
-    ),
+    )
   },
   estimateSize: _themeSettingsEntityEstimateSize,
   serialize: _themeSettingsEntitySerialize,
@@ -42,7 +46,7 @@ final ThemeSettingsEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'ownerUsername': IndexSchema(
-      id: int.parse('9203638787039241762'),
+      id: 9203638787039241762,
       name: r'ownerUsername',
       unique: true,
       replace: true,
@@ -51,9 +55,9 @@ final ThemeSettingsEntitySchema = CollectionSchema(
           name: r'ownerUsername',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
-    ),
+    )
   },
   links: {},
   embeddedSchemas: {},
@@ -126,16 +130,12 @@ Id _themeSettingsEntityGetId(ThemeSettingsEntity object) {
 }
 
 List<IsarLinkBase<dynamic>> _themeSettingsEntityGetLinks(
-  ThemeSettingsEntity object,
-) {
+    ThemeSettingsEntity object) {
   return [];
 }
 
 void _themeSettingsEntityAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  ThemeSettingsEntity object,
-) {
+    IsarCollection<dynamic> col, Id id, ThemeSettingsEntity object) {
   object.id = id;
 }
 
@@ -157,15 +157,13 @@ extension ThemeSettingsEntityByIndex on IsarCollection<ThemeSettingsEntity> {
   }
 
   Future<List<ThemeSettingsEntity?>> getAllByOwnerUsername(
-    List<String> ownerUsernameValues,
-  ) {
+      List<String> ownerUsernameValues) {
     final values = ownerUsernameValues.map((e) => [e]).toList();
     return getAllByIndex(r'ownerUsername', values);
   }
 
   List<ThemeSettingsEntity?> getAllByOwnerUsernameSync(
-    List<String> ownerUsernameValues,
-  ) {
+      List<String> ownerUsernameValues) {
     final values = ownerUsernameValues.map((e) => [e]).toList();
     return getAllByIndexSync(r'ownerUsername', values);
   }
@@ -184,10 +182,8 @@ extension ThemeSettingsEntityByIndex on IsarCollection<ThemeSettingsEntity> {
     return putByIndex(r'ownerUsername', object);
   }
 
-  Id putByOwnerUsernameSync(
-    ThemeSettingsEntity object, {
-    bool saveLinks = true,
-  }) {
+  Id putByOwnerUsernameSync(ThemeSettingsEntity object,
+      {bool saveLinks = true}) {
     return putByIndexSync(r'ownerUsername', object, saveLinks: saveLinks);
   }
 
@@ -195,10 +191,8 @@ extension ThemeSettingsEntityByIndex on IsarCollection<ThemeSettingsEntity> {
     return putAllByIndex(r'ownerUsername', objects);
   }
 
-  List<Id> putAllByOwnerUsernameSync(
-    List<ThemeSettingsEntity> objects, {
-    bool saveLinks = true,
-  }) {
+  List<Id> putAllByOwnerUsernameSync(List<ThemeSettingsEntity> objects,
+      {bool saveLinks = true}) {
     return putAllByIndexSync(r'ownerUsername', objects, saveLinks: saveLinks);
   }
 }
@@ -215,14 +209,17 @@ extension ThemeSettingsEntityQueryWhereSort
 extension ThemeSettingsEntityQueryWhere
     on QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QWhereClause> {
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterWhereClause>
-  idEqualTo(Id id) {
+      idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterWhereClause>
-  idNotEqualTo(Id id) {
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -245,7 +242,7 @@ extension ThemeSettingsEntityQueryWhere
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterWhereClause>
-  idGreaterThan(Id id, {bool include = false}) {
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -254,7 +251,7 @@ extension ThemeSettingsEntityQueryWhere
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterWhereClause>
-  idLessThan(Id id, {bool include = false}) {
+      idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -263,202 +260,184 @@ extension ThemeSettingsEntityQueryWhere
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterWhereClause>
-  idBetween(
+      idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterWhereClause>
-  ownerUsernameEqualTo(String ownerUsername) {
+      ownerUsernameEqualTo(String ownerUsername) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'ownerUsername',
-          value: [ownerUsername],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'ownerUsername',
+        value: [ownerUsername],
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterWhereClause>
-  ownerUsernameNotEqualTo(String ownerUsername) {
+      ownerUsernameNotEqualTo(String ownerUsername) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername',
-                lower: [],
-                upper: [ownerUsername],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername',
-                lower: [ownerUsername],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername',
+              lower: [],
+              upper: [ownerUsername],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername',
+              lower: [ownerUsername],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername',
-                lower: [ownerUsername],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerUsername',
-                lower: [],
-                upper: [ownerUsername],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername',
+              lower: [ownerUsername],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUsername',
+              lower: [],
+              upper: [ownerUsername],
+              includeUpper: false,
+            ));
       }
     });
   }
 }
 
-extension ThemeSettingsEntityQueryFilter
-    on
-        QueryBuilder<
-          ThemeSettingsEntity,
-          ThemeSettingsEntity,
-          QFilterCondition
-        > {
+extension ThemeSettingsEntityQueryFilter on QueryBuilder<ThemeSettingsEntity,
+    ThemeSettingsEntity, QFilterCondition> {
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  darkModeEqualTo(bool value) {
+      darkModeEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'darkMode', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'darkMode',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  idEqualTo(Id value) {
+      idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  idGreaterThan(Id value, {bool include = false}) {
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  idLessThan(Id value, {bool include = false}) {
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  idBetween(
+      idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameEqualTo(String value, {bool caseSensitive = true}) {
+      ownerUsernameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameGreaterThan(
+      ownerUsernameGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameLessThan(
+      ownerUsernameLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameBetween(
+      ownerUsernameBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -466,140 +445,135 @@ extension ThemeSettingsEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'ownerUsername',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerUsername',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameStartsWith(String value, {bool caseSensitive = true}) {
+      ownerUsernameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameEndsWith(String value, {bool caseSensitive = true}) {
+      ownerUsernameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameContains(String value, {bool caseSensitive = true}) {
+      ownerUsernameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameMatches(String pattern, {bool caseSensitive = true}) {
+      ownerUsernameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'ownerUsername',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerUsername',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameIsEmpty() {
+      ownerUsernameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'ownerUsername', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUsername',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  ownerUsernameIsNotEmpty() {
+      ownerUsernameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'ownerUsername', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerUsername',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeEqualTo(String value, {bool caseSensitive = true}) {
+      selectedThemeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'selectedTheme',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'selectedTheme',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeGreaterThan(
+      selectedThemeGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'selectedTheme',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'selectedTheme',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeLessThan(
+      selectedThemeLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'selectedTheme',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'selectedTheme',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeBetween(
+      selectedThemeBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -607,214 +581,203 @@ extension ThemeSettingsEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'selectedTheme',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'selectedTheme',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeStartsWith(String value, {bool caseSensitive = true}) {
+      selectedThemeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'selectedTheme',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'selectedTheme',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeEndsWith(String value, {bool caseSensitive = true}) {
+      selectedThemeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'selectedTheme',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'selectedTheme',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeContains(String value, {bool caseSensitive = true}) {
+      selectedThemeContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'selectedTheme',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'selectedTheme',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeMatches(String pattern, {bool caseSensitive = true}) {
+      selectedThemeMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'selectedTheme',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'selectedTheme',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeIsEmpty() {
+      selectedThemeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'selectedTheme', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'selectedTheme',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  selectedThemeIsNotEmpty() {
+      selectedThemeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'selectedTheme', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'selectedTheme',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  updatedAtEqualTo(DateTime value) {
+      updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'updatedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+      updatedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  updatedAtLessThan(DateTime value, {bool include = false}) {
+      updatedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterFilterCondition>
-  updatedAtBetween(
+      updatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'updatedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
 
-extension ThemeSettingsEntityQueryObject
-    on
-        QueryBuilder<
-          ThemeSettingsEntity,
-          ThemeSettingsEntity,
-          QFilterCondition
-        > {}
+extension ThemeSettingsEntityQueryObject on QueryBuilder<ThemeSettingsEntity,
+    ThemeSettingsEntity, QFilterCondition> {}
 
-extension ThemeSettingsEntityQueryLinks
-    on
-        QueryBuilder<
-          ThemeSettingsEntity,
-          ThemeSettingsEntity,
-          QFilterCondition
-        > {}
+extension ThemeSettingsEntityQueryLinks on QueryBuilder<ThemeSettingsEntity,
+    ThemeSettingsEntity, QFilterCondition> {}
 
 extension ThemeSettingsEntityQuerySortBy
     on QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QSortBy> {
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  sortByDarkMode() {
+      sortByDarkMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'darkMode', Sort.asc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  sortByDarkModeDesc() {
+      sortByDarkModeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'darkMode', Sort.desc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  sortByOwnerUsername() {
+      sortByOwnerUsername() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.asc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  sortByOwnerUsernameDesc() {
+      sortByOwnerUsernameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.desc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  sortBySelectedTheme() {
+      sortBySelectedTheme() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'selectedTheme', Sort.asc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  sortBySelectedThemeDesc() {
+      sortBySelectedThemeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'selectedTheme', Sort.desc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  sortByUpdatedAt() {
+      sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  sortByUpdatedAtDesc() {
+      sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -824,70 +787,70 @@ extension ThemeSettingsEntityQuerySortBy
 extension ThemeSettingsEntityQuerySortThenBy
     on QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QSortThenBy> {
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenByDarkMode() {
+      thenByDarkMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'darkMode', Sort.asc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenByDarkModeDesc() {
+      thenByDarkModeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'darkMode', Sort.desc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenById() {
+      thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenByIdDesc() {
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenByOwnerUsername() {
+      thenByOwnerUsername() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.asc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenByOwnerUsernameDesc() {
+      thenByOwnerUsernameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.desc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenBySelectedTheme() {
+      thenBySelectedTheme() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'selectedTheme', Sort.asc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenBySelectedThemeDesc() {
+      thenBySelectedThemeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'selectedTheme', Sort.desc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenByUpdatedAt() {
+      thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QAfterSortBy>
-  thenByUpdatedAtDesc() {
+      thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -897,34 +860,30 @@ extension ThemeSettingsEntityQuerySortThenBy
 extension ThemeSettingsEntityQueryWhereDistinct
     on QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QDistinct> {
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QDistinct>
-  distinctByDarkMode() {
+      distinctByDarkMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'darkMode');
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QDistinct>
-  distinctByOwnerUsername({bool caseSensitive = true}) {
+      distinctByOwnerUsername({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'ownerUsername',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'ownerUsername',
+          caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QDistinct>
-  distinctBySelectedTheme({bool caseSensitive = true}) {
+      distinctBySelectedTheme({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'selectedTheme',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'selectedTheme',
+          caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, ThemeSettingsEntity, QDistinct>
-  distinctByUpdatedAt() {
+      distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
     });
@@ -946,21 +905,21 @@ extension ThemeSettingsEntityQueryProperty
   }
 
   QueryBuilder<ThemeSettingsEntity, String, QQueryOperations>
-  ownerUsernameProperty() {
+      ownerUsernameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ownerUsername');
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, String, QQueryOperations>
-  selectedThemeProperty() {
+      selectedThemeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'selectedTheme');
     });
   }
 
   QueryBuilder<ThemeSettingsEntity, DateTime, QQueryOperations>
-  updatedAtProperty() {
+      updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'updatedAt');
     });

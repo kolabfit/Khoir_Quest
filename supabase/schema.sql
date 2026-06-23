@@ -49,6 +49,14 @@ create table if not exists public.learning_materials (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+alter table public.learning_materials
+  add column if not exists version integer not null default 1,
+  add column if not exists deleted_at timestamptz,
+  add column if not exists image_storage_path text,
+  add column if not exists audio_storage_path text,
+  add column if not exists video_storage_path text,
+  add column if not exists media_version integer not null default 1;
+
 create or replace function public.handle_profile_bootstrap()
 returns trigger
 language plpgsql
@@ -107,6 +115,141 @@ drop trigger if exists set_profiles_updated_at on public.profiles;
 create trigger set_profiles_updated_at
 before update on public.profiles
 for each row execute function public.set_profiles_updated_at();
+
+create or replace function public.is_teacher()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = auth.uid()
+      and role = 'teacher'
+  );
+$$;
+
+create or replace function public.upsert_learning_material_if_current(
+  expected_version integer,
+  payload jsonb
+)
+returns public.learning_materials
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  existing public.learning_materials%rowtype;
+  saved public.learning_materials%rowtype;
+begin
+  if not public.is_teacher() then
+    raise exception 'teacher role required' using errcode = '42501';
+  end if;
+
+  select * into existing
+  from public.learning_materials
+  where id = payload ->> 'id'
+  for update;
+
+  if existing.id is null then
+    if coalesce(expected_version, 0) <> 0 then
+      raise exception 'stale learning material version' using errcode = 'P0001';
+    end if;
+
+    insert into public.learning_materials (
+      id, category, symbol, label, image_path, audio_path, video_path,
+      image_storage_path, audio_storage_path, video_storage_path,
+      media_version, created_by, created_at, updated_at, version, deleted_at
+    )
+    values (
+      payload ->> 'id',
+      payload ->> 'category',
+      coalesce(payload ->> 'symbol', ''),
+      coalesce(payload ->> 'label', ''),
+      nullif(payload ->> 'image_path', ''),
+      nullif(payload ->> 'audio_path', ''),
+      nullif(payload ->> 'video_path', ''),
+      nullif(payload ->> 'image_storage_path', ''),
+      nullif(payload ->> 'audio_storage_path', ''),
+      nullif(payload ->> 'video_storage_path', ''),
+      coalesce((payload ->> 'media_version')::integer, 1),
+      auth.uid(),
+      coalesce((payload ->> 'created_at')::timestamptz, timezone('utc', now())),
+      timezone('utc', now()),
+      1,
+      null
+    )
+    returning * into saved;
+    return saved;
+  end if;
+
+  if existing.version <> expected_version then
+    raise exception 'stale learning material version' using errcode = 'P0001';
+  end if;
+
+  update public.learning_materials
+  set
+    category = payload ->> 'category',
+    symbol = coalesce(payload ->> 'symbol', ''),
+    label = coalesce(payload ->> 'label', ''),
+    image_path = nullif(payload ->> 'image_path', ''),
+    audio_path = nullif(payload ->> 'audio_path', ''),
+    video_path = nullif(payload ->> 'video_path', ''),
+    image_storage_path = nullif(payload ->> 'image_storage_path', ''),
+    audio_storage_path = nullif(payload ->> 'audio_storage_path', ''),
+    video_storage_path = nullif(payload ->> 'video_storage_path', ''),
+    media_version = greatest(coalesce((payload ->> 'media_version')::integer, existing.media_version), 1),
+    created_by = auth.uid(),
+    deleted_at = null,
+    version = existing.version + 1
+  where id = existing.id
+  returning * into saved;
+
+  return saved;
+end;
+$$;
+
+create or replace function public.soft_delete_learning_material_if_current(
+  material_id text,
+  expected_version integer
+)
+returns public.learning_materials
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  existing public.learning_materials%rowtype;
+  saved public.learning_materials%rowtype;
+begin
+  if not public.is_teacher() then
+    raise exception 'teacher role required' using errcode = '42501';
+  end if;
+
+  select * into existing
+  from public.learning_materials
+  where id = material_id
+  for update;
+
+  if existing.id is null then
+    raise exception 'learning material not found' using errcode = 'P0002';
+  end if;
+
+  if existing.version <> expected_version then
+    raise exception 'stale learning material version' using errcode = 'P0001';
+  end if;
+
+  update public.learning_materials
+  set deleted_at = timezone('utc', now()),
+      version = existing.version + 1
+  where id = material_id
+  returning * into saved;
+
+  return saved;
+end;
+$$;
 
 alter table public.profiles enable row level security;
 alter table public.learning_materials enable row level security;

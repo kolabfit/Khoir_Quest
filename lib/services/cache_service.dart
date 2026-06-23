@@ -19,20 +19,9 @@ class CacheService {
 
   Future<void> replaceFromCloud(List<LearningMaterialModel> materials) async {
     if (kIsWeb) return _webReplaceFromCloud(materials);
-    final grouped = <String, List<LearningMaterialEntity>>{
-      LearningCategories.huruf: [],
-      LearningCategories.angka: [],
-      LearningCategories.benda: [],
-      LearningCategories.iqra: [],
-      LearningCategories.lagu: [],
-    };
-    for (final material in materials) {
-      grouped.putIfAbsent(material.category, () => <LearningMaterialEntity>[]);
-      grouped[material.category]!.add(material.toEntity());
-    }
-    for (final entry in grouped.entries) {
-      await _materials.replaceCategory(entry.key, entry.value);
-    }
+    await _materials.mergeFromCloud(
+      materials.map((material) => material.toEntity()).toList(),
+    );
   }
 
   Future<void> upsert(LearningMaterialModel material) {
@@ -52,7 +41,7 @@ class CacheService {
 
   Future<List<LearningMaterialEntity>> loadAllSyncable() {
     if (kIsWeb) return _webLoadAll();
-    return _materials.loadAll();
+    return _materials.loadAllIncludingDeleted();
   }
 
   Future<void> _webReplaceFromCloud(

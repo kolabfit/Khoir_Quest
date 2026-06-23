@@ -360,8 +360,19 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> addObject(String name, String img, String category) async {
-    final object = await _db.addObject(name, img, category);
+  Future<void> addObject(
+    String name,
+    String img,
+    String category, {
+    String? existingId,
+  }) async {
+    final object = await _db.addObject(
+      name,
+      img,
+      category,
+      existingId: existingId,
+    );
+    objects.removeWhere((item) => item.id == object.id);
     objects.insert(0, object);
     await _syncSingleMaterial(object.id);
     notifyListeners();
@@ -460,16 +471,23 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> addSong(String title, String url, {String? fileName}) async {
-    final song = SongItem(
-      DateTime.now().millisecondsSinceEpoch.toString(),
-      title,
-      url,
-      const [],
+  Future<void> addSong(
+    String title,
+    String url, {
+    String? fileName,
+    String? existingId,
+  }) async {
+    final id = existingId?.trim().isNotEmpty == true
+        ? existingId!.trim()
+        : DateTime.now().millisecondsSinceEpoch.toString();
+    final song = await _db.saveSong(
+      id: id,
+      title: title,
+      videoPath: url,
       fileName: fileName,
     );
+    songs.removeWhere((item) => item.id == id);
     songs.insert(0, song);
-    await _db.saveSongs(songs);
     await _syncSingleMaterial(song.id);
     notifyListeners();
   }
@@ -480,7 +498,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (deleteMedia && MediaSourceHelper.isLocalFilePath(song.videoUrl)) {
       await _db.deleteFile(song.videoUrl);
     }
-    await _db.saveSongs(songs);
+    await _db.removeSong(song);
     if (email != null) {
       await _db.saveFavoriteIds(email!, favorites);
     }
@@ -568,7 +586,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     } catch (error) {
       syncStatus = ApiErrorMapper.toMessage(
         error,
-        fallback: 'Perubahan tersimpan. Sinkron tertunda.',
+        fallback: 'Materi sudah diubah di perangkat lain. Refresh dulu.',
       );
     } finally {
       syncInProgress = false;
@@ -595,7 +613,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     } catch (error) {
       syncStatus = ApiErrorMapper.toMessage(
         error,
-        fallback: 'Hapus selesai. Sinkron cloud tertunda.',
+        fallback: 'Materi sudah diubah di perangkat lain. Refresh dulu.',
       );
     } finally {
       syncInProgress = false;
@@ -645,7 +663,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void _startAutoSync() {
     _autoSyncTimer?.cancel();
     if (!_cloudSync.isConfigured) return;
-    _autoSyncTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
+    if (role == Role.teacher) return;
+    _autoSyncTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
       await _syncIfNeeded(reason: 'timer');
     });
   }
@@ -660,7 +679,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (!force) {
       final last = _lastAutoSyncAt;
       if (last != null &&
-          DateTime.now().difference(last) < const Duration(seconds: 20)) {
+          DateTime.now().difference(last) < const Duration(minutes: 5)) {
         return;
       }
     }

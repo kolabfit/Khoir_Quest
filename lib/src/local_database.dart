@@ -790,6 +790,41 @@ class LocalDatabase {
     await _materialRepository.replaceSongs(entities);
   }
 
+  Future<SongItem> saveSong({
+    required String id,
+    required String title,
+    required String videoPath,
+    String? fileName,
+  }) async {
+    await ensureReady();
+    if (kIsWeb) {
+      final songs = await loadSongs();
+      final song = SongItem(id, title, videoPath, const [], fileName: fileName);
+      songs.removeWhere((item) => item.id == id);
+      songs.insert(0, song);
+      await saveSongs(songs);
+      return song;
+    }
+    await _materialRepository.upsertSong(
+      id: id,
+      title: title,
+      videoPath: videoPath,
+      fileName: fileName,
+    );
+    return SongItem(id, title, videoPath, const [], fileName: fileName);
+  }
+
+  Future<void> removeSong(SongItem song) async {
+    await ensureReady();
+    if (kIsWeb) {
+      final songs = await loadSongs();
+      songs.removeWhere((item) => item.id == song.id);
+      await saveSongs(songs);
+      return;
+    }
+    await _materialRepository.deleteMaterialById(song.id);
+  }
+
   Future<List<LearningObject>> loadObjects() async {
     await ensureReady();
     if (kIsWeb) {
@@ -826,8 +861,9 @@ class LocalDatabase {
   Future<LearningObject> addObject(
     String name,
     String imagePath,
-    String category,
-  ) async {
+    String category, {
+    String? existingId,
+  }) async {
     await ensureReady();
     if (kIsWeb) {
       final objects = await loadObjects();
@@ -835,7 +871,9 @@ class LocalDatabase {
         name,
         imagePath,
         category,
-        'benda_${DateTime.now().millisecondsSinceEpoch}',
+        existingId?.trim().isNotEmpty == true
+            ? existingId!.trim()
+            : 'benda_${DateTime.now().millisecondsSinceEpoch}',
       );
       objects.insert(0, object);
       await _webPrefs!.setString(
@@ -855,7 +893,12 @@ class LocalDatabase {
       );
       return object;
     }
-    final entity = await _materialRepository.saveObject(
+    final materialId = existingId?.trim().isNotEmpty == true
+        ? existingId!.trim()
+        : 'benda_${name.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}';
+    final entity = await _materialRepository.upsertMaterial(
+      materialId: materialId,
+      category: LearningCategories.benda,
       title: name,
       imagePath: imagePath,
       subcategory: category,

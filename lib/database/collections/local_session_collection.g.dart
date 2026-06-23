@@ -14,9 +14,9 @@ extension GetLocalSessionEntityCollection on Isar {
       this.collection();
 }
 
-final LocalSessionEntitySchema = CollectionSchema(
+const LocalSessionEntitySchema = CollectionSchema(
   name: r'LocalSessionEntity',
-  id: int.parse('-6232920299758717415'),
+  id: -6232920299758717415,
   properties: {
     r'currentUsername': PropertySchema(
       id: 0,
@@ -32,7 +32,7 @@ final LocalSessionEntitySchema = CollectionSchema(
       id: 2,
       name: r'updatedAt',
       type: IsarType.dateTime,
-    ),
+    )
   },
   estimateSize: _localSessionEntityEstimateSize,
   serialize: _localSessionEntitySerialize,
@@ -111,16 +111,12 @@ Id _localSessionEntityGetId(LocalSessionEntity object) {
 }
 
 List<IsarLinkBase<dynamic>> _localSessionEntityGetLinks(
-  LocalSessionEntity object,
-) {
+    LocalSessionEntity object) {
   return [];
 }
 
 void _localSessionEntityAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  LocalSessionEntity object,
-) {
+    IsarCollection<dynamic> col, Id id, LocalSessionEntity object) {
   object.id = id;
 }
 
@@ -136,14 +132,17 @@ extension LocalSessionEntityQueryWhereSort
 extension LocalSessionEntityQueryWhere
     on QueryBuilder<LocalSessionEntity, LocalSessionEntity, QWhereClause> {
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterWhereClause>
-  idEqualTo(Id id) {
+      idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterWhereClause>
-  idNotEqualTo(Id id) {
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -166,7 +165,7 @@ extension LocalSessionEntityQueryWhere
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterWhereClause>
-  idGreaterThan(Id id, {bool include = false}) {
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -175,7 +174,7 @@ extension LocalSessionEntityQueryWhere
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterWhereClause>
-  idLessThan(Id id, {bool include = false}) {
+      idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -184,21 +183,19 @@ extension LocalSessionEntityQueryWhere
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterWhereClause>
-  idBetween(
+      idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -206,74 +203,71 @@ extension LocalSessionEntityQueryWhere
 extension LocalSessionEntityQueryFilter
     on QueryBuilder<LocalSessionEntity, LocalSessionEntity, QFilterCondition> {
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameIsNull() {
+      currentUsernameIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'currentUsername'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'currentUsername',
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameIsNotNull() {
+      currentUsernameIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'currentUsername'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'currentUsername',
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameEqualTo(String? value, {bool caseSensitive = true}) {
+      currentUsernameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'currentUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'currentUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameGreaterThan(
+      currentUsernameGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'currentUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'currentUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameLessThan(
+      currentUsernameLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'currentUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'currentUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameBetween(
+      currentUsernameBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -281,251 +275,252 @@ extension LocalSessionEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'currentUsername',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'currentUsername',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameStartsWith(String value, {bool caseSensitive = true}) {
+      currentUsernameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'currentUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'currentUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameEndsWith(String value, {bool caseSensitive = true}) {
+      currentUsernameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'currentUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'currentUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameContains(String value, {bool caseSensitive = true}) {
+      currentUsernameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'currentUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'currentUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameMatches(String pattern, {bool caseSensitive = true}) {
+      currentUsernameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'currentUsername',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'currentUsername',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameIsEmpty() {
+      currentUsernameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'currentUsername', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'currentUsername',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  currentUsernameIsNotEmpty() {
+      currentUsernameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'currentUsername', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'currentUsername',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  dataVersionEqualTo(int value) {
+      dataVersionEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'dataVersion', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dataVersion',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  dataVersionGreaterThan(int value, {bool include = false}) {
+      dataVersionGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'dataVersion',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dataVersion',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  dataVersionLessThan(int value, {bool include = false}) {
+      dataVersionLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'dataVersion',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dataVersion',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  dataVersionBetween(
+      dataVersionBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'dataVersion',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dataVersion',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  idEqualTo(Id value) {
+      idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  idGreaterThan(Id value, {bool include = false}) {
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  idLessThan(Id value, {bool include = false}) {
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  idBetween(
+      idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  updatedAtEqualTo(DateTime value) {
+      updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'updatedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+      updatedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  updatedAtLessThan(DateTime value, {bool include = false}) {
+      updatedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterFilterCondition>
-  updatedAtBetween(
+      updatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'updatedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -539,42 +534,42 @@ extension LocalSessionEntityQueryLinks
 extension LocalSessionEntityQuerySortBy
     on QueryBuilder<LocalSessionEntity, LocalSessionEntity, QSortBy> {
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  sortByCurrentUsername() {
+      sortByCurrentUsername() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentUsername', Sort.asc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  sortByCurrentUsernameDesc() {
+      sortByCurrentUsernameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentUsername', Sort.desc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  sortByDataVersion() {
+      sortByDataVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataVersion', Sort.asc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  sortByDataVersionDesc() {
+      sortByDataVersionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataVersion', Sort.desc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  sortByUpdatedAt() {
+      sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  sortByUpdatedAtDesc() {
+      sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -584,56 +579,56 @@ extension LocalSessionEntityQuerySortBy
 extension LocalSessionEntityQuerySortThenBy
     on QueryBuilder<LocalSessionEntity, LocalSessionEntity, QSortThenBy> {
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  thenByCurrentUsername() {
+      thenByCurrentUsername() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentUsername', Sort.asc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  thenByCurrentUsernameDesc() {
+      thenByCurrentUsernameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentUsername', Sort.desc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  thenByDataVersion() {
+      thenByDataVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataVersion', Sort.asc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  thenByDataVersionDesc() {
+      thenByDataVersionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataVersion', Sort.desc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  thenById() {
+      thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  thenByIdDesc() {
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  thenByUpdatedAt() {
+      thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QAfterSortBy>
-  thenByUpdatedAtDesc() {
+      thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -643,24 +638,22 @@ extension LocalSessionEntityQuerySortThenBy
 extension LocalSessionEntityQueryWhereDistinct
     on QueryBuilder<LocalSessionEntity, LocalSessionEntity, QDistinct> {
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QDistinct>
-  distinctByCurrentUsername({bool caseSensitive = true}) {
+      distinctByCurrentUsername({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'currentUsername',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'currentUsername',
+          caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QDistinct>
-  distinctByDataVersion() {
+      distinctByDataVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dataVersion');
     });
   }
 
   QueryBuilder<LocalSessionEntity, LocalSessionEntity, QDistinct>
-  distinctByUpdatedAt() {
+      distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
     });
@@ -676,21 +669,21 @@ extension LocalSessionEntityQueryProperty
   }
 
   QueryBuilder<LocalSessionEntity, String?, QQueryOperations>
-  currentUsernameProperty() {
+      currentUsernameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'currentUsername');
     });
   }
 
   QueryBuilder<LocalSessionEntity, int, QQueryOperations>
-  dataVersionProperty() {
+      dataVersionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dataVersion');
     });
   }
 
   QueryBuilder<LocalSessionEntity, DateTime, QQueryOperations>
-  updatedAtProperty() {
+      updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'updatedAt');
     });

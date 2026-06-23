@@ -31,8 +31,10 @@ class LearningMaterialRepository {
         .stream(primaryKey: const ['id'])
         .order('updated_at', ascending: false)
         .map(
-          (rows) =>
-              rows.map((item) => LearningMaterialModel.fromMap(item)).toList(),
+          (rows) => rows
+              .where((item) => item['deleted_at'] == null)
+              .map((item) => LearningMaterialModel.fromMap(item))
+              .toList(),
         );
   }
 
@@ -41,23 +43,44 @@ class LearningMaterialRepository {
         .from('learning_materials')
         .select()
         .eq('id', id)
+        .isFilter('deleted_at', null)
         .maybeSingle();
     if (data == null) return null;
     return LearningMaterialModel.fromMap(Map<String, dynamic>.from(data));
   }
 
   Future<LearningMaterialModel> upsertMaterial(
-    LearningMaterialModel material,
-  ) async {
-    final data = await _client
-        .from('learning_materials')
-        .upsert(material.toMap(), onConflict: 'id')
-        .select()
-        .single();
+    LearningMaterialModel material, {
+    int? expectedVersion,
+  }) async {
+    final data = expectedVersion == null
+        ? await _client
+              .from('learning_materials')
+              .upsert(material.toMap(), onConflict: 'id')
+              .select()
+              .single()
+        : await _client
+              .rpc(
+                'upsert_learning_material_if_current',
+                params: {
+                  'expected_version': expectedVersion,
+                  'payload': material.toMap(),
+                },
+              )
+              .single();
     return LearningMaterialModel.fromMap(Map<String, dynamic>.from(data));
   }
 
-  Future<void> deleteMaterial(String id) {
-    return _client.from('learning_materials').delete().eq('id', id);
+  Future<LearningMaterialModel> softDeleteMaterial(
+    String id, {
+    required int expectedVersion,
+  }) async {
+    final data = await _client
+        .rpc(
+          'soft_delete_learning_material_if_current',
+          params: {'material_id': id, 'expected_version': expectedVersion},
+        )
+        .single();
+    return LearningMaterialModel.fromMap(Map<String, dynamic>.from(data));
   }
 }

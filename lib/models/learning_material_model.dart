@@ -11,7 +11,13 @@ class LearningMaterialModel {
     this.imagePath = '',
     this.audioPath = '',
     this.videoPath = '',
+    this.imageStoragePath = '',
+    this.audioStoragePath = '',
+    this.videoStoragePath = '',
     this.createdBy = '',
+    this.version = 0,
+    this.mediaVersion = 1,
+    this.deletedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -23,7 +29,13 @@ class LearningMaterialModel {
   final String imagePath;
   final String audioPath;
   final String videoPath;
+  final String imageStoragePath;
+  final String audioStoragePath;
+  final String videoStoragePath;
   final String createdBy;
+  final int version;
+  final int mediaVersion;
+  final DateTime? deletedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -44,7 +56,13 @@ class LearningMaterialModel {
       imagePath: (map['image_path'] as String? ?? '').trim(),
       audioPath: (map['audio_path'] as String? ?? '').trim(),
       videoPath: (map['video_path'] as String? ?? '').trim(),
+      imageStoragePath: (map['image_storage_path'] as String? ?? '').trim(),
+      audioStoragePath: (map['audio_storage_path'] as String? ?? '').trim(),
+      videoStoragePath: (map['video_storage_path'] as String? ?? '').trim(),
       createdBy: (map['created_by'] as String? ?? '').trim(),
+      version: (map['version'] as num?)?.toInt() ?? 0,
+      mediaVersion: (map['media_version'] as num?)?.toInt() ?? 1,
+      deletedAt: _parseDate(map['deleted_at']),
       createdAt: _parseDate(map['created_at']) ?? DateTime.now().toUtc(),
       updatedAt: _parseDate(map['updated_at']) ?? DateTime.now().toUtc(),
     );
@@ -74,7 +92,13 @@ class LearningMaterialModel {
       imagePath: entity.imagePath,
       audioPath: entity.audioPath,
       videoPath: entity.videoPath,
+      imageStoragePath: entity.imageStoragePath,
+      audioStoragePath: entity.audioStoragePath,
+      videoStoragePath: entity.videoStoragePath,
       createdBy: entity.sourceUrl,
+      version: entity.cloudVersion,
+      mediaVersion: entity.mediaVersion,
+      deletedAt: entity.deletedAt?.toUtc(),
       createdAt: entity.createdAt.toUtc(),
       updatedAt: entity.updatedAt.toUtc(),
     );
@@ -88,7 +112,13 @@ class LearningMaterialModel {
     String? imagePath,
     String? audioPath,
     String? videoPath,
+    String? imageStoragePath,
+    String? audioStoragePath,
+    String? videoStoragePath,
     String? createdBy,
+    int? version,
+    int? mediaVersion,
+    DateTime? deletedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -100,7 +130,13 @@ class LearningMaterialModel {
       imagePath: imagePath ?? this.imagePath,
       audioPath: audioPath ?? this.audioPath,
       videoPath: videoPath ?? this.videoPath,
+      imageStoragePath: imageStoragePath ?? this.imageStoragePath,
+      audioStoragePath: audioStoragePath ?? this.audioStoragePath,
+      videoStoragePath: videoStoragePath ?? this.videoStoragePath,
       createdBy: createdBy ?? this.createdBy,
+      version: version ?? this.version,
+      mediaVersion: mediaVersion ?? this.mediaVersion,
+      deletedAt: deletedAt ?? this.deletedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -115,7 +151,13 @@ class LearningMaterialModel {
       'image_path': imagePath.isEmpty ? null : imagePath,
       'audio_path': audioPath.isEmpty ? null : audioPath,
       'video_path': videoPath.isEmpty ? null : videoPath,
+      'image_storage_path': imageStoragePath.isEmpty ? null : imageStoragePath,
+      'audio_storage_path': audioStoragePath.isEmpty ? null : audioStoragePath,
+      'video_storage_path': videoStoragePath.isEmpty ? null : videoStoragePath,
       'created_by': createdBy,
+      'version': version,
+      'media_version': mediaVersion,
+      'deleted_at': deletedAt?.toUtc().toIso8601String(),
       'created_at': createdAt.toUtc().toIso8601String(),
       'updated_at': updatedAt.toUtc().toIso8601String(),
     };
@@ -138,8 +180,16 @@ class LearningMaterialModel {
       ..imagePath = imagePath
       ..audioPath = audioPath
       ..videoPath = videoPath
+      ..imageStoragePath = imageStoragePath
+      ..audioStoragePath = audioStoragePath
+      ..videoStoragePath = videoStoragePath
       ..sourceUrl = createdBy
       ..fileName = ''
+      ..cloudVersion = version
+      ..cloudUpdatedAt = updatedAt.toLocal()
+      ..syncState = deletedAt == null ? 'clean' : 'deleted'
+      ..deletedAt = deletedAt?.toLocal()
+      ..mediaVersion = mediaVersion
       ..createdAt = createdAt.toLocal()
       ..updatedAt = updatedAt.toLocal();
     return entity;

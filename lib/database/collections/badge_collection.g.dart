@@ -13,16 +13,20 @@ extension GetBadgeModelEntityCollection on Isar {
   IsarCollection<BadgeModelEntity> get badgeModelEntitys => this.collection();
 }
 
-final BadgeModelEntitySchema = CollectionSchema(
+const BadgeModelEntitySchema = CollectionSchema(
   name: r'BadgeModelEntity',
-  id: int.parse('-4488980966009466009'),
+  id: -4488980966009466009,
   properties: {
     r'badgeImagePath': PropertySchema(
       id: 0,
       name: r'badgeImagePath',
       type: IsarType.string,
     ),
-    r'code': PropertySchema(id: 1, name: r'code', type: IsarType.string),
+    r'code': PropertySchema(
+      id: 1,
+      name: r'code',
+      type: IsarType.string,
+    ),
     r'description': PropertySchema(
       id: 2,
       name: r'description',
@@ -33,14 +37,26 @@ final BadgeModelEntitySchema = CollectionSchema(
       name: r'ownerUsername',
       type: IsarType.string,
     ),
-    r'rarity': PropertySchema(id: 4, name: r'rarity', type: IsarType.string),
-    r'title': PropertySchema(id: 5, name: r'title', type: IsarType.string),
-    r'unlocked': PropertySchema(id: 6, name: r'unlocked', type: IsarType.bool),
+    r'rarity': PropertySchema(
+      id: 4,
+      name: r'rarity',
+      type: IsarType.string,
+    ),
+    r'title': PropertySchema(
+      id: 5,
+      name: r'title',
+      type: IsarType.string,
+    ),
+    r'unlocked': PropertySchema(
+      id: 6,
+      name: r'unlocked',
+      type: IsarType.bool,
+    ),
     r'unlockedAt': PropertySchema(
       id: 7,
       name: r'unlockedAt',
       type: IsarType.dateTime,
-    ),
+    )
   },
   estimateSize: _badgeModelEntityEstimateSize,
   serialize: _badgeModelEntitySerialize,
@@ -49,7 +65,7 @@ final BadgeModelEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'code_ownerUsername': IndexSchema(
-      id: int.parse('166744829813898090'),
+      id: 166744829813898090,
       name: r'code_ownerUsername',
       unique: true,
       replace: true,
@@ -63,9 +79,9 @@ final BadgeModelEntitySchema = CollectionSchema(
           name: r'ownerUsername',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
-    ),
+    )
   },
   links: {},
   embeddedSchemas: {},
@@ -162,25 +178,18 @@ List<IsarLinkBase<dynamic>> _badgeModelEntityGetLinks(BadgeModelEntity object) {
 }
 
 void _badgeModelEntityAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  BadgeModelEntity object,
-) {
+    IsarCollection<dynamic> col, Id id, BadgeModelEntity object) {
   object.id = id;
 }
 
 extension BadgeModelEntityByIndex on IsarCollection<BadgeModelEntity> {
   Future<BadgeModelEntity?> getByCodeOwnerUsername(
-    String code,
-    String ownerUsername,
-  ) {
+      String code, String ownerUsername) {
     return getByIndex(r'code_ownerUsername', [code, ownerUsername]);
   }
 
   BadgeModelEntity? getByCodeOwnerUsernameSync(
-    String code,
-    String ownerUsername,
-  ) {
+      String code, String ownerUsername) {
     return getByIndexSync(r'code_ownerUsername', [code, ownerUsername]);
   }
 
@@ -193,14 +202,10 @@ extension BadgeModelEntityByIndex on IsarCollection<BadgeModelEntity> {
   }
 
   Future<List<BadgeModelEntity?>> getAllByCodeOwnerUsername(
-    List<String> codeValues,
-    List<String> ownerUsernameValues,
-  ) {
+      List<String> codeValues, List<String> ownerUsernameValues) {
     final len = codeValues.length;
-    assert(
-      ownerUsernameValues.length == len,
-      'All index values must have the same length',
-    );
+    assert(ownerUsernameValues.length == len,
+        'All index values must have the same length');
     final values = <List<dynamic>>[];
     for (var i = 0; i < len; i++) {
       values.add([codeValues[i], ownerUsernameValues[i]]);
@@ -210,14 +215,10 @@ extension BadgeModelEntityByIndex on IsarCollection<BadgeModelEntity> {
   }
 
   List<BadgeModelEntity?> getAllByCodeOwnerUsernameSync(
-    List<String> codeValues,
-    List<String> ownerUsernameValues,
-  ) {
+      List<String> codeValues, List<String> ownerUsernameValues) {
     final len = codeValues.length;
-    assert(
-      ownerUsernameValues.length == len,
-      'All index values must have the same length',
-    );
+    assert(ownerUsernameValues.length == len,
+        'All index values must have the same length');
     final values = <List<dynamic>>[];
     for (var i = 0; i < len; i++) {
       values.add([codeValues[i], ownerUsernameValues[i]]);
@@ -227,14 +228,10 @@ extension BadgeModelEntityByIndex on IsarCollection<BadgeModelEntity> {
   }
 
   Future<int> deleteAllByCodeOwnerUsername(
-    List<String> codeValues,
-    List<String> ownerUsernameValues,
-  ) {
+      List<String> codeValues, List<String> ownerUsernameValues) {
     final len = codeValues.length;
-    assert(
-      ownerUsernameValues.length == len,
-      'All index values must have the same length',
-    );
+    assert(ownerUsernameValues.length == len,
+        'All index values must have the same length');
     final values = <List<dynamic>>[];
     for (var i = 0; i < len; i++) {
       values.add([codeValues[i], ownerUsernameValues[i]]);
@@ -244,14 +241,10 @@ extension BadgeModelEntityByIndex on IsarCollection<BadgeModelEntity> {
   }
 
   int deleteAllByCodeOwnerUsernameSync(
-    List<String> codeValues,
-    List<String> ownerUsernameValues,
-  ) {
+      List<String> codeValues, List<String> ownerUsernameValues) {
     final len = codeValues.length;
-    assert(
-      ownerUsernameValues.length == len,
-      'All index values must have the same length',
-    );
+    assert(ownerUsernameValues.length == len,
+        'All index values must have the same length');
     final values = <List<dynamic>>[];
     for (var i = 0; i < len; i++) {
       values.add([codeValues[i], ownerUsernameValues[i]]);
@@ -264,10 +257,8 @@ extension BadgeModelEntityByIndex on IsarCollection<BadgeModelEntity> {
     return putByIndex(r'code_ownerUsername', object);
   }
 
-  Id putByCodeOwnerUsernameSync(
-    BadgeModelEntity object, {
-    bool saveLinks = true,
-  }) {
+  Id putByCodeOwnerUsernameSync(BadgeModelEntity object,
+      {bool saveLinks = true}) {
     return putByIndexSync(r'code_ownerUsername', object, saveLinks: saveLinks);
   }
 
@@ -275,15 +266,10 @@ extension BadgeModelEntityByIndex on IsarCollection<BadgeModelEntity> {
     return putAllByIndex(r'code_ownerUsername', objects);
   }
 
-  List<Id> putAllByCodeOwnerUsernameSync(
-    List<BadgeModelEntity> objects, {
-    bool saveLinks = true,
-  }) {
-    return putAllByIndexSync(
-      r'code_ownerUsername',
-      objects,
-      saveLinks: saveLinks,
-    );
+  List<Id> putAllByCodeOwnerUsernameSync(List<BadgeModelEntity> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'code_ownerUsername', objects,
+        saveLinks: saveLinks);
   }
 }
 
@@ -299,15 +285,17 @@ extension BadgeModelEntityQueryWhereSort
 extension BadgeModelEntityQueryWhere
     on QueryBuilder<BadgeModelEntity, BadgeModelEntity, QWhereClause> {
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterWhereClause> idEqualTo(
-    Id id,
-  ) {
+      Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterWhereClause>
-  idNotEqualTo(Id id) {
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -330,7 +318,7 @@ extension BadgeModelEntityQueryWhere
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterWhereClause>
-  idGreaterThan(Id id, {bool include = false}) {
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -339,7 +327,7 @@ extension BadgeModelEntityQueryWhere
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterWhereClause>
-  idLessThan(Id id, {bool include = false}) {
+      idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -354,123 +342,101 @@ extension BadgeModelEntityQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterWhereClause>
-  codeEqualToAnyOwnerUsername(String code) {
+      codeEqualToAnyOwnerUsername(String code) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'code_ownerUsername',
-          value: [code],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'code_ownerUsername',
+        value: [code],
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterWhereClause>
-  codeNotEqualToAnyOwnerUsername(String code) {
+      codeNotEqualToAnyOwnerUsername(String code) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'code_ownerUsername',
-                lower: [],
-                upper: [code],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'code_ownerUsername',
-                lower: [code],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'code_ownerUsername',
+              lower: [],
+              upper: [code],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'code_ownerUsername',
+              lower: [code],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'code_ownerUsername',
-                lower: [code],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'code_ownerUsername',
-                lower: [],
-                upper: [code],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'code_ownerUsername',
+              lower: [code],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'code_ownerUsername',
+              lower: [],
+              upper: [code],
+              includeUpper: false,
+            ));
       }
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterWhereClause>
-  codeOwnerUsernameEqualTo(String code, String ownerUsername) {
+      codeOwnerUsernameEqualTo(String code, String ownerUsername) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'code_ownerUsername',
-          value: [code, ownerUsername],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'code_ownerUsername',
+        value: [code, ownerUsername],
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterWhereClause>
-  codeEqualToOwnerUsernameNotEqualTo(String code, String ownerUsername) {
+      codeEqualToOwnerUsernameNotEqualTo(String code, String ownerUsername) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'code_ownerUsername',
-                lower: [code],
-                upper: [code, ownerUsername],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'code_ownerUsername',
-                lower: [code, ownerUsername],
-                includeLower: false,
-                upper: [code],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'code_ownerUsername',
+              lower: [code],
+              upper: [code, ownerUsername],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'code_ownerUsername',
+              lower: [code, ownerUsername],
+              includeLower: false,
+              upper: [code],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'code_ownerUsername',
-                lower: [code, ownerUsername],
-                includeLower: false,
-                upper: [code],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'code_ownerUsername',
-                lower: [code],
-                upper: [code, ownerUsername],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'code_ownerUsername',
+              lower: [code, ownerUsername],
+              includeLower: false,
+              upper: [code],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'code_ownerUsername',
+              lower: [code],
+              upper: [code, ownerUsername],
+              includeUpper: false,
+            ));
       }
     });
   }
@@ -479,56 +445,53 @@ extension BadgeModelEntityQueryWhere
 extension BadgeModelEntityQueryFilter
     on QueryBuilder<BadgeModelEntity, BadgeModelEntity, QFilterCondition> {
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathEqualTo(String value, {bool caseSensitive = true}) {
+      badgeImagePathEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'badgeImagePath',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'badgeImagePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathGreaterThan(
+      badgeImagePathGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'badgeImagePath',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'badgeImagePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathLessThan(
+      badgeImagePathLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'badgeImagePath',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'badgeImagePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathBetween(
+      badgeImagePathBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -536,140 +499,135 @@ extension BadgeModelEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'badgeImagePath',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'badgeImagePath',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathStartsWith(String value, {bool caseSensitive = true}) {
+      badgeImagePathStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'badgeImagePath',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'badgeImagePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathEndsWith(String value, {bool caseSensitive = true}) {
+      badgeImagePathEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'badgeImagePath',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'badgeImagePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathContains(String value, {bool caseSensitive = true}) {
+      badgeImagePathContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'badgeImagePath',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'badgeImagePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathMatches(String pattern, {bool caseSensitive = true}) {
+      badgeImagePathMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'badgeImagePath',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'badgeImagePath',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathIsEmpty() {
+      badgeImagePathIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'badgeImagePath', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'badgeImagePath',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  badgeImagePathIsNotEmpty() {
+      badgeImagePathIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'badgeImagePath', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'badgeImagePath',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeEqualTo(String value, {bool caseSensitive = true}) {
+      codeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'code',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'code',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeGreaterThan(
+      codeGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'code',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'code',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeLessThan(
+      codeLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'code',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'code',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeBetween(
+      codeBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -677,140 +635,135 @@ extension BadgeModelEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'code',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'code',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeStartsWith(String value, {bool caseSensitive = true}) {
+      codeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'code',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'code',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeEndsWith(String value, {bool caseSensitive = true}) {
+      codeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'code',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'code',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeContains(String value, {bool caseSensitive = true}) {
+      codeContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'code',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'code',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeMatches(String pattern, {bool caseSensitive = true}) {
+      codeMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'code',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'code',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeIsEmpty() {
+      codeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'code', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'code',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  codeIsNotEmpty() {
+      codeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'code', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'code',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionEqualTo(String value, {bool caseSensitive = true}) {
+      descriptionEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'description',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'description',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionGreaterThan(
+      descriptionGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'description',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'description',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionLessThan(
+      descriptionLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'description',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'description',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionBetween(
+      descriptionBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -818,195 +771,191 @@ extension BadgeModelEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'description',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'description',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionStartsWith(String value, {bool caseSensitive = true}) {
+      descriptionStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'description',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'description',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionEndsWith(String value, {bool caseSensitive = true}) {
+      descriptionEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'description',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'description',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionContains(String value, {bool caseSensitive = true}) {
+      descriptionContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'description',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'description',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionMatches(String pattern, {bool caseSensitive = true}) {
+      descriptionMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'description',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'description',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionIsEmpty() {
+      descriptionIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'description', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'description',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  descriptionIsNotEmpty() {
+      descriptionIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'description', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'description',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  idEqualTo(Id value) {
+      idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  idGreaterThan(Id value, {bool include = false}) {
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  idLessThan(Id value, {bool include = false}) {
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  idBetween(
+      idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameEqualTo(String value, {bool caseSensitive = true}) {
+      ownerUsernameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameGreaterThan(
+      ownerUsernameGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameLessThan(
+      ownerUsernameLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameBetween(
+      ownerUsernameBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1014,140 +963,135 @@ extension BadgeModelEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'ownerUsername',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerUsername',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameStartsWith(String value, {bool caseSensitive = true}) {
+      ownerUsernameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameEndsWith(String value, {bool caseSensitive = true}) {
+      ownerUsernameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameContains(String value, {bool caseSensitive = true}) {
+      ownerUsernameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'ownerUsername',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerUsername',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameMatches(String pattern, {bool caseSensitive = true}) {
+      ownerUsernameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'ownerUsername',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerUsername',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameIsEmpty() {
+      ownerUsernameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'ownerUsername', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUsername',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  ownerUsernameIsNotEmpty() {
+      ownerUsernameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'ownerUsername', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerUsername',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityEqualTo(String value, {bool caseSensitive = true}) {
+      rarityEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'rarity',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rarity',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityGreaterThan(
+      rarityGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'rarity',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'rarity',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityLessThan(
+      rarityLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'rarity',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'rarity',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityBetween(
+      rarityBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1155,140 +1099,135 @@ extension BadgeModelEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'rarity',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'rarity',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityStartsWith(String value, {bool caseSensitive = true}) {
+      rarityStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'rarity',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'rarity',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityEndsWith(String value, {bool caseSensitive = true}) {
+      rarityEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'rarity',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'rarity',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityContains(String value, {bool caseSensitive = true}) {
+      rarityContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'rarity',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'rarity',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityMatches(String pattern, {bool caseSensitive = true}) {
+      rarityMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'rarity',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'rarity',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityIsEmpty() {
+      rarityIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'rarity', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rarity',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  rarityIsNotEmpty() {
+      rarityIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'rarity', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'rarity',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleEqualTo(String value, {bool caseSensitive = true}) {
+      titleEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'title',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleGreaterThan(
+      titleGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'title',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleLessThan(
+      titleLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'title',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleBetween(
+      titleBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1296,168 +1235,168 @@ extension BadgeModelEntityQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'title',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'title',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleStartsWith(String value, {bool caseSensitive = true}) {
+      titleStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'title',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleEndsWith(String value, {bool caseSensitive = true}) {
+      titleEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'title',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleContains(String value, {bool caseSensitive = true}) {
+      titleContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'title',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleMatches(String pattern, {bool caseSensitive = true}) {
+      titleMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'title',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'title',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleIsEmpty() {
+      titleIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'title', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'title',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  titleIsNotEmpty() {
+      titleIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'title', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'title',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  unlockedEqualTo(bool value) {
+      unlockedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'unlocked', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'unlocked',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  unlockedAtIsNull() {
+      unlockedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'unlockedAt'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'unlockedAt',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  unlockedAtIsNotNull() {
+      unlockedAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'unlockedAt'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'unlockedAt',
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  unlockedAtEqualTo(DateTime? value) {
+      unlockedAtEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'unlockedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'unlockedAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  unlockedAtGreaterThan(DateTime? value, {bool include = false}) {
+      unlockedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'unlockedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'unlockedAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  unlockedAtLessThan(DateTime? value, {bool include = false}) {
+      unlockedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'unlockedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'unlockedAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterFilterCondition>
-  unlockedAtBetween(
+      unlockedAtBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'unlockedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'unlockedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -1471,14 +1410,14 @@ extension BadgeModelEntityQueryLinks
 extension BadgeModelEntityQuerySortBy
     on QueryBuilder<BadgeModelEntity, BadgeModelEntity, QSortBy> {
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByBadgeImagePath() {
+      sortByBadgeImagePath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'badgeImagePath', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByBadgeImagePathDesc() {
+      sortByBadgeImagePathDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'badgeImagePath', Sort.desc);
     });
@@ -1491,49 +1430,49 @@ extension BadgeModelEntityQuerySortBy
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByCodeDesc() {
+      sortByCodeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'code', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByDescription() {
+      sortByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByDescriptionDesc() {
+      sortByDescriptionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByOwnerUsername() {
+      sortByOwnerUsername() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByOwnerUsernameDesc() {
+      sortByOwnerUsernameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByRarity() {
+      sortByRarity() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rarity', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByRarityDesc() {
+      sortByRarityDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rarity', Sort.desc);
     });
@@ -1546,35 +1485,35 @@ extension BadgeModelEntityQuerySortBy
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByTitleDesc() {
+      sortByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByUnlocked() {
+      sortByUnlocked() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unlocked', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByUnlockedDesc() {
+      sortByUnlockedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unlocked', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByUnlockedAt() {
+      sortByUnlockedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unlockedAt', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  sortByUnlockedAtDesc() {
+      sortByUnlockedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unlockedAt', Sort.desc);
     });
@@ -1584,14 +1523,14 @@ extension BadgeModelEntityQuerySortBy
 extension BadgeModelEntityQuerySortThenBy
     on QueryBuilder<BadgeModelEntity, BadgeModelEntity, QSortThenBy> {
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByBadgeImagePath() {
+      thenByBadgeImagePath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'badgeImagePath', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByBadgeImagePathDesc() {
+      thenByBadgeImagePathDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'badgeImagePath', Sort.desc);
     });
@@ -1604,21 +1543,21 @@ extension BadgeModelEntityQuerySortThenBy
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByCodeDesc() {
+      thenByCodeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'code', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByDescription() {
+      thenByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByDescriptionDesc() {
+      thenByDescriptionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.desc);
     });
@@ -1631,35 +1570,35 @@ extension BadgeModelEntityQuerySortThenBy
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByIdDesc() {
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByOwnerUsername() {
+      thenByOwnerUsername() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByOwnerUsernameDesc() {
+      thenByOwnerUsernameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerUsername', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByRarity() {
+      thenByRarity() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rarity', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByRarityDesc() {
+      thenByRarityDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rarity', Sort.desc);
     });
@@ -1672,35 +1611,35 @@ extension BadgeModelEntityQuerySortThenBy
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByTitleDesc() {
+      thenByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByUnlocked() {
+      thenByUnlocked() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unlocked', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByUnlockedDesc() {
+      thenByUnlockedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unlocked', Sort.desc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByUnlockedAt() {
+      thenByUnlockedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unlockedAt', Sort.asc);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QAfterSortBy>
-  thenByUnlockedAtDesc() {
+      thenByUnlockedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unlockedAt', Sort.desc);
     });
@@ -1710,65 +1649,58 @@ extension BadgeModelEntityQuerySortThenBy
 extension BadgeModelEntityQueryWhereDistinct
     on QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct> {
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct>
-  distinctByBadgeImagePath({bool caseSensitive = true}) {
+      distinctByBadgeImagePath({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'badgeImagePath',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'badgeImagePath',
+          caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct> distinctByCode({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct> distinctByCode(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'code', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct>
-  distinctByDescription({bool caseSensitive = true}) {
+      distinctByDescription({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'description', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct>
-  distinctByOwnerUsername({bool caseSensitive = true}) {
+      distinctByOwnerUsername({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'ownerUsername',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'ownerUsername',
+          caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct> distinctByRarity({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct> distinctByRarity(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'rarity', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct> distinctByTitle({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct> distinctByTitle(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct>
-  distinctByUnlocked() {
+      distinctByUnlocked() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'unlocked');
     });
   }
 
   QueryBuilder<BadgeModelEntity, BadgeModelEntity, QDistinct>
-  distinctByUnlockedAt() {
+      distinctByUnlockedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'unlockedAt');
     });
@@ -1784,7 +1716,7 @@ extension BadgeModelEntityQueryProperty
   }
 
   QueryBuilder<BadgeModelEntity, String, QQueryOperations>
-  badgeImagePathProperty() {
+      badgeImagePathProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'badgeImagePath');
     });
@@ -1797,14 +1729,14 @@ extension BadgeModelEntityQueryProperty
   }
 
   QueryBuilder<BadgeModelEntity, String, QQueryOperations>
-  descriptionProperty() {
+      descriptionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'description');
     });
   }
 
   QueryBuilder<BadgeModelEntity, String, QQueryOperations>
-  ownerUsernameProperty() {
+      ownerUsernameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ownerUsername');
     });
@@ -1829,7 +1761,7 @@ extension BadgeModelEntityQueryProperty
   }
 
   QueryBuilder<BadgeModelEntity, DateTime?, QQueryOperations>
-  unlockedAtProperty() {
+      unlockedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'unlockedAt');
     });

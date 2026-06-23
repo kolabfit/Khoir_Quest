@@ -72,8 +72,9 @@ class MaterialRepository {
       final items = (await isar.learningMaterialEntitys.where().findAll())
           .where(
             (item) =>
-                item.category == LearningCategories.huruf ||
-                item.category == LearningCategories.angka,
+                item.deletedAt == null &&
+                (item.category == LearningCategories.huruf ||
+                    item.category == LearningCategories.angka),
           )
           .toList();
       final changed = <LearningMaterialEntity>[];
@@ -121,6 +122,7 @@ class MaterialRepository {
           .where()
           .filter()
           .categoryEqualTo(category)
+          .deletedAtIsNull()
           .sortByCreatedAtDesc()
           .findAll(),
     );
@@ -130,6 +132,17 @@ class MaterialRepository {
       loadByCategory(LearningCategories.lagu);
 
   Future<List<LearningMaterialEntity>> loadAll() {
+    return _database.read(
+      (isar) => isar.learningMaterialEntitys
+          .where()
+          .filter()
+          .deletedAtIsNull()
+          .sortByUpdatedAtDesc()
+          .findAll(),
+    );
+  }
+
+  Future<List<LearningMaterialEntity>> loadAllIncludingDeleted() {
     return _database.read(
       (isar) =>
           isar.learningMaterialEntitys.where().sortByUpdatedAtDesc().findAll(),
@@ -158,6 +171,11 @@ class MaterialRepository {
         );
       }
       if (items.isNotEmpty) {
+        for (final item in items) {
+          item
+            ..syncState = 'clean'
+            ..deletedAt = null;
+        }
         await isar.learningMaterialEntitys.putAll(items);
       }
     });
@@ -165,6 +183,29 @@ class MaterialRepository {
 
   Future<void> upsertEntity(LearningMaterialEntity entity) {
     return _database.write((isar) => isar.learningMaterialEntitys.put(entity));
+  }
+
+  Future<void> mergeFromCloud(List<LearningMaterialEntity> cloudItems) async {
+    await _database.write((isar) async {
+      for (final cloud in cloudItems) {
+        final existing = await isar.learningMaterialEntitys.getByMaterialId(
+          cloud.materialId,
+        );
+        if (existing != null && existing.syncState == 'dirty') {
+          final cloudTime = cloud.cloudUpdatedAt ?? cloud.updatedAt;
+          if (existing.cloudUpdatedAt != null &&
+              !cloudTime.isAfter(existing.cloudUpdatedAt!)) {
+            continue;
+          }
+        }
+        if (existing != null && existing.syncState == 'deleted') {
+          continue;
+        }
+        cloud.id = existing?.id ?? Isar.autoIncrement;
+        cloud.syncState = cloud.deletedAt == null ? 'clean' : 'deleted';
+        await isar.learningMaterialEntitys.put(cloud);
+      }
+    });
   }
 
   Future<void> replaceSongs(List<LearningMaterialEntity> items) async {
@@ -194,6 +235,8 @@ class MaterialRepository {
       ..subcategory = subcategory
       ..category = LearningCategories.benda
       ..imagePath = imagePath
+      ..syncState = 'dirty'
+      ..deletedAt = null
       ..createdAt = DateTime.now()
       ..updatedAt = DateTime.now();
     await _database.write((isar) => isar.learningMaterialEntitys.put(entity));
@@ -221,6 +264,9 @@ class MaterialRepository {
       ..imagePath = imagePath
       ..audioPath = audioPath
       ..fileName = fileName
+      ..syncState = 'dirty'
+      ..deletedAt = null
+      ..mediaVersion = existing?.mediaVersion ?? 1
       ..createdAt = existing?.createdAt ?? DateTime.now()
       ..updatedAt = DateTime.now();
     await _database.write((isar) => isar.learningMaterialEntitys.put(entity));
@@ -234,7 +280,11 @@ class MaterialRepository {
           .materialIdEqualTo(materialId)
           .findFirst();
       if (entity != null) {
-        await isar.learningMaterialEntitys.delete(entity.id);
+        entity
+          ..syncState = 'deleted'
+          ..deletedAt = DateTime.now()
+          ..updatedAt = DateTime.now();
+        await isar.learningMaterialEntitys.put(entity);
       }
     });
   }
@@ -258,6 +308,8 @@ class MaterialRepository {
         ..videoPath = videoPath
         ..fileName = fileName ?? ''
         ..thumbnailPath = ''
+        ..syncState = 'dirty'
+        ..deletedAt = null
         ..createdAt = existing?.createdAt ?? DateTime.now()
         ..updatedAt = DateTime.now();
       await isar.learningMaterialEntitys.put(entity);

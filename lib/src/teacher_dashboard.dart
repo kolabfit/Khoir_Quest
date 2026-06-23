@@ -787,16 +787,11 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       );
     } else if (category == _TeacherCategory.benda) {
       final previousPath = existing?.object?.img;
-      if (existing?.object != null) {
-        await appState.removeObject(
-          existing!.object!,
-          deleteMedia: previousPath != result.mediaPath,
-        );
-      }
       await appState.addObject(
         result.title,
         result.mediaPath,
         result.subtitle.isEmpty ? 'umum' : result.subtitle,
+        existingId: existing?.object?.id,
       );
       if (previousPath != null &&
           previousPath != result.mediaPath &&
@@ -813,16 +808,11 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       );
     } else {
       final previousPath = existing?.song?.videoUrl;
-      if (existing?.song != null) {
-        await appState.removeSong(
-          existing!.song!,
-          deleteMedia: previousPath != result.mediaPath,
-        );
-      }
       await appState.addSong(
         result.title,
         result.mediaPath,
         fileName: result.fileName,
+        existingId: existing?.song?.id,
       );
       if (previousPath != null &&
           previousPath != result.mediaPath &&

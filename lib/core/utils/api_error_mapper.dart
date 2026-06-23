@@ -42,6 +42,12 @@ class ApiErrorMapper {
 
     if (normalized.isEmpty) return fallback;
     if (_containsAny(normalized, const [
+      'stale learning material version',
+      'p0001',
+    ])) {
+      return 'Materi sudah diubah di perangkat lain. Refresh dulu.';
+    }
+    if (_containsAny(normalized, const [
       'akun belum terdaftar',
       'user not found',
       'user does not exist',

@@ -31,6 +31,12 @@ class StorageRepository {
 
   String getPublicUrl(String path) => _storage.getPublicUrl(path);
 
+  String getVersionedPublicUrl(String path, int version) {
+    final url = getPublicUrl(path);
+    final separator = url.contains('?') ? '&' : '?';
+    return '$url${separator}v=$version';
+  }
+
   Future<void> deletePath(String path) async {
     if (path.trim().isEmpty) return;
     await _storage.remove([path]);
