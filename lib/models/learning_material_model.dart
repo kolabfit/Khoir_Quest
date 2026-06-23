@@ -11,6 +11,7 @@ class LearningMaterialModel {
     this.imagePath = '',
     this.audioPath = '',
     this.videoPath = '',
+    this.mediaType = 'video',
     this.imageStoragePath = '',
     this.audioStoragePath = '',
     this.videoStoragePath = '',
@@ -29,6 +30,7 @@ class LearningMaterialModel {
   final String imagePath;
   final String audioPath;
   final String videoPath;
+  final String mediaType;
   final String imageStoragePath;
   final String audioStoragePath;
   final String videoStoragePath;
@@ -56,6 +58,10 @@ class LearningMaterialModel {
       imagePath: (map['image_path'] as String? ?? '').trim(),
       audioPath: (map['audio_path'] as String? ?? '').trim(),
       videoPath: (map['video_path'] as String? ?? '').trim(),
+      mediaType: MediaSourceHelper.inferSongMediaType(
+        source: (map['video_path'] as String? ?? '').trim(),
+        explicit: map['media_type'] as String?,
+      ),
       imageStoragePath: (map['image_storage_path'] as String? ?? '').trim(),
       audioStoragePath: (map['audio_storage_path'] as String? ?? '').trim(),
       videoStoragePath: (map['video_storage_path'] as String? ?? '').trim(),
@@ -92,6 +98,11 @@ class LearningMaterialModel {
       imagePath: entity.imagePath,
       audioPath: entity.audioPath,
       videoPath: entity.videoPath,
+      mediaType: MediaSourceHelper.inferSongMediaType(
+        source: entity.videoPath,
+        fileName: entity.fileName,
+        explicit: entity.mediaType,
+      ),
       imageStoragePath: entity.imageStoragePath,
       audioStoragePath: entity.audioStoragePath,
       videoStoragePath: entity.videoStoragePath,
@@ -112,6 +123,7 @@ class LearningMaterialModel {
     String? imagePath,
     String? audioPath,
     String? videoPath,
+    String? mediaType,
     String? imageStoragePath,
     String? audioStoragePath,
     String? videoStoragePath,
@@ -130,6 +142,7 @@ class LearningMaterialModel {
       imagePath: imagePath ?? this.imagePath,
       audioPath: audioPath ?? this.audioPath,
       videoPath: videoPath ?? this.videoPath,
+      mediaType: mediaType ?? this.mediaType,
       imageStoragePath: imageStoragePath ?? this.imageStoragePath,
       audioStoragePath: audioStoragePath ?? this.audioStoragePath,
       videoStoragePath: videoStoragePath ?? this.videoStoragePath,
@@ -151,6 +164,7 @@ class LearningMaterialModel {
       'image_path': imagePath.isEmpty ? null : imagePath,
       'audio_path': audioPath.isEmpty ? null : audioPath,
       'video_path': videoPath.isEmpty ? null : videoPath,
+      'media_type': mediaType,
       'image_storage_path': imageStoragePath.isEmpty ? null : imageStoragePath,
       'audio_storage_path': audioStoragePath.isEmpty ? null : audioStoragePath,
       'video_storage_path': videoStoragePath.isEmpty ? null : videoStoragePath,
@@ -180,6 +194,7 @@ class LearningMaterialModel {
       ..imagePath = imagePath
       ..audioPath = audioPath
       ..videoPath = videoPath
+      ..mediaType = mediaType
       ..imageStoragePath = imageStoragePath
       ..audioStoragePath = audioStoragePath
       ..videoStoragePath = videoStoragePath

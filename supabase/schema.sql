@@ -55,6 +55,7 @@ alter table public.learning_materials
   add column if not exists image_storage_path text,
   add column if not exists audio_storage_path text,
   add column if not exists video_storage_path text,
+  add column if not exists media_type text not null default 'video' check (media_type in ('audio', 'video', 'youtube')),
   add column if not exists media_version integer not null default 1;
 
 create or replace function public.handle_profile_bootstrap()
@@ -161,7 +162,7 @@ begin
     insert into public.learning_materials (
       id, category, symbol, label, image_path, audio_path, video_path,
       image_storage_path, audio_storage_path, video_storage_path,
-      media_version, created_by, created_at, updated_at, version, deleted_at
+      media_type, media_version, created_by, created_at, updated_at, version, deleted_at
     )
     values (
       payload ->> 'id',
@@ -174,6 +175,7 @@ begin
       nullif(payload ->> 'image_storage_path', ''),
       nullif(payload ->> 'audio_storage_path', ''),
       nullif(payload ->> 'video_storage_path', ''),
+      coalesce(nullif(payload ->> 'media_type', ''), 'video'),
       coalesce((payload ->> 'media_version')::integer, 1),
       auth.uid(),
       coalesce((payload ->> 'created_at')::timestamptz, timezone('utc', now())),
@@ -200,6 +202,7 @@ begin
     image_storage_path = nullif(payload ->> 'image_storage_path', ''),
     audio_storage_path = nullif(payload ->> 'audio_storage_path', ''),
     video_storage_path = nullif(payload ->> 'video_storage_path', ''),
+    media_type = coalesce(nullif(payload ->> 'media_type', ''), existing.media_type, 'video'),
     media_version = greatest(coalesce((payload ->> 'media_version')::integer, existing.media_version), 1),
     created_by = auth.uid(),
     deleted_at = null,

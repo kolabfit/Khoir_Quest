@@ -265,6 +265,7 @@ class MaterialRepository {
     String subcategory = '',
     String audioPath = '',
     String fileName = '',
+    String mediaType = 'video',
   }) async {
     final existing = await _database.read(
       (isar) => isar.learningMaterialEntitys.getByMaterialId(materialId),
@@ -278,6 +279,7 @@ class MaterialRepository {
       ..imagePath = imagePath
       ..audioPath = audioPath
       ..fileName = fileName
+      ..mediaType = mediaType
       ..syncState = 'dirty'
       ..deletedAt = null
       ..mediaVersion = existing?.mediaVersion ?? 1
@@ -308,6 +310,7 @@ class MaterialRepository {
     required String title,
     required String videoPath,
     String? fileName,
+    String mediaType = 'video',
   }) async {
     await _database.write((isar) async {
       final existing = await isar.learningMaterialEntitys
@@ -320,6 +323,7 @@ class MaterialRepository {
         ..title = title
         ..category = LearningCategories.lagu
         ..videoPath = videoPath
+        ..mediaType = mediaType
         ..fileName = fileName ?? ''
         ..thumbnailPath = ''
         ..syncState = 'dirty'

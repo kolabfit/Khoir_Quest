@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/constants/default_learning_catalog.dart';
+import '../core/utils/media_source_helper.dart';
 import '../database/collections/learning_material_collection.dart';
 import '../database/isar_database_service.dart';
 import '../models/learning_material_model.dart';
@@ -129,6 +130,7 @@ class CacheService {
                 'title': item.label,
                 'videoUrl': item.videoPath,
                 'fileName': null,
+                'mediaType': item.mediaType,
               },
             )
             .toList(),
@@ -249,6 +251,11 @@ class CacheService {
           symbol: '',
           label: label,
           videoPath: map['videoUrl'] as String? ?? '',
+          mediaType: MediaSourceHelper.inferSongMediaType(
+            source: map['videoUrl'] as String? ?? '',
+            fileName: map['fileName'] as String?,
+            explicit: map['mediaType'] as String?,
+          ),
           createdAt: now,
           updatedAt: now,
         ),

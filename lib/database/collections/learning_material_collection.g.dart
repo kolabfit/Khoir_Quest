@@ -16,7 +16,7 @@ extension GetLearningMaterialEntityCollection on Isar {
 
 const LearningMaterialEntitySchema = CollectionSchema(
   name: r'LearningMaterialEntity',
-  id: -1000005,
+  id: 1000014,
   properties: {
     r'audioPath': PropertySchema(
       id: 0,
@@ -78,48 +78,53 @@ const LearningMaterialEntitySchema = CollectionSchema(
       name: r'materialId',
       type: IsarType.string,
     ),
-    r'mediaVersion': PropertySchema(
+    r'mediaType': PropertySchema(
       id: 12,
+      name: r'mediaType',
+      type: IsarType.string,
+    ),
+    r'mediaVersion': PropertySchema(
+      id: 13,
       name: r'mediaVersion',
       type: IsarType.long,
     ),
     r'sourceUrl': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'sourceUrl',
       type: IsarType.string,
     ),
     r'subcategory': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'subcategory',
       type: IsarType.string,
     ),
     r'syncState': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'syncState',
       type: IsarType.string,
     ),
     r'thumbnailPath': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'thumbnailPath',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'videoPath': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'videoPath',
       type: IsarType.string,
     ),
     r'videoStoragePath': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'videoStoragePath',
       type: IsarType.string,
     )
@@ -131,7 +136,7 @@ const LearningMaterialEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'materialId': IndexSchema(
-      id: -1000003,
+      id: 1000015,
       name: r'materialId',
       unique: true,
       replace: true,
@@ -144,7 +149,7 @@ const LearningMaterialEntitySchema = CollectionSchema(
       ],
     ),
     r'category': IndexSchema(
-      id: -1000009,
+      id: 1000016,
       name: r'category',
       unique: false,
       replace: false,
@@ -157,7 +162,7 @@ const LearningMaterialEntitySchema = CollectionSchema(
       ],
     ),
     r'favorite': IndexSchema(
-      id: 1000004,
+      id: 1000017,
       name: r'favorite',
       unique: false,
       replace: false,
@@ -191,6 +196,7 @@ int _learningMaterialEntityEstimateSize(
   bytesCount += 3 + object.imagePath.length * 3;
   bytesCount += 3 + object.imageStoragePath.length * 3;
   bytesCount += 3 + object.materialId.length * 3;
+  bytesCount += 3 + object.mediaType.length * 3;
   bytesCount += 3 + object.sourceUrl.length * 3;
   bytesCount += 3 + object.subcategory.length * 3;
   bytesCount += 3 + object.syncState.length * 3;
@@ -219,15 +225,16 @@ void _learningMaterialEntitySerialize(
   writer.writeString(offsets[9], object.imagePath);
   writer.writeString(offsets[10], object.imageStoragePath);
   writer.writeString(offsets[11], object.materialId);
-  writer.writeLong(offsets[12], object.mediaVersion);
-  writer.writeString(offsets[13], object.sourceUrl);
-  writer.writeString(offsets[14], object.subcategory);
-  writer.writeString(offsets[15], object.syncState);
-  writer.writeString(offsets[16], object.thumbnailPath);
-  writer.writeString(offsets[17], object.title);
-  writer.writeDateTime(offsets[18], object.updatedAt);
-  writer.writeString(offsets[19], object.videoPath);
-  writer.writeString(offsets[20], object.videoStoragePath);
+  writer.writeString(offsets[12], object.mediaType);
+  writer.writeLong(offsets[13], object.mediaVersion);
+  writer.writeString(offsets[14], object.sourceUrl);
+  writer.writeString(offsets[15], object.subcategory);
+  writer.writeString(offsets[16], object.syncState);
+  writer.writeString(offsets[17], object.thumbnailPath);
+  writer.writeString(offsets[18], object.title);
+  writer.writeDateTime(offsets[19], object.updatedAt);
+  writer.writeString(offsets[20], object.videoPath);
+  writer.writeString(offsets[21], object.videoStoragePath);
 }
 
 LearningMaterialEntity _learningMaterialEntityDeserialize(
@@ -250,15 +257,16 @@ LearningMaterialEntity _learningMaterialEntityDeserialize(
   object.imagePath = reader.readString(offsets[9]);
   object.imageStoragePath = reader.readString(offsets[10]);
   object.materialId = reader.readString(offsets[11]);
-  object.mediaVersion = reader.readLong(offsets[12]);
-  object.sourceUrl = reader.readString(offsets[13]);
-  object.subcategory = reader.readString(offsets[14]);
-  object.syncState = reader.readString(offsets[15]);
-  object.thumbnailPath = reader.readString(offsets[16]);
-  object.title = reader.readString(offsets[17]);
-  object.updatedAt = reader.readDateTime(offsets[18]);
-  object.videoPath = reader.readString(offsets[19]);
-  object.videoStoragePath = reader.readString(offsets[20]);
+  object.mediaType = reader.readString(offsets[12]);
+  object.mediaVersion = reader.readLong(offsets[13]);
+  object.sourceUrl = reader.readString(offsets[14]);
+  object.subcategory = reader.readString(offsets[15]);
+  object.syncState = reader.readString(offsets[16]);
+  object.thumbnailPath = reader.readString(offsets[17]);
+  object.title = reader.readString(offsets[18]);
+  object.updatedAt = reader.readDateTime(offsets[19]);
+  object.videoPath = reader.readString(offsets[20]);
+  object.videoStoragePath = reader.readString(offsets[21]);
   return object;
 }
 
@@ -294,9 +302,9 @@ P _learningMaterialEntityDeserializeProp<P>(
     case 11:
       return (reader.readString(offset)) as P;
     case 12:
-      return (reader.readLong(offset)) as P;
-    case 13:
       return (reader.readString(offset)) as P;
+    case 13:
+      return (reader.readLong(offset)) as P;
     case 14:
       return (reader.readString(offset)) as P;
     case 15:
@@ -306,10 +314,12 @@ P _learningMaterialEntityDeserializeProp<P>(
     case 17:
       return (reader.readString(offset)) as P;
     case 18:
-      return (reader.readDateTime(offset)) as P;
-    case 19:
       return (reader.readString(offset)) as P;
+    case 19:
+      return (reader.readDateTime(offset)) as P;
     case 20:
+      return (reader.readString(offset)) as P;
+    case 21:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1909,6 +1919,144 @@ extension LearningMaterialEntityQueryFilter on QueryBuilder<
   }
 
   QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+      QAfterFilterCondition> mediaTypeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mediaType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+      QAfterFilterCondition> mediaTypeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mediaType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+      QAfterFilterCondition> mediaTypeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mediaType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+      QAfterFilterCondition> mediaTypeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mediaType',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+      QAfterFilterCondition> mediaTypeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'mediaType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+      QAfterFilterCondition> mediaTypeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'mediaType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+          QAfterFilterCondition>
+      mediaTypeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'mediaType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+          QAfterFilterCondition>
+      mediaTypeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'mediaType',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+      QAfterFilterCondition> mediaTypeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mediaType',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
+      QAfterFilterCondition> mediaTypeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'mediaType',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity,
       QAfterFilterCondition> mediaVersionEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -3164,6 +3312,20 @@ extension LearningMaterialEntityQuerySortBy
   }
 
   QueryBuilder<LearningMaterialEntity, LearningMaterialEntity, QAfterSortBy>
+      sortByMediaType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mediaType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity, QAfterSortBy>
+      sortByMediaTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mediaType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity, QAfterSortBy>
       sortByMediaVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'mediaVersion', Sort.asc);
@@ -3475,6 +3637,20 @@ extension LearningMaterialEntityQuerySortThenBy on QueryBuilder<
   }
 
   QueryBuilder<LearningMaterialEntity, LearningMaterialEntity, QAfterSortBy>
+      thenByMediaType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mediaType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity, QAfterSortBy>
+      thenByMediaTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mediaType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity, QAfterSortBy>
       thenByMediaVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'mediaVersion', Sort.asc);
@@ -3690,6 +3866,13 @@ extension LearningMaterialEntityQueryWhereDistinct
   }
 
   QueryBuilder<LearningMaterialEntity, LearningMaterialEntity, QDistinct>
+      distinctByMediaType({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mediaType', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, LearningMaterialEntity, QDistinct>
       distinctByMediaVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'mediaVersion');
@@ -3844,6 +4027,13 @@ extension LearningMaterialEntityQueryProperty on QueryBuilder<
       materialIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'materialId');
+    });
+  }
+
+  QueryBuilder<LearningMaterialEntity, String, QQueryOperations>
+      mediaTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mediaType');
     });
   }
 

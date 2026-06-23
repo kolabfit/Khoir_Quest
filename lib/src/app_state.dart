@@ -505,6 +505,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     String title,
     String url, {
     String? fileName,
+    String mediaType = 'video',
     String? existingId,
   }) async {
     final id = existingId?.trim().isNotEmpty == true
@@ -515,6 +516,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       title: title,
       videoPath: url,
       fileName: fileName,
+      mediaType: mediaType,
     );
     songs.removeWhere((item) => item.id == id);
     songs.insert(0, song);

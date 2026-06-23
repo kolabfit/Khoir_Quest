@@ -459,6 +459,11 @@ class LocalDatabase {
           map['videoUrl'] as String,
           const [],
           fileName: map['fileName'] as String?,
+          mediaType: MediaSourceHelper.inferSongMediaType(
+            source: map['videoUrl'] as String? ?? '',
+            fileName: map['fileName'] as String?,
+            explicit: map['mediaType'] as String?,
+          ),
         );
       }).toList();
     }
@@ -471,6 +476,11 @@ class LocalDatabase {
             item.videoPath,
             const [],
             fileName: item.fileName.isEmpty ? null : item.fileName,
+            mediaType: MediaSourceHelper.inferSongMediaType(
+              source: item.videoPath,
+              fileName: item.fileName,
+              explicit: item.mediaType,
+            ),
           ),
         )
         .toList();
@@ -768,6 +778,7 @@ class LocalDatabase {
                   'title': song.title,
                   'videoUrl': song.videoUrl,
                   'fileName': song.fileName,
+                  'mediaType': song.mediaType,
                 },
               )
               .toList(),
@@ -782,6 +793,7 @@ class LocalDatabase {
             ..title = song.title
             ..category = LearningCategories.lagu
             ..videoPath = song.videoUrl
+            ..mediaType = song.mediaType
             ..fileName = song.fileName ?? ''
             ..createdAt = DateTime.now()
             ..updatedAt = DateTime.now(),
@@ -795,11 +807,19 @@ class LocalDatabase {
     required String title,
     required String videoPath,
     String? fileName,
+    String mediaType = 'video',
   }) async {
     await ensureReady();
     if (kIsWeb) {
       final songs = await loadSongs();
-      final song = SongItem(id, title, videoPath, const [], fileName: fileName);
+      final song = SongItem(
+        id,
+        title,
+        videoPath,
+        const [],
+        fileName: fileName,
+        mediaType: mediaType,
+      );
       songs.removeWhere((item) => item.id == id);
       songs.insert(0, song);
       await saveSongs(songs);
@@ -810,8 +830,16 @@ class LocalDatabase {
       title: title,
       videoPath: videoPath,
       fileName: fileName,
+      mediaType: mediaType,
     );
-    return SongItem(id, title, videoPath, const [], fileName: fileName);
+    return SongItem(
+      id,
+      title,
+      videoPath,
+      const [],
+      fileName: fileName,
+      mediaType: mediaType,
+    );
   }
 
   Future<void> removeSong(SongItem song) async {

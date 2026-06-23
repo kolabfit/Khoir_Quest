@@ -813,6 +813,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
         result.title,
         result.mediaPath,
         fileName: result.fileName,
+        mediaType: result.mediaType,
         existingId: existing?.song?.id,
       );
       if (previousPath != null &&
@@ -1991,8 +1992,11 @@ class _TeacherUploadDialog extends StatefulWidget {
 class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
   late final TextEditingController _title;
   late final TextEditingController _subtitle;
+  late final TextEditingController _youtubeUrl;
   String? _fileName;
   String? _mediaPath;
+  String _pickedSongMediaType = 'video';
+  bool _pickedNewSongFile = false;
   Uint8List? _pickedMediaBytes;
   bool _saving = false;
 
@@ -2021,18 +2025,40 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
     if (_isBenda && !_fixedObjectCategories.contains(_subtitle.text)) {
       _subtitle.text = _fixedObjectCategories.first;
     }
+    final existingSongUrl = widget.existing?.song?.videoUrl ?? '';
+    final existingSongMediaType = widget.existing?.song?.mediaType ?? '';
+    _youtubeUrl = TextEditingController(
+      text:
+          _isSong &&
+              MediaSourceHelper.inferSongMediaType(
+                    source: existingSongUrl,
+                    fileName: widget.existing?.song?.fileName,
+                    explicit: existingSongMediaType,
+                  ) ==
+                  'youtube'
+          ? existingSongUrl
+          : '',
+    );
     _fileName = widget.existing?.song?.fileName;
+    _pickedSongMediaType = MediaSourceHelper.inferSongMediaType(
+      source: existingSongUrl,
+      fileName: _fileName,
+      explicit: existingSongMediaType,
+    );
     _mediaPath = widget.existing?.letter?.objects.isNotEmpty == true
         ? widget.existing!.letter!.objects.first.img
         : widget.existing?.number?.img ??
               widget.existing?.object?.img ??
-              widget.existing?.song?.videoUrl;
+              (_youtubeUrl.text.isEmpty
+                  ? widget.existing?.song?.videoUrl
+                  : null);
   }
 
   @override
   void dispose() {
     _title.dispose();
     _subtitle.dispose();
+    _youtubeUrl.dispose();
     super.dispose();
   }
 
@@ -2089,7 +2115,7 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                           const SizedBox(height: 4),
                           Text(
                             _isSong
-                                ? 'Upload video lagu anak untuk dashboard online.'
+                                ? 'Upload file MP3/video atau tempel link YouTube.'
                                 : _isHuruf
                                 ? 'Atur abjad, contoh benda, dan gambar preview secara terpisah.'
                                 : _isAngka
@@ -2186,7 +2212,7 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                         const SizedBox(height: 12),
                         Text(
                           _isSong
-                              ? 'Tap untuk pilih video lagu'
+                              ? 'Tap untuk pilih file MP3/video'
                               : _isHuruf
                               ? 'Tap untuk pilih gambar huruf'
                               : _isAngka
@@ -2215,6 +2241,15 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                     ),
                   ),
                 ),
+                if (_isSong) ...[
+                  const SizedBox(height: 14),
+                  AppField(
+                    controller: _youtubeUrl,
+                    label: 'Link YouTube',
+                    icon: Icons.link_rounded,
+                    hint: 'https://youtu.be/...',
+                  ),
+                ],
                 if (_mediaPath != null && !_isSong) ...[
                   const SizedBox(height: 14),
                   ClipRRect(
@@ -2287,7 +2322,10 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
       pickedName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
     } else {
       final result = await FilePicker.pickFiles(
-        type: _isSong ? FileType.video : FileType.image,
+        type: _isSong ? FileType.custom : FileType.image,
+        allowedExtensions: _isSong
+            ? const ['mp3', 'wav', 'm4a', 'ogg', 'mp4', 'webm', 'mov']
+            : null,
         withData: true,
       );
       final file = result?.files.single;
@@ -2313,25 +2351,56 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
     if (!mounted) return;
     setState(() {
       _fileName = pickedName;
+      _pickedSongMediaType = MediaSourceHelper.inferSongMediaType(
+        source: savedPath,
+        fileName: pickedName,
+      );
       _pickedMediaBytes = _isSong && kIsWeb ? bytes : null;
       _mediaPath = savedPath;
+      if (_isSong) _pickedNewSongFile = true;
+      if (_isSong) _youtubeUrl.clear();
     });
   }
 
   Future<void> _submit() async {
     if (_title.text.trim().isEmpty) return;
     if (!_isSong && _subtitle.text.trim().isEmpty) return;
-    if ((_mediaPath ?? '').trim().isEmpty) return;
+    final youtubeUrl = _youtubeUrl.text.trim();
+    if (_isSong) {
+      final hasYoutube = youtubeUrl.isNotEmpty;
+      final hasFile =
+          (_mediaPath ?? '').trim().isNotEmpty &&
+          (!hasYoutube || _pickedNewSongFile);
+      if (hasFile == hasYoutube) {
+        _showUploadError(
+          'Pilih file MP3/video atau isi link YouTube, salah satu saja.',
+        );
+        return;
+      }
+      if (hasYoutube && !MediaSourceHelper.isYoutubeUrl(youtubeUrl)) {
+        _showUploadError('Link YouTube tidak valid.');
+        return;
+      }
+    } else if ((_mediaPath ?? '').trim().isEmpty) {
+      return;
+    }
     setState(() => _saving = true);
     try {
-      var mediaPath = _mediaPath!.trim();
+      var mediaPath = _isSong && youtubeUrl.isNotEmpty
+          ? youtubeUrl
+          : _mediaPath!.trim();
+      var mediaType = _isSong && youtubeUrl.isNotEmpty
+          ? 'youtube'
+          : _pickedSongMediaType;
       final pickedBytes = _pickedMediaBytes;
       if (_isSong && kIsWeb && pickedBytes != null) {
         final baseName = (_fileName ?? 'lagu.mp4').trim();
         final uniqueName = '${DateTime.now().microsecondsSinceEpoch}_$baseName';
         mediaPath = (await UploadService.instance.uploadLearningAssetBytes(
           category: LearningCategories.lagu,
-          type: UploadedAssetType.video,
+          type: mediaType == 'audio'
+              ? UploadedAssetType.audio
+              : UploadedAssetType.video,
           bytes: pickedBytes,
           fileName: uniqueName,
         )).publicUrl;
@@ -2343,11 +2412,19 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
           subtitle: _subtitle.text.trim(),
           mediaPath: mediaPath,
           fileName: _fileName,
+          mediaType: mediaType,
         ),
       );
     } catch (_) {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  void _showUploadError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -3017,12 +3094,14 @@ class _TeacherDraftResult {
     required this.title,
     required this.subtitle,
     required this.mediaPath,
+    required this.mediaType,
     this.fileName,
   });
 
   final String title;
   final String subtitle;
   final String mediaPath;
+  final String mediaType;
   final String? fileName;
 }
 

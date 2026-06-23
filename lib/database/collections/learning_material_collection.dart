@@ -20,6 +20,7 @@ class LearningMaterialEntity {
   String imagePath = '';
   String audioPath = '';
   String videoPath = '';
+  String mediaType = 'video';
   String imageStoragePath = '';
   String audioStoragePath = '';
   String videoStoragePath = '';

@@ -245,7 +245,9 @@ class CloudSyncService {
       path: model.videoPath,
       existingStoragePath: model.videoStoragePath,
       category: model.category,
-      type: UploadedAssetType.video,
+      type: model.mediaType == 'audio'
+          ? UploadedAssetType.audio
+          : UploadedAssetType.video,
     );
     final mediaChanged =
         image.storagePath != model.imageStoragePath ||
@@ -278,6 +280,7 @@ class CloudSyncService {
         imageStoragePath: image.storagePath,
         audioStoragePath: audio.storagePath,
         videoStoragePath: video.storagePath,
+        mediaType: model.mediaType,
         createdBy: createdBy,
         createdAt: remote?.createdAt ?? model.createdAt,
         mediaVersion: nextMediaVersion,

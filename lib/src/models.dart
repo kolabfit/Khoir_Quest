@@ -67,12 +67,14 @@ class SongItem {
     this.videoUrl,
     this.lyrics, {
     this.fileName,
+    this.mediaType = 'video',
   });
   final String id;
   final String title;
   final String videoUrl;
   final List<LyricLine> lyrics;
   final String? fileName;
+  final String mediaType;
 }
 
 class LyricLine {

@@ -565,6 +565,8 @@ class _MiniMusicPlayerState extends State<_MiniMusicPlayer> {
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<PlayerState>? _playerStateSub;
 
+  bool get _isYoutube => widget.song.mediaType == 'youtube';
+
   @override
   void initState() {
     super.initState();
@@ -621,6 +623,17 @@ class _MiniMusicPlayerState extends State<_MiniMusicPlayer> {
       setState(() => _loading = false);
       return;
     }
+    if (_isYoutube) {
+      if (!mounted || token != _loadToken) return;
+      setState(() {
+        _duration = Duration.zero;
+        _position = Duration.zero;
+        _playing = false;
+        _loading = false;
+        _loadError = null;
+      });
+      return;
+    }
     try {
       await _prepareSongSource(_player, source, tempFilePrefix: 'mini_song');
       if (!mounted || token != _loadToken) return;
@@ -665,6 +678,11 @@ class _MiniMusicPlayerState extends State<_MiniMusicPlayer> {
         : (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
     final mobile = MediaQuery.sizeOf(context).width < 460;
     final ready = !_loading && _loadError == null;
+    final playIcon = _isYoutube
+        ? Icons.open_in_new_rounded
+        : _playing
+        ? Icons.pause_rounded
+        : Icons.play_arrow_rounded;
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
@@ -710,9 +728,7 @@ class _MiniMusicPlayerState extends State<_MiniMusicPlayer> {
                         ),
                         const SizedBox(width: 8),
                         _MiniControl(
-                          icon: _playing
-                              ? Icons.pause_rounded
-                              : Icons.play_arrow_rounded,
+                          icon: playIcon,
                           main: true,
                           onTap: ready ? _togglePlayback : null,
                         ),
@@ -763,9 +779,7 @@ class _MiniMusicPlayerState extends State<_MiniMusicPlayer> {
                     ),
                     const SizedBox(width: 8),
                     _MiniControl(
-                      icon: _playing
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
+                      icon: playIcon,
                       main: true,
                       onTap: ready ? _togglePlayback : null,
                     ),
@@ -783,6 +797,13 @@ class _MiniMusicPlayerState extends State<_MiniMusicPlayer> {
 
   Future<void> _togglePlayback() async {
     if (_loading || _loadError != null) return;
+    if (_isYoutube) {
+      final uri = Uri.tryParse(widget.song.videoUrl.trim());
+      if (uri != null) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      return;
+    }
     if (_playing) {
       await _player.pause();
     } else {
@@ -1159,6 +1180,9 @@ class _SongDurationPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (song.mediaType == 'youtube') {
+      return const _DurationPill(text: 'YouTube');
+    }
     return FutureBuilder<Duration?>(
       future: _resolveSongDuration(song.videoUrl),
       builder: (context, snapshot) {
@@ -1262,6 +1286,7 @@ Future<Duration?> _resolveSongDuration(String source) {
   final trimmed = source.trim();
   return _songDurationFutures.putIfAbsent(trimmed, () async {
     if (trimmed.isEmpty) return null;
+    if (MediaSourceHelper.isYoutubeUrl(trimmed)) return null;
     VideoPlayerController? controller;
     try {
       if (MediaSourceHelper.isDataUri(trimmed)) {
