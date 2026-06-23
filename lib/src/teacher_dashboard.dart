@@ -1416,16 +1416,39 @@ class _TeacherSyncSidebarButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final online = app.online;
-    final color = online ? const Color(0xff059669) : const Color(0xffEA580C);
-    final bg = online ? const Color(0xffECFDF5) : const Color(0xffFFF7ED);
-    final border = online ? const Color(0xffBBF7D0) : const Color(0xffFED7AA);
+    final pending = app.hasPendingMaterialSync;
+    final color = !online
+        ? const Color(0xffEA580C)
+        : pending
+        ? const Color(0xffB45309)
+        : const Color(0xff059669);
+    final bg = !online
+        ? const Color(0xffFFF7ED)
+        : pending
+        ? const Color(0xffFEF3C7)
+        : const Color(0xffECFDF5);
+    final border = !online
+        ? const Color(0xffFED7AA)
+        : pending
+        ? const Color(0xffF59E0B)
+        : const Color(0xffBBF7D0);
     final icon = app.syncInProgress
         ? null
-        : online
-        ? Icons.cloud_sync_rounded
-        : Icons.cloud_off_rounded;
+        : !online
+        ? Icons.cloud_off_rounded
+        : pending
+        ? Icons.priority_high_rounded
+        : Icons.cloud_done_rounded;
+    final label = app.syncInProgress
+        ? 'Menyinkron...'
+        : pending
+        ? 'Tekan saya - belum sinkron'
+        : 'Sudah sinkron';
+    final tooltip = pending
+        ? '${app.syncStatus} (${app.pendingMaterialSyncCount} perubahan belum sinkron)'
+        : app.syncStatus;
     return Tooltip(
-      message: app.syncStatus,
+      message: tooltip,
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
         onTap: app.syncInProgress ? null : onTap,
@@ -1468,7 +1491,7 @@ class _TeacherSyncSidebarButton extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        app.syncInProgress ? 'Menyinkron...' : 'Sinkronisasi',
+                        label,
                         style: TextStyle(
                           color: color,
                           fontWeight: FontWeight.w900,

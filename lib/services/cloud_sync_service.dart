@@ -110,6 +110,11 @@ class CloudSyncService {
 
   Future<void> syncForRole({required String role}) async {
     if (!isConfigured || !hasSession || !await isOnline()) return;
+    final profile = await _auth.currentProfile();
+    if (profile != null &&
+        (role == 'teacher' || role == 'pengajar' || role == 'guru')) {
+      await pushPendingTeacherCatalog(createdBy: profile.userId);
+    }
     await pullCloudToLocal();
   }
 
@@ -118,6 +123,14 @@ class CloudSyncService {
     final materials = await _materials.fetchAll();
     await _cache.replaceFromCloud(materials);
     return materials;
+  }
+
+  Stream<List<LearningMaterialModel>> watchCloudMaterials() {
+    return _materials.watchAll();
+  }
+
+  Future<void> mergeCloudMaterials(List<LearningMaterialModel> materials) {
+    return _cache.replaceFromCloud(materials);
   }
 
   Future<List<LearningMaterialModel>> pushLocalTeacherCatalog({
@@ -135,6 +148,29 @@ class CloudSyncService {
       }
     }
     return pushed;
+  }
+
+  Future<List<LearningMaterialModel>> pushPendingTeacherCatalog({
+    required String createdBy,
+  }) async {
+    final items = await _cache.loadPendingSync();
+    final pushed = <LearningMaterialModel>[];
+    for (final item in items) {
+      if (item.syncState == 'deletePending') {
+        await deleteMaterial(item.materialId);
+        continue;
+      }
+      final synced = await syncLocalMaterial(
+        item.materialId,
+        createdBy: createdBy,
+      );
+      if (synced != null) pushed.add(synced);
+    }
+    return pushed;
+  }
+
+  Future<int> pendingMaterialSyncCount() {
+    return _cache.countPendingSync();
   }
 
   Future<LearningMaterialModel?> syncLocalMaterial(

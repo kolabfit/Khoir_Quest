@@ -149,6 +149,24 @@ class MaterialRepository {
     );
   }
 
+  Future<List<LearningMaterialEntity>> loadPendingSync() {
+    return _database.read(
+      (isar) => isar.learningMaterialEntitys
+          .where()
+          .filter()
+          .syncStateEqualTo('dirty')
+          .or()
+          .syncStateEqualTo('deletePending')
+          .sortByUpdatedAtDesc()
+          .findAll(),
+    );
+  }
+
+  Future<int> countPendingSync() async {
+    final items = await loadPendingSync();
+    return items.length;
+  }
+
   Future<LearningMaterialEntity?> findByMaterialId(String materialId) {
     return _database.read(
       (isar) => isar.learningMaterialEntitys.getByMaterialId(materialId),
@@ -194,7 +212,7 @@ class MaterialRepository {
         if (existing != null && existing.syncState == 'dirty') {
           continue;
         }
-        if (existing != null && existing.syncState == 'deleted') {
+        if (existing != null && existing.syncState == 'deletePending') {
           continue;
         }
         cloud.id = existing?.id ?? Isar.autoIncrement;
@@ -277,7 +295,7 @@ class MaterialRepository {
           .findFirst();
       if (entity != null) {
         entity
-          ..syncState = 'deleted'
+          ..syncState = 'deletePending'
           ..deletedAt = DateTime.now()
           ..updatedAt = DateTime.now();
         await isar.learningMaterialEntitys.put(entity);

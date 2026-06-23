@@ -45,7 +45,7 @@ class ApiErrorMapper {
       'stale learning material version',
       'p0001',
     ])) {
-      return 'Materi sudah diubah di perangkat lain. Refresh dulu.';
+      return 'Ada konflik. Perubahan lokal aman.';
     }
     if (_containsAny(normalized, const [
       'akun belum terdaftar',

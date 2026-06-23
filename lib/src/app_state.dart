@@ -22,6 +22,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   final LocalDatabase _db;
   final CloudSyncService _cloudSync = CloudSyncService.instance;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  StreamSubscription<List<LearningMaterialModel>>? _materialSubscription;
   Timer? _autoSyncTimer;
   DateTime? _lastAutoSyncAt;
   String? email;
@@ -59,6 +60,10 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   bool syncInProgress = false;
   String syncStatus = 'Siap sinkron ke cloud';
   DateTime? lastSyncedAt;
+  int pendingMaterialSyncCount = 0;
+  final Set<String> _pendingMaterialSyncIds = {};
+
+  bool get hasPendingMaterialSync => pendingMaterialSyncCount > 0;
 
   AppThemeData get theme =>
       appThemes.firstWhere((t) => t.id == themeId, orElse: () => appThemes[0]);
@@ -107,7 +112,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       _applyAccount(account);
     }
     await _reloadLearningCatalog();
+    await _refreshPendingMaterialSyncCount();
     await _startConnectivityWatch();
+    _startMaterialRealtime();
     _startAutoSync();
     if (email != null && role != null) {
       unawaited(_safeSyncCloudContent(silent: true));
@@ -165,6 +172,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       );
       _applyAccount(account);
       tab = role == Role.teacher ? TabItem.akun : TabItem.main;
+      _startMaterialRealtime();
       _startAutoSync();
       notifyListeners();
       unawaited(_safeSyncCloudContent(silent: true));
@@ -221,6 +229,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     favorites.clear();
     _autoSyncTimer?.cancel();
     _autoSyncTimer = null;
+    await _materialSubscription?.cancel();
+    _materialSubscription = null;
     if (_cloudSync.isConfigured) {
       await _cloudSync.logout();
     }
@@ -374,6 +384,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     );
     objects.removeWhere((item) => item.id == object.id);
     objects.insert(0, object);
+    _markMaterialPending(object.id);
+    await _refreshPendingMaterialSyncCount();
     await _syncSingleMaterial(object.id);
     notifyListeners();
   }
@@ -393,6 +405,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     letters.removeWhere((entry) => entry.id == item.id);
     letters.insert(0, item);
     _sortLetters();
+    _markMaterialPending(item.id);
+    await _refreshPendingMaterialSyncCount();
     await _syncSingleMaterial(item.id);
     notifyListeners();
   }
@@ -406,6 +420,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _saveAccount();
     }
     await _db.removeLetter(item);
+    _markMaterialPending(item.id);
+    await _refreshPendingMaterialSyncCount();
     await _deleteCloudMaterial(item.id);
     notifyListeners();
   }
@@ -425,6 +441,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     numbers.removeWhere((entry) => entry.id == item.id);
     numbers.insert(0, item);
     _sortNumbers();
+    _markMaterialPending(item.id);
+    await _refreshPendingMaterialSyncCount();
     await _syncSingleMaterial(item.id);
     notifyListeners();
   }
@@ -454,6 +472,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _saveAccount();
     }
     await _db.removeNumber(item);
+    _markMaterialPending(item.id);
+    await _refreshPendingMaterialSyncCount();
     await _deleteCloudMaterial(item.id);
     notifyListeners();
   }
@@ -467,6 +487,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _db.deleteFile(item.img);
     }
     await _db.removeObject(item);
+    _markMaterialPending(item.id);
+    await _refreshPendingMaterialSyncCount();
     await _deleteCloudMaterial(item.id);
     notifyListeners();
   }
@@ -488,6 +510,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     );
     songs.removeWhere((item) => item.id == id);
     songs.insert(0, song);
+    _markMaterialPending(song.id);
+    await _refreshPendingMaterialSyncCount();
     await _syncSingleMaterial(song.id);
     notifyListeners();
   }
@@ -502,6 +526,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (email != null) {
       await _db.saveFavoriteIds(email!, favorites);
     }
+    _markMaterialPending(song.id);
+    await _refreshPendingMaterialSyncCount();
     await _deleteCloudMaterial(song.id);
     notifyListeners();
   }
@@ -538,8 +564,15 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _pushCloudLearningHistory();
       await _cloudSync.syncForRole(role: currentRole.name);
       await _reloadLearningCatalog();
+      await _refreshPendingMaterialSyncCount();
+      if (pendingMaterialSyncCount == _pendingMaterialSyncIds.length) {
+        _pendingMaterialSyncIds.clear();
+        await _refreshPendingMaterialSyncCount();
+      }
       lastSyncedAt = DateTime.now();
-      syncStatus = 'Tersinkron ${_formatSyncTime(lastSyncedAt!)}';
+      syncStatus = hasPendingMaterialSync
+          ? 'Belum sinkron: $pendingMaterialSyncCount perubahan'
+          : 'Sudah sinkron ${_formatSyncTime(lastSyncedAt!)}';
     } catch (error) {
       syncStatus = ApiErrorMapper.toMessage(
         error,
@@ -547,6 +580,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       );
     } finally {
       syncInProgress = false;
+      await _refreshPendingMaterialSyncCount();
       if (ready) notifyListeners();
     }
   }
@@ -568,6 +602,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     online = await _cloudSync.isOnline();
     if (!online) {
       syncStatus = 'Butuh koneksi internet';
+      await _refreshPendingMaterialSyncCount();
       if (ready) notifyListeners();
       return;
     }
@@ -576,20 +611,25 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       syncStatus = 'Upload materi ke cloud...';
       if (ready) notifyListeners();
       final profile = await _cloudSync.currentProfile();
-      await _cloudSync.syncLocalMaterial(
+      final synced = await _cloudSync.syncLocalMaterial(
         materialId,
         createdBy: profile?.userId ?? email!,
       );
+      if (synced == null) throw 'Sinkron materi ditunda.';
+      _pendingMaterialSyncIds.remove(materialId);
       await _reloadLearningCatalog();
+      await _refreshPendingMaterialSyncCount();
       lastSyncedAt = DateTime.now();
       syncStatus = 'Materi tersinkron ${_formatSyncTime(lastSyncedAt!)}';
     } catch (error) {
+      await _refreshPendingMaterialSyncCount();
       syncStatus = ApiErrorMapper.toMessage(
         error,
-        fallback: 'Materi sudah diubah di perangkat lain. Refresh dulu.',
+        fallback: 'Ada konflik. Perubahan lokal aman.',
       );
     } finally {
       syncInProgress = false;
+      await _refreshPendingMaterialSyncCount();
       if (ready) notifyListeners();
     }
   }
@@ -600,6 +640,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     online = await _cloudSync.isOnline();
     if (!online) {
       syncStatus = 'Butuh koneksi internet';
+      await _refreshPendingMaterialSyncCount();
       if (ready) notifyListeners();
       return;
     }
@@ -608,15 +649,19 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       syncStatus = 'Menghapus materi cloud...';
       if (ready) notifyListeners();
       await _cloudSync.deleteMaterial(materialId);
+      _pendingMaterialSyncIds.remove(materialId);
+      await _refreshPendingMaterialSyncCount();
       lastSyncedAt = DateTime.now();
       syncStatus = 'Perubahan tersinkron ${_formatSyncTime(lastSyncedAt!)}';
     } catch (error) {
+      await _refreshPendingMaterialSyncCount();
       syncStatus = ApiErrorMapper.toMessage(
         error,
-        fallback: 'Materi sudah diubah di perangkat lain. Refresh dulu.',
+        fallback: 'Ada konflik. Perubahan lokal aman.',
       );
     } finally {
       syncInProgress = false;
+      await _refreshPendingMaterialSyncCount();
       if (ready) notifyListeners();
     }
   }
@@ -640,6 +685,21 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       ..clear()
       ..addAll(await _db.loadSongs());
     _refreshDerivedProgress();
+  }
+
+  Future<void> _refreshPendingMaterialSyncCount() async {
+    if (role != Role.teacher || !_cloudSync.isConfigured) {
+      pendingMaterialSyncCount = 0;
+      _pendingMaterialSyncIds.clear();
+      return;
+    }
+    final storedCount = await _cloudSync.pendingMaterialSyncCount();
+    pendingMaterialSyncCount = max(storedCount, _pendingMaterialSyncIds.length);
+  }
+
+  void _markMaterialPending(String materialId) {
+    final id = materialId.trim();
+    if (id.isNotEmpty) _pendingMaterialSyncIds.add(id);
   }
 
   Future<void> _startConnectivityWatch() async {
@@ -672,6 +732,26 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _autoSyncTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
       await _syncIfNeeded(reason: 'timer');
     });
+  }
+
+  void _startMaterialRealtime() {
+    _materialSubscription?.cancel();
+    _materialSubscription = null;
+    if (!_cloudSync.isConfigured || role != Role.child || email == null) return;
+    _materialSubscription = _cloudSync.watchCloudMaterials().listen(
+      (materials) async {
+        if (role != Role.child) return;
+        await _cloudSync.mergeCloudMaterials(materials);
+        await _reloadLearningCatalog();
+        lastSyncedAt = DateTime.now();
+        syncStatus = 'Materi realtime ${_formatSyncTime(lastSyncedAt!)}';
+        if (ready) notifyListeners();
+      },
+      onError: (_) {
+        syncStatus = 'Realtime materi ditunda';
+        if (ready) notifyListeners();
+      },
+    );
   }
 
   Future<void> _syncIfNeeded({
@@ -717,6 +797,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _connectivitySubscription?.cancel();
+    _materialSubscription?.cancel();
     _autoSyncTimer?.cancel();
     super.dispose();
   }

@@ -44,6 +44,16 @@ class CacheService {
     return _materials.loadAllIncludingDeleted();
   }
 
+  Future<List<LearningMaterialEntity>> loadPendingSync() {
+    if (kIsWeb) return _webLoadAll();
+    return _materials.loadPendingSync();
+  }
+
+  Future<int> countPendingSync() async {
+    if (kIsWeb) return 0;
+    return _materials.countPendingSync();
+  }
+
   Future<void> _webReplaceFromCloud(
     List<LearningMaterialModel> materials,
   ) async {
