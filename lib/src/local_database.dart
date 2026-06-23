@@ -863,6 +863,7 @@ class LocalDatabase {
     String imagePath,
     String category, {
     String? existingId,
+    String? previousName,
   }) async {
     await ensureReady();
     if (kIsWeb) {
@@ -874,6 +875,12 @@ class LocalDatabase {
         existingId?.trim().isNotEmpty == true
             ? existingId!.trim()
             : 'benda_${DateTime.now().millisecondsSinceEpoch}',
+      );
+      final previous = previousName?.trim();
+      objects.removeWhere(
+        (item) =>
+            item.id == object.id ||
+            (previous != null && previous.isNotEmpty && item.name == previous),
       );
       objects.insert(0, object);
       await _webPrefs!.setString(

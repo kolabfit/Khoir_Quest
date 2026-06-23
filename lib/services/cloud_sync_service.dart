@@ -109,23 +109,28 @@ class CloudSyncService {
     }
   }
 
-  Future<void> syncForRole({required String role}) async {
+  Future<void> syncForRole({
+    required String role,
+    bool forceFullCatalogRefresh = false,
+  }) async {
     if (!isConfigured || !hasSession || !await isOnline()) return;
     final profile = await _auth.currentProfile();
     if (profile != null &&
         (role == 'teacher' || role == 'pengajar' || role == 'guru')) {
       await pushPendingTeacherCatalog(createdBy: profile.userId);
     }
-    await pullCloudToLocal();
+    await pullCloudToLocal(forceFullRefresh: forceFullCatalogRefresh);
   }
 
-  Future<List<LearningMaterialModel>> pullCloudToLocal() async {
+  Future<List<LearningMaterialModel>> pullCloudToLocal({
+    bool forceFullRefresh = false,
+  }) async {
     if (!isConfigured || !hasSession) return const [];
     final lastSyncAt = await _loadLastMaterialSyncAt();
     final localCount = await _cache.countLocalMaterials();
-    final fullSync = lastSyncAt == null || localCount == 0;
+    final fullSync = forceFullRefresh || lastSyncAt == null || localCount == 0;
     final materials = fullSync
-        ? await _materials.fetchAll(includeDeleted: true)
+        ? await _materials.fetchAll()
         : await _materials.fetchUpdatedSince(
             lastSyncAt.subtract(_materialSyncOverlap),
           );

@@ -376,14 +376,21 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     String img,
     String category, {
     String? existingId,
+    String? previousName,
   }) async {
     final object = await _db.addObject(
       name,
       img,
       category,
       existingId: existingId,
+      previousName: previousName,
     );
-    objects.removeWhere((item) => item.id == object.id);
+    final previous = previousName?.trim();
+    objects.removeWhere(
+      (item) =>
+          item.id == object.id ||
+          (previous != null && previous.isNotEmpty && item.name == previous),
+    );
     objects.insert(0, object);
     _markMaterialPending(object.id);
     await _refreshPendingMaterialSyncCount();
@@ -566,7 +573,10 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         await _pushPendingMaterialDeletes();
       }
       await _pushCloudLearningHistory();
-      await _cloudSync.syncForRole(role: currentRole.name);
+      await _cloudSync.syncForRole(
+        role: currentRole.name,
+        forceFullCatalogRefresh: !silent,
+      );
       await _reloadLearningCatalog();
       await _refreshPendingMaterialSyncCount();
       if (pendingMaterialSyncCount == _pendingMaterialSyncIds.length) {

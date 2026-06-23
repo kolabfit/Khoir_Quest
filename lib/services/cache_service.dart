@@ -56,7 +56,7 @@ class CacheService {
   }
 
   Future<List<LearningMaterialEntity>> loadPendingSync() {
-    if (kIsWeb) return _webLoadAll();
+    if (kIsWeb) return Future.value(const <LearningMaterialEntity>[]);
     return _materials.loadPendingSync();
   }
 

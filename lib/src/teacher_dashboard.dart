@@ -792,6 +792,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
         result.mediaPath,
         result.subtitle.isEmpty ? 'umum' : result.subtitle,
         existingId: existing?.object?.id,
+        previousName: existing?.object?.name,
       );
       if (previousPath != null &&
           previousPath != result.mediaPath &&
