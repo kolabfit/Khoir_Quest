@@ -61,7 +61,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   String syncStatus = 'Siap sinkron ke cloud';
   DateTime? lastSyncedAt;
   int pendingMaterialSyncCount = 0;
-  final Set<String> _pendingMaterialSyncIds = {};
+  static final Set<String> _pendingMaterialSyncIds = {};
+  static final Set<String> _pendingMaterialDeleteIds = {};
 
   bool get hasPendingMaterialSync => pendingMaterialSyncCount > 0;
 
@@ -420,7 +421,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _saveAccount();
     }
     await _db.removeLetter(item);
-    _markMaterialPending(item.id);
+    _markMaterialDeletePending(item.id);
     await _refreshPendingMaterialSyncCount();
     await _deleteCloudMaterial(item.id);
     notifyListeners();
@@ -472,7 +473,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _saveAccount();
     }
     await _db.removeNumber(item);
-    _markMaterialPending(item.id);
+    _markMaterialDeletePending(item.id);
     await _refreshPendingMaterialSyncCount();
     await _deleteCloudMaterial(item.id);
     notifyListeners();
@@ -487,7 +488,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       await _db.deleteFile(item.img);
     }
     await _db.removeObject(item);
-    _markMaterialPending(item.id);
+    _markMaterialDeletePending(item.id);
     await _refreshPendingMaterialSyncCount();
     await _deleteCloudMaterial(item.id);
     notifyListeners();
@@ -526,7 +527,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (email != null) {
       await _db.saveFavoriteIds(email!, favorites);
     }
-    _markMaterialPending(song.id);
+    _markMaterialDeletePending(song.id);
     await _refreshPendingMaterialSyncCount();
     await _deleteCloudMaterial(song.id);
     notifyListeners();
@@ -561,6 +562,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (!silent && ready) notifyListeners();
     try {
       await _pushCloudAccountState();
+      if (currentRole == Role.teacher) {
+        await _pushPendingMaterialDeletes();
+      }
       await _pushCloudLearningHistory();
       await _cloudSync.syncForRole(role: currentRole.name);
       await _reloadLearningCatalog();
@@ -650,6 +654,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       if (ready) notifyListeners();
       await _cloudSync.deleteMaterial(materialId);
       _pendingMaterialSyncIds.remove(materialId);
+      _pendingMaterialDeleteIds.remove(materialId);
       await _refreshPendingMaterialSyncCount();
       lastSyncedAt = DateTime.now();
       syncStatus = 'Perubahan tersinkron ${_formatSyncTime(lastSyncedAt!)}';
@@ -691,6 +696,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (role != Role.teacher || !_cloudSync.isConfigured) {
       pendingMaterialSyncCount = 0;
       _pendingMaterialSyncIds.clear();
+      _pendingMaterialDeleteIds.clear();
       return;
     }
     final storedCount = await _cloudSync.pendingMaterialSyncCount();
@@ -700,6 +706,22 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void _markMaterialPending(String materialId) {
     final id = materialId.trim();
     if (id.isNotEmpty) _pendingMaterialSyncIds.add(id);
+  }
+
+  void _markMaterialDeletePending(String materialId) {
+    final id = materialId.trim();
+    if (id.isEmpty) return;
+    _pendingMaterialSyncIds.add(id);
+    _pendingMaterialDeleteIds.add(id);
+  }
+
+  Future<void> _pushPendingMaterialDeletes() async {
+    if (_pendingMaterialDeleteIds.isEmpty) return;
+    for (final id in _pendingMaterialDeleteIds.toList()) {
+      await _cloudSync.deleteMaterial(id);
+      _pendingMaterialDeleteIds.remove(id);
+      _pendingMaterialSyncIds.remove(id);
+    }
   }
 
   Future<void> _startConnectivityWatch() async {
@@ -897,7 +919,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final username = email;
     if (username == null) return;
     final records = await _db.loadHistory(username, limit: 100);
-    await _cloudSync.syncLearningHistory(records);
+    try {
+      await _cloudSync.syncLearningHistory(records);
+    } catch (_) {
+      syncStatus = 'Riwayat belajar belum tersinkron';
+    }
   }
 
   String? _progressKeyForMode(LearnMode mode) => switch (mode) {

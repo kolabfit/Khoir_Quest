@@ -24,6 +24,13 @@ class CacheService {
     );
   }
 
+  Future<void> mergeFromCloud(List<LearningMaterialModel> materials) async {
+    if (kIsWeb) return _webMergeFromCloud(materials);
+    await _materials.mergeFromCloud(
+      materials.map((material) => material.toEntity()).toList(),
+    );
+  }
+
   Future<void> upsert(LearningMaterialModel material) {
     if (kIsWeb) return _webUpsert(material);
     return _materials.upsertEntity(material.toEntity());
@@ -44,6 +51,10 @@ class CacheService {
     return _materials.loadAllIncludingDeleted();
   }
 
+  Future<int> countLocalMaterials() async {
+    return (await loadAllSyncable()).length;
+  }
+
   Future<List<LearningMaterialEntity>> loadPendingSync() {
     if (kIsWeb) return _webLoadAll();
     return _materials.loadPendingSync();
@@ -59,7 +70,7 @@ class CacheService {
   ) async {
     final prefs = await SharedPreferences.getInstance();
     final grouped = <String, List<LearningMaterialModel>>{};
-    for (final material in materials) {
+    for (final material in materials.where((item) => item.deletedAt == null)) {
       grouped.putIfAbsent(material.category, () => []).add(material);
     }
     await prefs.setString(
@@ -126,10 +137,25 @@ class CacheService {
   }
 
   Future<void> _webUpsert(LearningMaterialModel material) async {
+    if (material.deletedAt != null) {
+      return _webDelete(material.id);
+    }
     final prefs = await SharedPreferences.getInstance();
     final items = await _webLoadModels(prefs);
     items.removeWhere((item) => item.id == material.id);
     items.add(material);
+    await _webReplaceFromCloud(items);
+  }
+
+  Future<void> _webMergeFromCloud(List<LearningMaterialModel> materials) async {
+    final prefs = await SharedPreferences.getInstance();
+    final items = await _webLoadModels(prefs);
+    for (final material in materials) {
+      items.removeWhere((item) => item.id == material.id);
+      if (material.deletedAt == null) {
+        items.add(material);
+      }
+    }
     await _webReplaceFromCloud(items);
   }
 

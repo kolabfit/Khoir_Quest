@@ -2,6 +2,8 @@ part of '../main.dart';
 
 enum _AuthMode { login, register, resetPassword }
 
+const String _semanticVersion = 'v1.0.0';
+
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -739,6 +741,16 @@ class _AuthPanelCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
+          const Text(
+            _semanticVersion,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xff8A8EA8),
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 12),
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

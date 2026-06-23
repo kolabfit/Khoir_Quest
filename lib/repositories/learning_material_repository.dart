@@ -10,12 +10,29 @@ class LearningMaterialRepository {
 
   SupabaseClient get _client => _supabaseService.client;
 
-  Future<List<LearningMaterialModel>> fetchAll() async {
+  Future<List<LearningMaterialModel>> fetchAll({
+    bool includeDeleted = false,
+  }) async {
+    var query = _client.from('learning_materials').select();
+    if (!includeDeleted) {
+      query = query.isFilter('deleted_at', null);
+    }
+    final data = await query
+        .order('category')
+        .order('updated_at', ascending: false);
+    return _mapRows(data);
+  }
+
+  Future<List<LearningMaterialModel>> fetchUpdatedSince(DateTime since) async {
     final data = await _client
         .from('learning_materials')
         .select()
-        .order('category')
-        .order('updated_at', ascending: false);
+        .gt('updated_at', since.toUtc().toIso8601String())
+        .order('updated_at');
+    return _mapRows(data);
+  }
+
+  List<LearningMaterialModel> _mapRows(dynamic data) {
     return (data as List<dynamic>)
         .map(
           (item) => LearningMaterialModel.fromMap(

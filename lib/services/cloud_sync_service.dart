@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/utils/media_source_helper.dart';
 import '../database/collections/learning_material_collection.dart';
@@ -120,8 +121,23 @@ class CloudSyncService {
 
   Future<List<LearningMaterialModel>> pullCloudToLocal() async {
     if (!isConfigured || !hasSession) return const [];
-    final materials = await _materials.fetchAll();
-    await _cache.replaceFromCloud(materials);
+    final lastSyncAt = await _loadLastMaterialSyncAt();
+    final localCount = await _cache.countLocalMaterials();
+    final fullSync = lastSyncAt == null || localCount == 0;
+    final materials = fullSync
+        ? await _materials.fetchAll(includeDeleted: true)
+        : await _materials.fetchUpdatedSince(
+            lastSyncAt.subtract(_materialSyncOverlap),
+          );
+    if (fullSync) {
+      await _cache.replaceFromCloud(materials);
+    } else {
+      await _cache.mergeFromCloud(materials);
+    }
+    final maxUpdatedAt = _maxUpdatedAt(materials);
+    if (maxUpdatedAt != null) {
+      await _saveLastMaterialSyncAt(maxUpdatedAt);
+    }
     return materials;
   }
 
@@ -186,12 +202,17 @@ class CloudSyncService {
   Future<void> deleteMaterial(String materialId) async {
     if (!isConfigured || !hasSession || !await isOnline()) return;
     final local = await _cache.findById(materialId);
-    final expectedVersion = local?.cloudVersion ?? 0;
+    final remote = local == null ? await _materials.findById(materialId) : null;
+    if (local == null && remote == null) {
+      await _cache.delete(materialId);
+      return;
+    }
+    final expectedVersion = local?.cloudVersion ?? remote?.version ?? 0;
     final deleted = await _materials.softDeleteMaterial(
       materialId,
       expectedVersion: expectedVersion,
     );
-    await _cache.upsert(deleted);
+    await _cache.delete(deleted.id);
   }
 
   Future<LearningMaterialModel> _pushEntity(
@@ -309,6 +330,35 @@ class CloudSyncService {
       publicUrl: uploaded.publicUrl,
     );
   }
+
+  Future<DateTime?> _loadLastMaterialSyncAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_lastMaterialSyncAtKey);
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw)?.toUtc();
+  }
+
+  Future<void> _saveLastMaterialSyncAt(DateTime value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _lastMaterialSyncAtKey,
+      value.toUtc().toIso8601String(),
+    );
+  }
+
+  DateTime? _maxUpdatedAt(List<LearningMaterialModel> materials) {
+    DateTime? maxValue;
+    for (final material in materials) {
+      final value = material.updatedAt.toUtc();
+      if (maxValue == null || value.isAfter(maxValue)) {
+        maxValue = value;
+      }
+    }
+    return maxValue;
+  }
+
+  static const _lastMaterialSyncAtKey = 'sync.learningMaterials.lastUpdatedAt';
+  static const _materialSyncOverlap = Duration(seconds: 2);
 }
 
 class _ResolvedCloudAsset {
