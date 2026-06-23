@@ -120,15 +120,36 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   Future<_TeacherStorageData>? _storageFuture;
   final List<_TeacherActivity> _activities = [];
   Future<int>? _userCountFuture;
+  final AudioPlayer _songPreviewPlayer = AudioPlayer();
+  StreamSubscription<PlayerState>? _songPreviewSub;
+  String? _previewSongId;
+  bool _previewPlaying = false;
+  bool _previewLoading = false;
 
   @override
   void initState() {
     super.initState();
     _userCountFuture = LocalDatabase.instance.countAccounts();
+    _songPreviewSub = _songPreviewPlayer.playerStateStream.listen((state) {
+      if (!mounted) return;
+      final completed = state.processingState == ProcessingState.completed;
+      if (completed) unawaited(_songPreviewPlayer.stop());
+      setState(() {
+        _previewPlaying = completed ? false : state.playing;
+        _previewLoading =
+            state.processingState == ProcessingState.loading ||
+            state.processingState == ProcessingState.buffering;
+        if (completed) _previewSongId = null;
+      });
+    });
   }
 
   @override
-  void dispose() => super.dispose();
+  void dispose() {
+    _songPreviewSub?.cancel();
+    _songPreviewPlayer.dispose();
+    super.dispose();
+  }
 
   Future<void> _confirmLogout() async {
     final confirmed = await showDialog<bool>(
@@ -263,10 +284,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
           ),
         ),
       ),
-      floatingActionButton:
-          mobile &&
-              activeCategory != _TeacherCategory.huruf &&
-              activeCategory != _TeacherCategory.angka
+      floatingActionButton: mobile && activeCategory != _TeacherCategory.huruf
           ? FloatingActionButton.extended(
               onPressed: () => _openUploadDialog(activeCategory),
               backgroundColor: activeCategory.color,
@@ -291,6 +309,51 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
         _selectedFilter = 'Semua';
       }
     });
+  }
+
+  Future<void> _toggleSongPreview(SongItem song) async {
+    final source = song.videoUrl.trim();
+    if (source.isEmpty) return;
+    if (song.mediaType == 'youtube' || MediaSourceHelper.isYoutubeUrl(source)) {
+      final uri = Uri.tryParse(source);
+      if (uri != null) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      return;
+    }
+    try {
+      if (_previewSongId == song.id) {
+        if (_previewPlaying) {
+          await _songPreviewPlayer.pause();
+        } else {
+          await _songPreviewPlayer.play();
+        }
+        return;
+      }
+      setState(() {
+        _previewSongId = song.id;
+        _previewLoading = true;
+        _previewPlaying = false;
+      });
+      await _songPreviewPlayer.stop();
+      await _prepareSongSource(
+        _songPreviewPlayer,
+        source,
+        tempFilePrefix: 'teacher_preview_song',
+      );
+      if (!mounted || _previewSongId != song.id) return;
+      await _songPreviewPlayer.play();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _previewSongId = null;
+        _previewLoading = false;
+        _previewPlaying = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preview lagu tidak bisa diputar.')),
+      );
+    }
   }
 
   Future<void> _syncDashboard({bool silent = false}) async {
@@ -569,7 +632,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                       'Fokus pada materi inti yang sudah aktif di Khoir Quest.',
                 ),
               ),
-              if (!mobile)
+              if (!mobile && activeCategory != _TeacherCategory.huruf)
                 FilledButton.icon(
                   onPressed: () => _openUploadDialog(activeCategory),
                   style: FilledButton.styleFrom(
@@ -704,6 +767,14 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                         ? () => _deleteContent(items[i])
                         : null,
                     onReadOnlyTap: () => _showReadOnlyMessage(activeCategory),
+                    previewActive: _previewSongId == items[i].song?.id,
+                    previewPlaying:
+                        _previewSongId == items[i].song?.id && _previewPlaying,
+                    previewLoading:
+                        _previewSongId == items[i].song?.id && _previewLoading,
+                    onPreview: items[i].song == null
+                        ? null
+                        : () => _toggleSongPreview(items[i].song!),
                   ).animate().fadeIn(
                     duration: 260.ms,
                     delay: Duration(milliseconds: i * 35),
@@ -718,9 +789,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     _TeacherCategory category, {
     _TeacherContentData? existing,
   }) async {
-    if ((category == _TeacherCategory.huruf ||
-            category == _TeacherCategory.angka) &&
-        existing == null) {
+    if (category == _TeacherCategory.huruf && existing == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: category.color,
@@ -1599,9 +1668,7 @@ class _TeacherTopbar extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (!mobile &&
-                    activeCategory != _TeacherCategory.huruf &&
-                    activeCategory != _TeacherCategory.angka)
+                if (!mobile && activeCategory != _TeacherCategory.huruf)
                   FilledButton.icon(
                     onPressed: onQuickUpload,
                     style: FilledButton.styleFrom(
@@ -1822,6 +1889,10 @@ class _TeacherContentCard extends StatelessWidget {
     required this.onUpload,
     required this.onDelete,
     required this.onReadOnlyTap,
+    required this.previewActive,
+    required this.previewPlaying,
+    required this.previewLoading,
+    this.onPreview,
   });
 
   final _TeacherContentData item;
@@ -1829,6 +1900,10 @@ class _TeacherContentCard extends StatelessWidget {
   final VoidCallback? onUpload;
   final VoidCallback? onDelete;
   final VoidCallback onReadOnlyTap;
+  final bool previewActive;
+  final bool previewPlaying;
+  final bool previewLoading;
+  final VoidCallback? onPreview;
 
   @override
   Widget build(BuildContext context) {
@@ -1932,6 +2007,18 @@ class _TeacherContentCard extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
+                        if (item.song != null)
+                          _TeacherActionButton(
+                            icon: previewLoading
+                                ? Icons.hourglass_top_rounded
+                                : previewPlaying
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            color: previewActive
+                                ? const Color(0xff22C55E)
+                                : const Color(0xffFB923C),
+                            onTap: onPreview!,
+                          ),
                         _TeacherActionButton(
                           icon: Icons.edit_rounded,
                           color: const Color(0xff8B5CF6),
@@ -2146,7 +2233,7 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
                       : _isAngka
                       ? Icons.numbers_rounded
                       : Icons.edit_rounded,
-                  readOnly: _isHuruf || _isAngka,
+                  readOnly: _isHuruf || (_isAngka && widget.existing != null),
                 ),
                 if (!_isSong)
                   _isBenda
