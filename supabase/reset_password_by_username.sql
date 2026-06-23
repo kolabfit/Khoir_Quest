@@ -43,10 +43,22 @@ begin
     email = target_email,
     encrypted_password = extensions.crypt(new_password, extensions.gen_salt('bf')),
     raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('username', normalized_username),
-    recovery_token = '',
+    recovery_token = coalesce(recovery_token, ''),
+    confirmation_token = coalesce(confirmation_token, ''),
+    email_change_token_new = coalesce(email_change_token_new, ''),
+    email_change_token_current = coalesce(email_change_token_current, ''),
+    reauthentication_token = coalesce(reauthentication_token, ''),
     recovery_sent_at = null,
     updated_at = timezone('utc', now())
   where id = target_user_id;
+
+  update auth.identities
+  set
+    identity_data = coalesce(identity_data, '{}'::jsonb)
+      || jsonb_build_object('email', target_email, 'username', normalized_username),
+    updated_at = timezone('utc', now())
+  where user_id = target_user_id
+    and provider = 'email';
 end;
 $$;
 
