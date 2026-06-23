@@ -15,7 +15,7 @@ extension GetUserProfileEntityCollection on Isar {
 
 const UserProfileEntitySchema = CollectionSchema(
   name: r'UserProfileEntity',
-  id: -588086384777568406,
+  id: -1000007,
   properties: {
     r'angkaMastered': PropertySchema(
       id: 0,
@@ -125,7 +125,7 @@ const UserProfileEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'username': IndexSchema(
-      id: -2899563114555695793,
+      id: -1000002,
       name: r'username',
       unique: true,
       replace: true,

@@ -16,7 +16,7 @@ extension GetLearningMaterialEntityCollection on Isar {
 
 const LearningMaterialEntitySchema = CollectionSchema(
   name: r'LearningMaterialEntity',
-  id: -437356215016307091,
+  id: -1000005,
   properties: {
     r'audioPath': PropertySchema(
       id: 0,
@@ -131,7 +131,7 @@ const LearningMaterialEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'materialId': IndexSchema(
-      id: -4039490305560314015,
+      id: -1000003,
       name: r'materialId',
       unique: true,
       replace: true,
@@ -144,7 +144,7 @@ const LearningMaterialEntitySchema = CollectionSchema(
       ],
     ),
     r'category': IndexSchema(
-      id: -7560358558326323820,
+      id: -1000009,
       name: r'category',
       unique: false,
       replace: false,
@@ -157,7 +157,7 @@ const LearningMaterialEntitySchema = CollectionSchema(
       ],
     ),
     r'favorite': IndexSchema(
-      id: 4264748667377999100,
+      id: 1000004,
       name: r'favorite',
       unique: false,
       replace: false,

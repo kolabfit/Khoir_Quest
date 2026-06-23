@@ -15,7 +15,7 @@ extension GetBadgeModelEntityCollection on Isar {
 
 const BadgeModelEntitySchema = CollectionSchema(
   name: r'BadgeModelEntity',
-  id: -4488980966009466009,
+  id: -1000006,
   properties: {
     r'badgeImagePath': PropertySchema(
       id: 0,
@@ -65,7 +65,7 @@ const BadgeModelEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'code_ownerUsername': IndexSchema(
-      id: 166744829813898090,
+      id: 1000000,
       name: r'code_ownerUsername',
       unique: true,
       replace: true,

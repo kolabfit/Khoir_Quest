@@ -16,7 +16,7 @@ extension GetLocalSessionEntityCollection on Isar {
 
 const LocalSessionEntitySchema = CollectionSchema(
   name: r'LocalSessionEntity',
-  id: -6232920299758717415,
+  id: -1000008,
   properties: {
     r'currentUsername': PropertySchema(
       id: 0,

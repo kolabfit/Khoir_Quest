@@ -163,6 +163,10 @@ class CloudSyncService {
     required String createdBy,
   }) async {
     final model = LearningMaterialModel.fromEntity(entity);
+    final remote = model.version == 0
+        ? await _materials.findById(model.id)
+        : null;
+    final expectedVersion = remote?.version ?? model.version;
     final image = await _resolveCloudAsset(
       path: model.imagePath,
       existingStoragePath: model.imageStoragePath,
@@ -213,11 +217,11 @@ class CloudSyncService {
         audioStoragePath: audio.storagePath,
         videoStoragePath: video.storagePath,
         createdBy: createdBy,
-        createdAt: model.createdAt,
+        createdAt: remote?.createdAt ?? model.createdAt,
         mediaVersion: nextMediaVersion,
         updatedAt: DateTime.now().toUtc(),
       ),
-      expectedVersion: model.version,
+      expectedVersion: expectedVersion,
     );
     await _cache.upsert(synced);
     return synced;

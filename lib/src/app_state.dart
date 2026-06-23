@@ -654,6 +654,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         return;
       }
       if (email == null || role == null || syncInProgress) return;
+      if (role == Role.teacher) {
+        syncStatus = 'Koneksi pulih. Sinkron manual tersedia.';
+        if (ready) notifyListeners();
+        return;
+      }
       syncStatus = 'Koneksi pulih. Refresh materi...';
       if (ready) notifyListeners();
       await syncCloudContent();
@@ -690,6 +695,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      if (role == Role.teacher) return;
       unawaited(_syncIfNeeded(reason: 'resume', force: true));
     }
   }

@@ -125,10 +125,6 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   void initState() {
     super.initState();
     _userCountFuture = LocalDatabase.instance.countAccounts();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      unawaited(_syncDashboard(silent: true));
-    });
   }
 
   @override
@@ -173,6 +169,10 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                       Navigator.of(context).pop();
                       _selectSection(section);
                     },
+                    onSync: () {
+                      Navigator.of(context).pop();
+                      _syncDashboard();
+                    },
                     onLogout: () {
                       Navigator.of(context).pop();
                       _confirmLogout();
@@ -203,6 +203,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                     onToggleCollapse: () =>
                         setState(() => _sidebarCollapsed = !_sidebarCollapsed),
                     onSelected: _selectSection,
+                    onSync: _syncDashboard,
                     onLogout: _confirmLogout,
                   ),
                 ),
@@ -220,7 +221,6 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                               () => _sidebarCollapsed = !_sidebarCollapsed,
                             ),
                       onQuickUpload: () => _openUploadDialog(activeCategory),
-                      onSync: () => _syncDashboard(),
                     ),
                     Expanded(
                       child: SingleChildScrollView(
@@ -1053,6 +1053,7 @@ class _TeacherSidebar extends StatelessWidget {
     required this.collapsed,
     required this.onToggleCollapse,
     required this.onSelected,
+    required this.onSync,
     required this.onLogout,
   });
 
@@ -1061,6 +1062,7 @@ class _TeacherSidebar extends StatelessWidget {
   final bool collapsed;
   final VoidCallback? onToggleCollapse;
   final ValueChanged<_TeacherSection> onSelected;
+  final VoidCallback onSync;
   final VoidCallback onLogout;
 
   @override
@@ -1167,6 +1169,12 @@ class _TeacherSidebar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
+                _TeacherSyncSidebarButton(
+                  app: app,
+                  collapsed: collapsed,
+                  onTap: onSync,
+                ),
+                const SizedBox(height: 10),
                 _TeacherLogoutSidebarButton(
                   collapsed: collapsed,
                   onTap: onLogout,
@@ -1394,6 +1402,87 @@ class _TeacherSidebarTile extends StatelessWidget {
   }
 }
 
+class _TeacherSyncSidebarButton extends StatelessWidget {
+  const _TeacherSyncSidebarButton({
+    required this.app,
+    required this.collapsed,
+    required this.onTap,
+  });
+
+  final AppState app;
+  final bool collapsed;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final online = app.online;
+    final color = online ? const Color(0xff059669) : const Color(0xffEA580C);
+    final bg = online ? const Color(0xffECFDF5) : const Color(0xffFFF7ED);
+    final border = online ? const Color(0xffBBF7D0) : const Color(0xffFED7AA);
+    final icon = app.syncInProgress
+        ? null
+        : online
+        ? Icons.cloud_sync_rounded
+        : Icons.cloud_off_rounded;
+    return Tooltip(
+      message: app.syncStatus,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: app.syncInProgress ? null : onTap,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: collapsed ? 0 : 14,
+            vertical: 13,
+          ),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: border),
+          ),
+          child: collapsed
+              ? Center(
+                  child: app.syncInProgress
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: color,
+                          ),
+                        )
+                      : Icon(icon, color: color),
+                )
+              : Row(
+                  children: [
+                    app.syncInProgress
+                        ? SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              color: color,
+                            ),
+                          )
+                        : Icon(icon, color: color),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        app.syncInProgress ? 'Menyinkron...' : 'Sinkronisasi',
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
 class _TeacherTopbar extends StatelessWidget {
   const _TeacherTopbar({
     required this.app,
@@ -1402,7 +1491,6 @@ class _TeacherTopbar extends StatelessWidget {
     required this.onMenuTap,
     required this.onCollapseTap,
     required this.onQuickUpload,
-    required this.onSync,
   });
 
   final AppState app;
@@ -1411,7 +1499,6 @@ class _TeacherTopbar extends StatelessWidget {
   final VoidCallback onMenuTap;
   final VoidCallback? onCollapseTap;
   final VoidCallback onQuickUpload;
-  final VoidCallback onSync;
 
   @override
   Widget build(BuildContext context) {
@@ -1506,32 +1593,6 @@ class _TeacherTopbar extends StatelessWidget {
                     icon: const Icon(Icons.file_upload_rounded),
                     label: const Text('Quick Upload'),
                   ),
-                if (!mobile) const SizedBox(width: 12),
-                Tooltip(
-                  message: app.syncStatus,
-                  child: IconButton(
-                    onPressed: app.syncInProgress ? null : onSync,
-                    style: IconButton.styleFrom(
-                      backgroundColor: app.online
-                          ? const Color(0xffECFDF5)
-                          : const Color(0xffFFF7ED),
-                      foregroundColor: app.online
-                          ? const Color(0xff059669)
-                          : const Color(0xffEA580C),
-                    ),
-                    icon: app.syncInProgress
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2.4),
-                          )
-                        : Icon(
-                            app.online
-                                ? Icons.cloud_sync_rounded
-                                : Icons.cloud_off_rounded,
-                          ),
-                  ),
-                ),
                 const SizedBox(width: 12),
                 _TeacherProfilePill(
                   name: teacherName,

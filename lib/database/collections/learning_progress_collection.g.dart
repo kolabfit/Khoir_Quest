@@ -16,7 +16,7 @@ extension GetLearningProgressEntityCollection on Isar {
 
 const LearningProgressEntitySchema = CollectionSchema(
   name: r'LearningProgressEntity',
-  id: -226150867204275572,
+  id: -1000001,
   properties: {
     r'category': PropertySchema(
       id: 0,
@@ -61,7 +61,7 @@ const LearningProgressEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'ownerUsername_category': IndexSchema(
-      id: 7870599218042869831,
+      id: 1000010,
       name: r'ownerUsername_category',
       unique: true,
       replace: true,

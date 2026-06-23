@@ -16,7 +16,7 @@ extension GetLearningHistoryEntityCollection on Isar {
 
 const LearningHistoryEntitySchema = CollectionSchema(
   name: r'LearningHistoryEntity',
-  id: 7917947214307255236,
+  id: 1000012,
   properties: {
     r'category': PropertySchema(
       id: 0,
@@ -56,7 +56,7 @@ const LearningHistoryEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'ownerUsername': IndexSchema(
-      id: 9203638787039241762,
+      id: 1000013,
       name: r'ownerUsername',
       unique: false,
       replace: false,
@@ -69,7 +69,7 @@ const LearningHistoryEntitySchema = CollectionSchema(
       ],
     ),
     r'category': IndexSchema(
-      id: -7560358558326323820,
+      id: -1000009,
       name: r'category',
       unique: false,
       replace: false,

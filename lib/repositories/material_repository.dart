@@ -192,11 +192,7 @@ class MaterialRepository {
           cloud.materialId,
         );
         if (existing != null && existing.syncState == 'dirty') {
-          final cloudTime = cloud.cloudUpdatedAt ?? cloud.updatedAt;
-          if (existing.cloudUpdatedAt != null &&
-              !cloudTime.isAfter(existing.cloudUpdatedAt!)) {
-            continue;
-          }
+          continue;
         }
         if (existing != null && existing.syncState == 'deleted') {
           continue;

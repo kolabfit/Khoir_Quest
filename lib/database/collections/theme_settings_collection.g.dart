@@ -16,7 +16,7 @@ extension GetThemeSettingsEntityCollection on Isar {
 
 const ThemeSettingsEntitySchema = CollectionSchema(
   name: r'ThemeSettingsEntity',
-  id: 7886392070402085114,
+  id: 1000011,
   properties: {
     r'darkMode': PropertySchema(
       id: 0,
@@ -46,7 +46,7 @@ const ThemeSettingsEntitySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'ownerUsername': IndexSchema(
-      id: 9203638787039241762,
+      id: 1000013,
       name: r'ownerUsername',
       unique: true,
       replace: true,
