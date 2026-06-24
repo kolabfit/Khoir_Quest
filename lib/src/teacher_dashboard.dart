@@ -315,10 +315,14 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     final source = song.videoUrl.trim();
     if (source.isEmpty) return;
     if (song.mediaType == 'youtube' || MediaSourceHelper.isYoutubeUrl(source)) {
-      final uri = Uri.tryParse(source);
-      if (uri != null) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+      await _songPreviewPlayer.stop();
+      if (!mounted) return;
+      setState(() {
+        _previewSongId = null;
+        _previewLoading = false;
+        _previewPlaying = false;
+      });
+      await _showYoutubePreview(song);
       return;
     }
     try {
@@ -354,6 +358,66 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
         const SnackBar(content: Text('Preview lagu tidak bisa diputar.')),
       );
     }
+  }
+
+  Future<void> _showYoutubePreview(SongItem song) async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: .26),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(18),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 860),
+          child: _TeacherSurfaceCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _TeacherCategory.lagu.color.withValues(
+                          alpha: .12,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        Icons.play_circle_fill_rounded,
+                        color: _TeacherCategory.lagu.color,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        song.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xff2F2966),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                AppYoutubeEmbedPlayer(url: song.videoUrl, borderRadius: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _syncDashboard({bool silent = false}) async {

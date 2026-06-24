@@ -22,6 +22,10 @@ class _SongsScreenState extends ConsumerState<SongsScreen> {
     }
 
     final tablet = MediaQuery.sizeOf(context).width >= 760;
+    final selectedIsYoutube =
+        selected != null &&
+        (selected!.mediaType == 'youtube' ||
+            MediaSourceHelper.isYoutubeUrl(selected!.videoUrl));
     final visibleSongs = songs.where((song) {
       final matchesQuery =
           query.trim().isEmpty ||
@@ -95,7 +99,13 @@ class _SongsScreenState extends ConsumerState<SongsScreen> {
                   tablet ? 28 : 18,
                   18,
                   tablet ? 28 : 18,
-                  selected == null ? 126 : 196,
+                  selected == null
+                      ? 126
+                      : selectedIsYoutube
+                      ? tablet
+                            ? 430
+                            : 390
+                      : 196,
                 ),
                 children: [
                   _SongsHero(app: app),
@@ -683,6 +693,9 @@ class _MiniMusicPlayerState extends State<_MiniMusicPlayer> {
         : _playing
         ? Icons.pause_rounded
         : Icons.play_arrow_rounded;
+    if (_isYoutube) {
+      return _buildYoutubePlayer(song);
+    }
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
@@ -790,6 +803,57 @@ class _MiniMusicPlayerState extends State<_MiniMusicPlayer> {
                     ),
                   ],
                 ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildYoutubePlayer(SongItem song) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xff6B75FF).withValues(alpha: .90),
+                const Color(0xffB76DFF).withValues(alpha: .90),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white.withValues(alpha: .45)),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+                color: const Color(0xff765BFF).withValues(alpha: .28),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppYoutubeEmbedPlayer(url: song.videoUrl, borderRadius: 20),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(child: _MiniSongMeta(song: song)),
+                  const SizedBox(width: 8),
+                  _MiniControl(
+                    icon: Icons.skip_previous_rounded,
+                    onTap: widget.canSkip ? widget.onPrevious : null,
+                  ),
+                  const SizedBox(width: 8),
+                  _MiniControl(
+                    icon: Icons.skip_next_rounded,
+                    onTap: widget.canSkip ? widget.onNext : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

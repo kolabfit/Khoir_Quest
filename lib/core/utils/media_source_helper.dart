@@ -16,6 +16,35 @@ class MediaSourceHelper {
         host.endsWith('.youtube.com');
   }
 
+  static String? youtubeVideoId(String value) {
+    final uri = Uri.tryParse(value.trim());
+    if (uri == null) return null;
+    final host = uri.host.toLowerCase();
+    if (host == 'youtu.be' || host.endsWith('.youtu.be')) {
+      return _cleanYoutubeId(
+        uri.pathSegments.isEmpty ? '' : uri.pathSegments.first,
+      );
+    }
+    if (host == 'youtube.com' || host.endsWith('.youtube.com')) {
+      final queryId = _cleanYoutubeId(uri.queryParameters['v'] ?? '');
+      if (queryId != null) return queryId;
+      final segments = uri.pathSegments;
+      if (segments.length >= 2 &&
+          (segments.first == 'embed' ||
+              segments.first == 'shorts' ||
+              segments.first == 'live')) {
+        return _cleanYoutubeId(segments[1]);
+      }
+    }
+    return null;
+  }
+
+  static String? _cleanYoutubeId(String value) {
+    final id = value.trim();
+    if (RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(id)) return id;
+    return null;
+  }
+
   static bool isAudioFileName(String value) {
     final lower = value.toLowerCase().trim();
     return lower.endsWith('.mp3') ||

@@ -24,6 +24,7 @@ import 'core/utils/api_error_mapper.dart';
 import 'core/utils/local_file_ops.dart';
 import 'core/utils/local_media_widgets.dart';
 import 'core/utils/media_source_helper.dart';
+import 'core/utils/youtube_embed_player.dart';
 import 'database/collections/learning_material_collection.dart';
 import 'database/isar_database_service.dart';
 import 'models/app_local_models.dart';
