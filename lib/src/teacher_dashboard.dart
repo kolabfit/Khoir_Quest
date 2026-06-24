@@ -2200,9 +2200,7 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
         ? widget.existing!.letter!.objects.first.img
         : widget.existing?.number?.img ??
               widget.existing?.object?.img ??
-              (_youtubeUrl.text.isEmpty
-                  ? widget.existing?.song?.videoUrl
-                  : null);
+              widget.existing?.song?.videoUrl;
   }
 
   @override
@@ -2215,6 +2213,8 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isSong) return _buildSongDialog(context);
+
     final accent = widget.category.color;
     final mediaWidth = MediaQuery.sizeOf(context).width;
     return Dialog(
@@ -2460,6 +2460,208 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
     );
   }
 
+  Widget _buildSongDialog(BuildContext context) {
+    final accent = widget.category.color;
+    final mediaWidth = MediaQuery.sizeOf(context).width;
+    final compact = mediaWidth < 430;
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.fromLTRB(
+        18,
+        18,
+        18,
+        max(18, MediaQuery.viewInsetsOf(context).bottom + 18),
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 560,
+          maxHeight: MediaQuery.sizeOf(context).height * .9,
+        ),
+        child: _TeacherSurfaceCard(
+          padding: EdgeInsets.all(compact ? 18 : 24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: const Color(0xffffefe8),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 5),
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 18,
+                            offset: const Offset(0, 10),
+                            color: accent.withValues(alpha: .18),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.music_note_rounded,
+                        color: accent,
+                        size: 36,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.existing == null
+                                  ? 'Tambah Lagu Anak'
+                                  : 'Edit Lagu Anak',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xff2F2966),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Unggah file MP3/video atau tempel link YouTube untuk konten pembelajaran.',
+                              style: TextStyle(
+                                color: Color(0xff6D6A95),
+                                fontWeight: FontWeight.w800,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    IconButton.filledTonal(
+                      onPressed: _saving ? null : () => Navigator.pop(context),
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xffF3EEFF),
+                        foregroundColor: const Color(0xff5B3CB8),
+                      ),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _SongTitleField(controller: _title),
+                const SizedBox(height: 18),
+                GestureDetector(
+                  onTap: _pickMedia,
+                  child: AnimatedContainer(
+                    duration: 220.ms,
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 16 : 24,
+                      vertical: compact ? 24 : 30,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xfffff7f0),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: accent.withValues(alpha: .65),
+                        width: 1.4,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          'assets/images/Menambahkan_lagu_pengajar.png',
+                          width: compact ? 150 : 180,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Klik untuk memilih',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xff2F2966),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _fileName ?? 'Format: MP3, MP4, MOV - Maks. 50 MB',
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xff6D6A95),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _SongDivider(label: 'atau'),
+                const SizedBox(height: 14),
+                _SongYoutubeField(controller: _youtubeUrl),
+                const SizedBox(height: 22),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: _saving
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xff7C3AED),
+                            side: const BorderSide(
+                              color: Color(0xff8B5CF6),
+                              width: 1.4,
+                            ),
+                          ),
+                          child: const Text('Batal'),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: compact ? 10 : 18),
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: FilledButton.icon(
+                          onPressed: _saving ? null : _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: accent,
+                            foregroundColor: Colors.white,
+                          ),
+                          icon: _saving
+                              ? const SizedBox.square(
+                                  dimension: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.save_rounded),
+                          label: Text(
+                            widget.existing == null
+                                ? 'Simpan Konten'
+                                : 'Update Konten',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _pickMedia() async {
     Uint8List? bytes;
     String? pickedName;
@@ -2576,6 +2778,110 @@ class _TeacherUploadDialogState extends State<_TeacherUploadDialog> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+class _SongTitleField extends StatelessWidget {
+  const _SongTitleField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        hintText: 'Masukkan judul lagu',
+        prefixIcon: Container(
+          width: 48,
+          margin: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: const Color(0xffF3EEFF),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Icon(Icons.article_rounded, color: Color(0xff7C3AED)),
+        ),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: .86),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xffDDD6FE)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xffDDD6FE)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xff8B5CF6), width: 1.6),
+        ),
+      ),
+    );
+  }
+}
+
+class _SongYoutubeField extends StatelessWidget {
+  const _SongYoutubeField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        hintText: 'https://youtube.com/...',
+        prefixIcon: Container(
+          width: 48,
+          margin: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: const Color(0xffF3EEFF),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Icon(Icons.link_rounded, color: Color(0xff5B3CB8)),
+        ),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: .86),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xffDDD6FE)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xffDDD6FE)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xff8B5CF6), width: 1.6),
+        ),
+      ),
+    );
+  }
+}
+
+class _SongDivider extends StatelessWidget {
+  const _SongDivider({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: Divider(color: Color(0xffDDD6FE), thickness: 1)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xff6D6A95),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const Expanded(child: Divider(color: Color(0xffDDD6FE), thickness: 1)),
+      ],
+    );
   }
 }
 
