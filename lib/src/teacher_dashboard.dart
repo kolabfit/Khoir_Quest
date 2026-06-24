@@ -2,7 +2,15 @@
 
 part of '../main.dart';
 
-enum _TeacherSection { dashboard, huruf, angka, benda, lagu }
+enum _TeacherSection {
+  dashboard,
+  huruf,
+  merangkaiAbjad,
+  merangkaiKata,
+  angka,
+  benda,
+  lagu,
+}
 
 enum _TeacherCategory { huruf, angka, benda, lagu }
 
@@ -23,6 +31,35 @@ const _fixedObjectCategories = <String>[
   'Benda Sekolah',
   'Alam',
   'Warna',
+];
+
+const _fixedLatinLetters = <String>[
+  'A',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F',
+  'G',
+  'H',
+  'I',
+  'J',
+  'K',
+  'L',
+  'M',
+  'N',
+  'O',
+  'P',
+  'Q',
+  'R',
+  'S',
+  'T',
+  'U',
+  'V',
+  'W',
+  'X',
+  'Y',
+  'Z',
 ];
 
 extension on _TeacherCategory {
@@ -72,7 +109,9 @@ extension on _TeacherCategory {
 extension on _TeacherSection {
   String get label => switch (this) {
     _TeacherSection.dashboard => 'Dashboard',
-    _TeacherSection.huruf => 'Abjad',
+    _TeacherSection.huruf => 'Daftar Abjad',
+    _TeacherSection.merangkaiAbjad => 'Merangkai Abjad',
+    _TeacherSection.merangkaiKata => 'Merangkai Kata',
     _TeacherSection.angka => 'Bilangan',
     _TeacherSection.benda => 'Benda',
     _TeacherSection.lagu => 'Lagu Anak',
@@ -81,6 +120,8 @@ extension on _TeacherSection {
   IconData get icon => switch (this) {
     _TeacherSection.dashboard => Icons.grid_view_rounded,
     _TeacherSection.huruf => Icons.sort_by_alpha_rounded,
+    _TeacherSection.merangkaiAbjad => Icons.join_inner_rounded,
+    _TeacherSection.merangkaiKata => Icons.extension_rounded,
     _TeacherSection.angka => Icons.numbers_rounded,
     _TeacherSection.benda => Icons.category_rounded,
     _TeacherSection.lagu => Icons.music_note_rounded,
@@ -89,6 +130,8 @@ extension on _TeacherSection {
   Color get color => switch (this) {
     _TeacherSection.dashboard => const Color(0xff7C3AED),
     _TeacherSection.huruf => _TeacherCategory.huruf.color,
+    _TeacherSection.merangkaiAbjad => const Color(0xffF97316),
+    _TeacherSection.merangkaiKata => const Color(0xffEC4899),
     _TeacherSection.angka => _TeacherCategory.angka.color,
     _TeacherSection.benda => _TeacherCategory.benda.color,
     _TeacherSection.lagu => _TeacherCategory.lagu.color,
@@ -96,6 +139,8 @@ extension on _TeacherSection {
 
   _TeacherCategory? get category => switch (this) {
     _TeacherSection.huruf => _TeacherCategory.huruf,
+    _TeacherSection.merangkaiAbjad => _TeacherCategory.huruf,
+    _TeacherSection.merangkaiKata => _TeacherCategory.huruf,
     _TeacherSection.angka => _TeacherCategory.angka,
     _TeacherSection.benda => _TeacherCategory.benda,
     _TeacherSection.lagu => _TeacherCategory.lagu,
@@ -119,6 +164,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   bool _sidebarCollapsed = false;
   Future<_TeacherStorageData>? _storageFuture;
   final List<_TeacherActivity> _activities = [];
+  final List<_LetterBlendItem> _letterBlends = [];
+  final List<_WordAssemblyItem> _wordAssemblies = [];
   Future<int>? _databaseUserCountFuture;
   final AudioPlayer _songPreviewPlayer = AudioPlayer();
   StreamSubscription<PlayerState>? _songPreviewSub;
@@ -130,6 +177,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   void initState() {
     super.initState();
     _databaseUserCountFuture = _countDatabaseUsers();
+    unawaited(_loadAbjadTools());
     _songPreviewSub = _songPreviewPlayer.playerStateStream.listen((state) {
       if (!mounted) return;
       final completed = state.processingState == ProcessingState.completed;
@@ -142,6 +190,33 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
         if (completed) _previewSongId = null;
       });
     });
+  }
+
+  Future<void> _loadAbjadTools() async {
+    final prefs = await SharedPreferences.getInstance();
+    final blendsRaw = prefs.getString(_letterBlendsPrefsKey);
+    final wordsRaw = prefs.getString(_wordAssembliesPrefsKey);
+    if (!mounted) return;
+    setState(() {
+      _letterBlends
+        ..clear()
+        ..addAll(_decodeLetterBlends(blendsRaw));
+      _wordAssemblies
+        ..clear()
+        ..addAll(_decodeWordAssemblies(wordsRaw));
+    });
+  }
+
+  Future<void> _saveAbjadTools() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _letterBlendsPrefsKey,
+      jsonEncode(_letterBlends.map((item) => item.toJson()).toList()),
+    );
+    await prefs.setString(
+      _wordAssembliesPrefsKey,
+      jsonEncode(_wordAssemblies.map((item) => item.toJson()).toList()),
+    );
   }
 
   @override
@@ -443,25 +518,20 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   ) {
     return switch (category) {
       _TeacherCategory.huruf =>
-        app.letters
+        _fixedLatinLetters
             .map(
-              (group) => _TeacherContentData(
-                id: group.id.isEmpty ? group.letter : group.id,
-                title: group.letter,
-                subtitle: group.objects.isEmpty
-                    ? 'Contoh belum diisi'
-                    : group.objects.first.name,
+              (letter) => _TeacherContentData(
+                id: 'fixed_letter_$letter',
+                title: _letterPair(letter),
+                subtitle: '',
                 category: 'Abjad',
-                statusLabel: 'Aktif',
-                mediaPath: group.objects.isEmpty
-                    ? DefaultLearningCatalog.hurufPlaceholderAsset
-                    : group.objects.first.img,
+                statusLabel: 'Bawaan',
+                mediaPath: '',
                 color: category.color,
                 icon: category.icon,
                 badgeText: '',
-                actionLabel: 'Edit Gambar',
-                editable: true,
-                letter: group,
+                actionLabel: 'Bawaan aplikasi',
+                editable: false,
               ),
             )
             .toList(),
@@ -569,16 +639,17 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _TeacherSummaryCardData(
         title: 'Total Konten',
         value:
-            '${app.letters.length + app.numbers.length + app.objects.length + app.songs.length}',
-        subtitle: 'Abjad, bilangan, benda, lagu',
+            '${_fixedLatinLetters.length + _letterBlends.length + _wordAssemblies.length + app.numbers.length + app.objects.length + app.songs.length}',
+        subtitle: 'Abjad, rangkaian, kata, bilangan, benda, lagu',
         icon: Icons.dashboard_customize_rounded,
         color: const Color(0xff8B5CF6),
         background: const [Color(0xffF3ECFF), Color(0xffFFF7FF)],
       ),
       _TeacherSummaryCardData(
         title: 'Abjad Aktif',
-        value: '${app.letters.length}',
-        subtitle: 'Materi mengenal abjad',
+        value: '${_fixedLatinLetters.length}',
+        subtitle:
+            '${_letterBlends.length} rangkaian, ${_wordAssemblies.length} kata',
         icon: Icons.sort_by_alpha_rounded,
         color: const Color(0xffA855F7),
         background: const [Color(0xffF4ECFF), Color(0xffF8F4FF)],
@@ -674,6 +745,12 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     required bool tablet,
     required bool desktop,
   }) {
+    if (_section == _TeacherSection.merangkaiAbjad) {
+      return _buildLetterBlendSection(mobile: mobile, desktop: desktop);
+    }
+    if (_section == _TeacherSection.merangkaiKata) {
+      return _buildWordAssemblySection(mobile: mobile, desktop: desktop);
+    }
     final screenWidth = MediaQuery.sizeOf(context).width;
     final filters = _filterOptionsForCategory(app, activeCategory);
     if (!filters.contains(_selectedFilter)) {
@@ -846,6 +923,277 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                   ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLetterBlendSection({
+    required bool mobile,
+    required bool desktop,
+  }) {
+    final columns = desktop
+        ? 4
+        : mobile
+        ? 1
+        : 2;
+    return _TeacherSurfaceCard(
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _TeacherToolHeader(
+            title: 'Merangkai Abjad',
+            subtitle: 'Gabungkan dua abjad dasar menjadi rangkaian seperti AN.',
+            icon: Icons.join_inner_rounded,
+            color: _TeacherSection.merangkaiAbjad.color,
+            actionLabel: 'Tambah Rangkaian',
+            onAction: _openLetterBlendDialog,
+          ),
+          const SizedBox(height: 18),
+          if (_letterBlends.isEmpty)
+            _TeacherEmptyTool(
+              icon: Icons.join_inner_rounded,
+              color: _TeacherSection.merangkaiAbjad.color,
+              text:
+                  'Belum ada rangkaian abjad. Pilih dua kartu abjad untuk membuat rangkaian pertama.',
+            )
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+                mainAxisExtent: 270,
+              ),
+              itemCount: _letterBlends.length,
+              itemBuilder: (_, i) {
+                final item = _letterBlends[i];
+                final usedBy = _wordsUsingBlend(item.label);
+                return _TeacherBlendCard(
+                  item: item,
+                  usedCount: usedBy.length,
+                  onEdit: () => _openLetterBlendDialog(existing: item),
+                  onPreview: () => _showBlendPreview(item),
+                  onDelete: () => _deleteLetterBlend(item),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWordAssemblySection({
+    required bool mobile,
+    required bool desktop,
+  }) {
+    final columns = desktop
+        ? 3
+        : mobile
+        ? 1
+        : 2;
+    return _TeacherSurfaceCard(
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _TeacherToolHeader(
+            title: 'Merangkai Kata',
+            subtitle:
+                'Susun abjad dasar dan rangkaian abjad menjadi satu kata.',
+            icon: Icons.extension_rounded,
+            color: _TeacherSection.merangkaiKata.color,
+            actionLabel: 'Tambah Kata',
+            onAction: _openWordAssemblyDialog,
+          ),
+          const SizedBox(height: 18),
+          if (_wordAssemblies.isEmpty)
+            _TeacherEmptyTool(
+              icon: Icons.extension_rounded,
+              color: _TeacherSection.merangkaiKata.color,
+              text:
+                  'Belum ada latihan kata. Buat dari abjad dasar dan rangkaian abjad yang sudah tersimpan.',
+            )
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+                mainAxisExtent: 300,
+              ),
+              itemCount: _wordAssemblies.length,
+              itemBuilder: (_, i) {
+                final item = _wordAssemblies[i];
+                return _TeacherWordCard(
+                  item: item,
+                  onEdit: () => _openWordAssemblyDialog(existing: item),
+                  onPreview: () => _showWordPreview(item),
+                  onDelete: () => _deleteWordAssembly(item),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openLetterBlendDialog({_LetterBlendItem? existing}) async {
+    final result = await showDialog<_LetterBlendItem>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: .18),
+      builder: (_) => _LetterBlendDialog(
+        letters: _fixedLatinLetters,
+        existing: existing,
+        existingLabels: _letterBlends
+            .where((item) => item.id != existing?.id)
+            .map((item) => item.label)
+            .toSet(),
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _letterBlends.removeWhere((item) => item.id == result.id);
+      _letterBlends.insert(0, result);
+    });
+    await _saveAbjadTools();
+    _pushActivity(
+      title: existing == null
+          ? 'Menambahkan rangkaian abjad: ${result.label}'
+          : 'Memperbarui rangkaian abjad: ${result.label}',
+      subtitle: result.letters.join(' + '),
+      icon: Icons.join_inner_rounded,
+      color: _TeacherSection.merangkaiAbjad.color,
+    );
+  }
+
+  Future<void> _openWordAssemblyDialog({_WordAssemblyItem? existing}) async {
+    final result = await showDialog<_WordAssemblyItem>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: .18),
+      builder: (_) => _WordAssemblyDialog(
+        letters: _fixedLatinLetters,
+        blends: _letterBlends,
+        existing: existing,
+        existingTargets: _wordAssemblies
+            .where((item) => item.id != existing?.id)
+            .map((item) => item.target)
+            .toSet(),
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _wordAssemblies.removeWhere((item) => item.id == result.id);
+      _wordAssemblies.insert(0, result);
+    });
+    await _saveAbjadTools();
+    _pushActivity(
+      title: existing == null
+          ? 'Menambahkan latihan kata: ${result.target}'
+          : 'Memperbarui latihan kata: ${result.target}',
+      subtitle: result.name,
+      icon: Icons.extension_rounded,
+      color: _TeacherSection.merangkaiKata.color,
+    );
+  }
+
+  Future<void> _deleteLetterBlend(_LetterBlendItem item) async {
+    final usedBy = _wordsUsingBlend(item.label);
+    if (usedBy.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: _TeacherSection.merangkaiAbjad.color,
+          content: Text(
+            '${item.label} dipakai di kata ${usedBy.map((e) => e.target).join(', ')}.',
+          ),
+        ),
+      );
+      return;
+    }
+    final confirmed = await _confirmDeleteLabel('Hapus Rangkaian?', item.label);
+    if (!confirmed || !mounted) return;
+    setState(() => _letterBlends.removeWhere((entry) => entry.id == item.id));
+    await _saveAbjadTools();
+  }
+
+  Future<void> _deleteWordAssembly(_WordAssemblyItem item) async {
+    final confirmed = await _confirmDeleteLabel(
+      'Hapus Latihan Kata?',
+      item.target,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _wordAssemblies.removeWhere((entry) => entry.id == item.id));
+    await _saveAbjadTools();
+  }
+
+  Future<bool> _confirmDeleteLabel(String title, String value) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierColor: Colors.black.withValues(alpha: .20),
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            title: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+            content: Text(
+              '"$value" akan dihapus dari dashboard pengajar.',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Batal'),
+              ),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xffF43F5E),
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.delete_outline_rounded),
+                label: const Text('Hapus'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  List<_WordAssemblyItem> _wordsUsingBlend(String label) {
+    return _wordAssemblies
+        .where(
+          (word) => word.units.any(
+            (unit) => unit.type == _WordUnitType.blend && unit.value == label,
+          ),
+        )
+        .toList();
+  }
+
+  void _showBlendPreview(_LetterBlendItem item) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: .18),
+      builder: (_) => _TeacherPreviewDialog(
+        title: 'Preview ${item.label}',
+        child: _BlendPreview(item: item),
+      ),
+    );
+  }
+
+  void _showWordPreview(_WordAssemblyItem item) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: .18),
+      builder: (_) => _TeacherPreviewDialog(
+        title: 'Preview ${item.target}',
+        child: _WordTapPreview(item: item),
       ),
     );
   }
@@ -1205,10 +1553,14 @@ class _TeacherSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       _TeacherSection.dashboard,
-      _TeacherSection.huruf,
       _TeacherSection.angka,
       _TeacherSection.benda,
       _TeacherSection.lagu,
+    ];
+    final abjadItems = [
+      _TeacherSection.huruf,
+      _TeacherSection.merangkaiAbjad,
+      _TeacherSection.merangkaiKata,
     ];
 
     return AnimatedContainer(
@@ -1289,19 +1641,47 @@ class _TeacherSidebar extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: ListView.separated(
-                    itemCount: items.length,
-                    separatorBuilder: (_, index) => const SizedBox(height: 8),
-                    itemBuilder: (_, i) {
-                      final item = items[i];
-                      final selected = item == section;
-                      return _TeacherSidebarTile(
-                        item: item,
-                        selected: selected,
+                  child: ListView(
+                    children: [
+                      _TeacherSidebarTile(
+                        item: _TeacherSection.dashboard,
+                        selected: section == _TeacherSection.dashboard,
                         collapsed: collapsed,
-                        onTap: () => onSelected(item),
-                      );
-                    },
+                        onTap: () => onSelected(_TeacherSection.dashboard),
+                      ),
+                      const SizedBox(height: 8),
+                      _TeacherSidebarGroup(
+                        title: 'Abjad',
+                        icon: Icons.sort_by_alpha_rounded,
+                        color: _TeacherCategory.huruf.color,
+                        collapsed: collapsed,
+                        selected: abjadItems.contains(section),
+                        children: abjadItems
+                            .map(
+                              (item) => _TeacherSidebarSubTile(
+                                item: item,
+                                selected: item == section,
+                                collapsed: collapsed,
+                                onTap: () => onSelected(item),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                      const SizedBox(height: 8),
+                      ...items
+                          .skip(1)
+                          .map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _TeacherSidebarTile(
+                                item: item,
+                                selected: item == section,
+                                collapsed: collapsed,
+                                onTap: () => onSelected(item),
+                              ),
+                            ),
+                          ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1438,6 +1818,144 @@ class _ObjectCategoryDropdown extends StatelessWidget {
       style: const TextStyle(
         color: Color(0xff2F2966),
         fontWeight: FontWeight.w800,
+      ),
+    );
+  }
+}
+
+class _TeacherSidebarGroup extends StatelessWidget {
+  const _TeacherSidebarGroup({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.collapsed,
+    required this.selected,
+    required this.children,
+  });
+
+  final String title;
+  final IconData icon;
+  final Color color;
+  final bool collapsed;
+  final bool selected;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (collapsed) {
+      return Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: selected
+                  ? color.withValues(alpha: .16)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(icon, color: color),
+          ),
+          const SizedBox(height: 6),
+          ...children,
+        ],
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: selected ? .08 : .04),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withValues(alpha: .12)),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+            child: Row(
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      color: Color(0xff2D275B),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _TeacherSidebarSubTile extends StatelessWidget {
+  const _TeacherSidebarSubTile({
+    required this.item,
+    required this.selected,
+    required this.collapsed,
+    required this.onTap,
+  });
+
+  final _TeacherSection item;
+  final bool selected;
+  final bool collapsed;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(left: collapsed ? 0 : 18, top: 6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: 220.ms,
+          padding: EdgeInsets.symmetric(
+            horizontal: collapsed ? 0 : 12,
+            vertical: collapsed ? 10 : 11,
+          ),
+          decoration: BoxDecoration(
+            color: selected
+                ? item.color.withValues(alpha: .14)
+                : Colors.white.withValues(alpha: .45),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected
+                  ? item.color.withValues(alpha: .35)
+                  : Colors.white.withValues(alpha: .55),
+            ),
+          ),
+          child: collapsed
+              ? Icon(item.icon, color: item.color, size: 19)
+              : Row(
+                  children: [
+                    Icon(item.icon, color: item.color, size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: selected
+                              ? item.color
+                              : const Color(0xff4A4278),
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -1973,6 +2491,52 @@ class _TeacherContentCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 220;
+        if (item.category == 'Abjad') {
+          return Container(
+            padding: EdgeInsets.all(compact ? 12 : 14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .90),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                  color: item.color.withValues(alpha: .10),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      item.color.withValues(alpha: .12),
+                      item.color.withValues(alpha: .03),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      item.title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: compact ? 76 : 104,
+                        fontWeight: FontWeight.w900,
+                        color: item.color,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
         return Container(
           padding: EdgeInsets.all(compact ? 12 : 14),
           decoration: BoxDecoration(
@@ -3451,6 +4015,1159 @@ class _TeacherLogoutDialog extends StatelessWidget {
   }
 }
 
+class _TeacherToolHeader extends StatelessWidget {
+  const _TeacherToolHeader({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final narrow = constraints.maxWidth < 620;
+        final titleBlock = Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 52,
+              height: 52,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: .12),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(icon, color: color),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _TeacherSectionTitle(title: title, subtitle: subtitle),
+            ),
+          ],
+        );
+        final button = FilledButton.icon(
+          onPressed: onAction,
+          style: FilledButton.styleFrom(
+            backgroundColor: color,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: narrow ? 12 : 18,
+              vertical: narrow ? 14 : 16,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(narrow ? 18 : 22),
+            ),
+          ),
+          icon: const Icon(Icons.add_rounded),
+          label: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              actionLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: narrow ? 13 : 14),
+            ),
+          ),
+        );
+        if (narrow) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              titleBlock,
+              const SizedBox(height: 14),
+              SizedBox(width: double.infinity, child: button),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: titleBlock),
+            const SizedBox(width: 12),
+            button,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _TeacherEmptyTool extends StatelessWidget {
+  const _TeacherEmptyTool({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        color: const Color(0xffFCFBFF),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: color.withValues(alpha: .16)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 48, color: color),
+          const SizedBox(height: 12),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+              color: Color(0xff322A64),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TeacherBlendCard extends StatelessWidget {
+  const _TeacherBlendCard({
+    required this.item,
+    required this.usedCount,
+    required this.onEdit,
+    required this.onPreview,
+    required this.onDelete,
+  });
+
+  final _LetterBlendItem item;
+  final int usedCount;
+  final VoidCallback onEdit;
+  final VoidCallback onPreview;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xffF97316);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .90),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+            color: color.withValues(alpha: .10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              ...item.letters.map(
+                (letter) => _MiniLetterTile(label: _letterPair(letter)),
+              ),
+              const Icon(Icons.arrow_forward_rounded, color: Color(0xff8B87AC)),
+              _BlendPill(label: item.label, large: true),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _TeacherStatusPill(
+            label: usedCount == 0 ? 'Belum dipakai' : 'Dipakai $usedCount kata',
+            background: color.withValues(alpha: .10),
+            foreground: color,
+          ),
+          const Spacer(),
+          Wrap(
+            spacing: 8,
+            children: [
+              _TeacherActionButton(
+                icon: Icons.visibility_rounded,
+                color: color,
+                onTap: onPreview,
+              ),
+              _TeacherActionButton(
+                icon: Icons.edit_rounded,
+                color: const Color(0xff38BDF8),
+                onTap: onEdit,
+              ),
+              _TeacherActionButton(
+                icon: Icons.delete_outline_rounded,
+                color: const Color(0xffFB7185),
+                onTap: onDelete,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TeacherWordCard extends StatelessWidget {
+  const _TeacherWordCard({
+    required this.item,
+    required this.onEdit,
+    required this.onPreview,
+    required this.onDelete,
+  });
+
+  final _WordAssemblyItem item;
+  final VoidCallback onEdit;
+  final VoidCallback onPreview;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xffEC4899);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .90),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+            color: color.withValues(alpha: .10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            item.target,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xff2F2966),
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            item.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xff6D6A95),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ..._compactUnits(
+                item.units,
+                maxVisible: 3,
+              ).map((unit) => _UnitChip(unit: unit, showTypeLabel: true)),
+              if (item.units.length > 3)
+                _OverflowUnitChip(extraCount: item.units.length - 3),
+            ],
+          ),
+          const Spacer(),
+          Wrap(
+            spacing: 8,
+            children: [
+              _TeacherActionButton(
+                icon: Icons.play_arrow_rounded,
+                color: color,
+                onTap: onPreview,
+              ),
+              _TeacherActionButton(
+                icon: Icons.edit_rounded,
+                color: const Color(0xff38BDF8),
+                onTap: onEdit,
+              ),
+              _TeacherActionButton(
+                icon: Icons.delete_outline_rounded,
+                color: const Color(0xffFB7185),
+                onTap: onDelete,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniLetterTile extends StatelessWidget {
+  const _MiniLetterTile({required this.label, this.selected = false});
+
+  final String label;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xff8B5CF6);
+    return Container(
+      width: 46,
+      height: 46,
+      margin: const EdgeInsets.only(right: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: selected ? .18 : .10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withValues(alpha: selected ? .45 : .18),
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w900,
+          fontSize: 18,
+        ),
+      ),
+    );
+  }
+}
+
+class _UnitChip extends StatelessWidget {
+  const _UnitChip({required this.unit, this.showTypeLabel = false});
+
+  final _WordUnitData unit;
+  final bool showTypeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = unit.type == _WordUnitType.blend
+        ? const Color(0xffF97316)
+        : const Color(0xff8B5CF6);
+    final radius = unit.type == _WordUnitType.blend ? 999.0 : 16.0;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: unit.type == _WordUnitType.blend ? 16 : 12,
+        vertical: showTypeLabel ? 8 : 10,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .10),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: color.withValues(alpha: .24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            unit.display,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: unit.type == _WordUnitType.blend ? 17 : 16,
+            ),
+          ),
+          if (showTypeLabel) ...[
+            const SizedBox(height: 2),
+            Text(
+              unit.type == _WordUnitType.blend ? 'Rangkaian' : 'Abjad',
+              style: TextStyle(
+                color: color.withValues(alpha: .82),
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+List<_WordUnitData> _compactUnits(
+  List<_WordUnitData> units, {
+  required int maxVisible,
+}) {
+  if (units.length <= maxVisible) return units;
+  return units.take(maxVisible).toList();
+}
+
+class _OverflowUnitChip extends StatelessWidget {
+  const _OverflowUnitChip({required this.extraCount});
+
+  final int extraCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xffEC4899).withValues(alpha: .10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xffEC4899).withValues(alpha: .24),
+        ),
+      ),
+      child: Text(
+        '+$extraCount',
+        style: const TextStyle(
+          color: Color(0xffEC4899),
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _BlendPill extends StatelessWidget {
+  const _BlendPill({required this.label, this.large = false});
+
+  final String label;
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xffF97316);
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: large ? 18 : 14,
+        vertical: large ? 10 : 8,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: .28)),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: color,
+          fontSize: large ? 30 : 20,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _TeacherPreviewDialog extends StatelessWidget {
+  const _TeacherPreviewDialog({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(18),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620),
+        child: _TeacherSurfaceCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: Color(0xff2F2966),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              child,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BlendPreview extends StatelessWidget {
+  const _BlendPreview({required this.item});
+
+  final _LetterBlendItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: const Color(0xffFFF7ED),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ...item.letters.map(
+            (letter) => _MiniLetterTile(label: _letterPair(letter)),
+          ),
+          const Icon(Icons.arrow_forward_rounded, color: Color(0xffF97316)),
+          _BlendPill(label: item.label, large: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _WordTapPreview extends StatefulWidget {
+  const _WordTapPreview({required this.item});
+
+  final _WordAssemblyItem item;
+
+  @override
+  State<_WordTapPreview> createState() => _WordTapPreviewState();
+}
+
+class _WordTapPreviewState extends State<_WordTapPreview> {
+  late List<_WordUnitData> _choices;
+  final List<_WordUnitData> _filled = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _choices = [...widget.item.units]..shuffle(Random(widget.item.id.hashCode));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final complete = _filled.length == widget.item.units.length;
+    final correct =
+        complete &&
+        List.generate(
+          widget.item.units.length,
+          (i) =>
+              widget.item.units[i].value == _filled[i].value &&
+              widget.item.units[i].type == _filled[i].type,
+        ).every((ok) => ok);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xffFFF4FA),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            widget.item.target,
+            style: const TextStyle(
+              color: Color(0xff2F2966),
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: List.generate(widget.item.units.length, (index) {
+              final filled = index < _filled.length ? _filled[index] : null;
+              return Container(
+                width: 82,
+                height: 58,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xffF9A8D4)),
+                ),
+                child: filled == null
+                    ? null
+                    : FittedBox(child: _UnitChip(unit: filled)),
+              );
+            }),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            alignment: WrapAlignment.center,
+            children: _choices.map((unit) {
+              final used = _filled.contains(unit);
+              return Opacity(
+                opacity: used ? .35 : 1,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: used || complete
+                      ? null
+                      : () => setState(() => _filled.add(unit)),
+                  child: _UnitChip(unit: unit),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            alignment: WrapAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _filled.isEmpty
+                    ? null
+                    : () => setState(() => _filled.removeLast()),
+                icon: const Icon(Icons.undo_rounded),
+                label: const Text('Undo'),
+              ),
+              FilledButton.icon(
+                onPressed: () => setState(() => _filled.clear()),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xffEC4899),
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Reset'),
+              ),
+            ],
+          ),
+          if (complete) ...[
+            const SizedBox(height: 12),
+            Text(
+              correct ? 'Urutan benar' : 'Urutan belum tepat',
+              style: TextStyle(
+                color: correct
+                    ? const Color(0xff16A34A)
+                    : const Color(0xffF43F5E),
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _LetterBlendDialog extends StatefulWidget {
+  const _LetterBlendDialog({
+    required this.letters,
+    required this.existingLabels,
+    this.existing,
+  });
+
+  final List<String> letters;
+  final Set<String> existingLabels;
+  final _LetterBlendItem? existing;
+
+  @override
+  State<_LetterBlendDialog> createState() => _LetterBlendDialogState();
+}
+
+class _LetterBlendDialogState extends State<_LetterBlendDialog> {
+  late final List<String> _selected;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = [...?widget.existing?.letters];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final result = _selected.join();
+    void save() {
+      if (_selected.length != 2) {
+        setState(() => _error = 'Pilih tepat 2 abjad.');
+        return;
+      }
+      if (widget.existingLabels.contains(result)) {
+        setState(() => _error = '$result sudah ada.');
+        return;
+      }
+      Navigator.of(context).pop(
+        _LetterBlendItem(
+          id: widget.existing?.id ?? _newLocalId('blend'),
+          letters: [..._selected],
+        ),
+      );
+    }
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(18),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 760,
+          maxHeight: MediaQuery.sizeOf(context).height * .88,
+        ),
+        child: _TeacherSurfaceCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _dialogTitle(
+                        context,
+                        widget.existing == null
+                            ? 'Tambah Rangkaian Abjad'
+                            : 'Edit Rangkaian Abjad',
+                      ),
+                      const SizedBox(height: 14),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: widget.letters.map((item) {
+                          final letter = _normalizeLabel(item);
+                          final selected = _selected.contains(letter);
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () {
+                              setState(() {
+                                _error = null;
+                                if (selected) {
+                                  _selected.remove(letter);
+                                } else if (_selected.length < 2) {
+                                  _selected.add(letter);
+                                }
+                              });
+                            },
+                            child: _MiniLetterTile(
+                              label: _letterPair(letter),
+                              selected: selected,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 18),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xffFFF7ED),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            const Text(
+                              'Hasil: ',
+                              style: TextStyle(
+                                color: Color(0xff6D6A95),
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            if (_selected.isEmpty)
+                              const Text(
+                                '-',
+                                style: TextStyle(
+                                  color: Color(0xff2F2966),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              )
+                            else ...[
+                              ..._selected.map(
+                                (letter) => _MiniLetterTile(
+                                  label: _letterPair(letter),
+                                  selected: false,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Color(0xffF97316),
+                              ),
+                              _BlendPill(
+                                label: result.isEmpty ? '-' : result,
+                                large: false,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (_error != null) _DialogError(text: _error!),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              _dialogActions(context, onSave: save),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WordAssemblyDialog extends StatefulWidget {
+  const _WordAssemblyDialog({
+    required this.letters,
+    required this.blends,
+    required this.existingTargets,
+    this.existing,
+  });
+
+  final List<String> letters;
+  final List<_LetterBlendItem> blends;
+  final Set<String> existingTargets;
+  final _WordAssemblyItem? existing;
+
+  @override
+  State<_WordAssemblyDialog> createState() => _WordAssemblyDialogState();
+}
+
+class _WordAssemblyDialogState extends State<_WordAssemblyDialog> {
+  late final TextEditingController _name;
+  late final List<_WordUnitData> _units;
+  int _tab = 0;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _name = TextEditingController(text: widget.existing?.name ?? '');
+    _units = [...?widget.existing?.units];
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final target = _units.map((unit) => unit.value).join();
+    final source = _tab == 0
+        ? widget.letters
+              .map((letter) => _WordUnitData(_WordUnitType.letter, letter))
+              .toList()
+        : widget.blends
+              .map((blend) => _WordUnitData(_WordUnitType.blend, blend.label))
+              .toList();
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(18),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 820),
+        child: _TeacherSurfaceCard(
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _dialogTitle(
+                  context,
+                  widget.existing == null
+                      ? 'Tambah Merangkai Kata'
+                      : 'Edit Merangkai Kata',
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _name,
+                  decoration: InputDecoration(
+                    labelText: 'Nama aktivitas (opsional)',
+                    hintText: target.isEmpty ? 'Otomatis dari kata' : target,
+                    prefixIcon: const Icon(
+                      Icons.drive_file_rename_outline_rounded,
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                SegmentedButton<int>(
+                  segments: const [
+                    ButtonSegment(value: 0, label: Text('Abjad Dasar')),
+                    ButtonSegment(value: 1, label: Text('Rangkaian Abjad')),
+                  ],
+                  selected: {_tab},
+                  onSelectionChanged: (value) =>
+                      setState(() => _tab = value.first),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: source.map((unit) {
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () => setState(() {
+                        _error = null;
+                        _units.add(unit);
+                      }),
+                      child: _UnitChip(unit: unit, showTypeLabel: true),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                _DialogPreviewLine(
+                  label: 'Target kata',
+                  value: target.isEmpty ? '-' : target,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ..._units.asMap().entries.map((entry) {
+                      final unit = entry.value;
+                      final color = unit.type == _WordUnitType.blend
+                          ? const Color(0xffF97316)
+                          : const Color(0xff8B5CF6);
+                      return InputChip(
+                        backgroundColor: color.withValues(alpha: .10),
+                        side: BorderSide(color: color.withValues(alpha: .24)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            unit.type == _WordUnitType.blend ? 999 : 16,
+                          ),
+                        ),
+                        label: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              unit.display,
+                              style: TextStyle(
+                                color: color,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              unit.type == _WordUnitType.blend
+                                  ? 'Rangkaian'
+                                  : 'Abjad',
+                              style: TextStyle(
+                                color: color.withValues(alpha: .82),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                        onDeleted: () =>
+                            setState(() => _units.removeAt(entry.key)),
+                      );
+                    }),
+                    if (_units.isNotEmpty)
+                      ActionChip(
+                        avatar: const Icon(Icons.undo_rounded, size: 18),
+                        label: const Text('Undo'),
+                        onPressed: () => setState(() => _units.removeLast()),
+                      ),
+                  ],
+                ),
+                if (_error != null) _DialogError(text: _error!),
+                const SizedBox(height: 18),
+                _dialogActions(
+                  context,
+                  onSave: () {
+                    if (_units.isEmpty) {
+                      setState(() => _error = 'Pilih minimal satu unit.');
+                      return;
+                    }
+                    if (widget.existingTargets.contains(target)) {
+                      setState(() => _error = '$target sudah ada.');
+                      return;
+                    }
+                    final name = _name.text.trim().isEmpty
+                        ? target
+                        : _name.text.trim();
+                    Navigator.of(context).pop(
+                      _WordAssemblyItem(
+                        id: widget.existing?.id ?? _newLocalId('word'),
+                        name: name,
+                        units: [..._units],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Widget _dialogTitle(BuildContext context, String title) {
+  return Row(
+    children: [
+      Expanded(
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: Color(0xff2F2966),
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+      IconButton(
+        onPressed: () => Navigator.of(context).pop(),
+        icon: const Icon(Icons.close_rounded),
+      ),
+    ],
+  );
+}
+
+Widget _dialogActions(BuildContext context, {required VoidCallback onSave}) {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final narrow = constraints.maxWidth < 320;
+      final cancel = OutlinedButton(
+        onPressed: () => Navigator.of(context).pop(),
+        style: OutlinedButton.styleFrom(
+          padding: EdgeInsets.symmetric(
+            horizontal: narrow ? 10 : 14,
+            vertical: 13,
+          ),
+        ),
+        child: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text('Batal', maxLines: 1),
+        ),
+      );
+      final save = FilledButton.icon(
+        onPressed: onSave,
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xff8B5CF6),
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(
+            horizontal: narrow ? 10 : 14,
+            vertical: 13,
+          ),
+        ),
+        icon: const Icon(Icons.save_rounded, size: 18),
+        label: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text('Simpan', maxLines: 1),
+        ),
+      );
+      if (narrow) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(width: double.infinity, child: cancel),
+            const SizedBox(height: 8),
+            SizedBox(width: double.infinity, child: save),
+          ],
+        );
+      }
+      return Row(
+        children: [
+          Expanded(child: cancel),
+          const SizedBox(width: 12),
+          Expanded(child: save),
+        ],
+      );
+    },
+  );
+}
+
+class _DialogPreviewLine extends StatelessWidget {
+  const _DialogPreviewLine({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xffF7F3FF),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: const TextStyle(
+              color: Color(0xff6D6A95),
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Color(0xff2F2966),
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DialogError extends StatelessWidget {
+  const _DialogError({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Color(0xffE11D48),
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
 class _TeacherSurfaceCard extends StatelessWidget {
   const _TeacherSurfaceCard({
     required this.child,
@@ -3485,6 +5202,135 @@ class _TeacherSurfaceCard extends StatelessWidget {
           child: child,
         ),
       ),
+    );
+  }
+}
+
+const _letterBlendsPrefsKey = 'teacher.letter_blends.v1';
+const _wordAssembliesPrefsKey = 'teacher.word_assemblies.v1';
+
+String _newLocalId(String prefix) =>
+    '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(9999)}';
+
+String _normalizeLabel(String value) => value.trim().toUpperCase();
+
+String _letterPair(String value) {
+  final normalized = _normalizeLabel(value);
+  if (normalized.isEmpty) return '';
+  return '$normalized${normalized.toLowerCase()}';
+}
+
+List<_LetterBlendItem> _decodeLetterBlends(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return const [];
+  try {
+    final data = jsonDecode(raw);
+    if (data is! List) return const [];
+    return data
+        .whereType<Map>()
+        .map(
+          (item) => _LetterBlendItem.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .where((item) => item.letters.length == 2)
+        .toList();
+  } catch (_) {
+    return const [];
+  }
+}
+
+List<_WordAssemblyItem> _decodeWordAssemblies(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return const [];
+  try {
+    final data = jsonDecode(raw);
+    if (data is! List) return const [];
+    return data
+        .whereType<Map>()
+        .map(
+          (item) => _WordAssemblyItem.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .where((item) => item.units.isNotEmpty)
+        .toList();
+  } catch (_) {
+    return const [];
+  }
+}
+
+class _LetterBlendItem {
+  const _LetterBlendItem({required this.id, required this.letters});
+
+  final String id;
+  final List<String> letters;
+
+  String get label => letters.map(_normalizeLabel).join();
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'letters': letters.map(_normalizeLabel).toList(),
+  };
+
+  factory _LetterBlendItem.fromJson(Map<String, dynamic> json) {
+    final letters = (json['letters'] as List? ?? const [])
+        .map((item) => _normalizeLabel('$item'))
+        .where((item) => item.isNotEmpty)
+        .toList();
+    return _LetterBlendItem(
+      id: '${json['id'] ?? _newLocalId('blend')}',
+      letters: letters,
+    );
+  }
+}
+
+enum _WordUnitType { letter, blend }
+
+class _WordUnitData {
+  const _WordUnitData(this.type, this.value);
+
+  final _WordUnitType type;
+  final String value;
+
+  String get display =>
+      type == _WordUnitType.letter ? _letterPair(value) : value;
+
+  Map<String, dynamic> toJson() => {'type': type.name, 'value': value};
+
+  factory _WordUnitData.fromJson(Map<String, dynamic> json) {
+    final type = json['type'] == 'blend'
+        ? _WordUnitType.blend
+        : _WordUnitType.letter;
+    return _WordUnitData(type, _normalizeLabel('${json['value'] ?? ''}'));
+  }
+}
+
+class _WordAssemblyItem {
+  const _WordAssemblyItem({
+    required this.id,
+    required this.name,
+    required this.units,
+  });
+
+  final String id;
+  final String name;
+  final List<_WordUnitData> units;
+
+  String get target => units.map((unit) => unit.value).join();
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'units': units.map((unit) => unit.toJson()).toList(),
+  };
+
+  factory _WordAssemblyItem.fromJson(Map<String, dynamic> json) {
+    final units = (json['units'] as List? ?? const [])
+        .whereType<Map>()
+        .map((item) => _WordUnitData.fromJson(Map<String, dynamic>.from(item)))
+        .where((item) => item.value.isNotEmpty)
+        .toList();
+    final target = units.map((unit) => unit.value).join();
+    final name = '${json['name'] ?? ''}'.trim();
+    return _WordAssemblyItem(
+      id: '${json['id'] ?? _newLocalId('word')}',
+      name: name.isEmpty ? target : name,
+      units: units,
     );
   }
 }
