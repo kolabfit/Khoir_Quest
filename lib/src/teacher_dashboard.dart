@@ -119,7 +119,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   bool _sidebarCollapsed = false;
   Future<_TeacherStorageData>? _storageFuture;
   final List<_TeacherActivity> _activities = [];
-  Future<int>? _userCountFuture;
+  Future<int>? _databaseUserCountFuture;
   final AudioPlayer _songPreviewPlayer = AudioPlayer();
   StreamSubscription<PlayerState>? _songPreviewSub;
   String? _previewSongId;
@@ -129,7 +129,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   @override
   void initState() {
     super.initState();
-    _userCountFuture = LocalDatabase.instance.countAccounts();
+    _databaseUserCountFuture = _countDatabaseUsers();
     _songPreviewSub = _songPreviewPlayer.playerStateStream.listen((state) {
       if (!mounted) return;
       final completed = state.processingState == ProcessingState.completed;
@@ -420,12 +420,19 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     );
   }
 
+  Future<int> _countDatabaseUsers() async {
+    try {
+      return await AuthService.instance.countDatabaseUsers();
+    } catch (_) {}
+    return 0;
+  }
+
   Future<void> _syncDashboard({bool silent = false}) async {
     final appState = ref.read(appStateProvider);
     await appState.syncCloudContent(silent: silent);
     if (!mounted) return;
     setState(() {
-      _userCountFuture = LocalDatabase.instance.countAccounts();
+      _databaseUserCountFuture = _countDatabaseUsers();
       _storageFuture = _loadStorage();
     });
   }
@@ -571,7 +578,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _TeacherSummaryCardData(
         title: 'Abjad Aktif',
         value: '${app.letters.length}',
-        subtitle: 'Materi online siap',
+        subtitle: 'Materi mengenal abjad',
         icon: Icons.sort_by_alpha_rounded,
         color: const Color(0xffA855F7),
         background: const [Color(0xffF4ECFF), Color(0xffF8F4FF)],
@@ -587,7 +594,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _TeacherSummaryCardData(
         title: 'Benda Aktif',
         value: '${app.objects.length}',
-        subtitle: 'Konten cloud tersinkron',
+        subtitle: 'Materi mengenal benda',
         icon: Icons.category_rounded,
         color: const Color(0xff34D399),
         background: const [Color(0xffECFFF6), Color(0xffF6FFFB)],
@@ -595,15 +602,15 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _TeacherSummaryCardData(
         title: 'Lagu Anak',
         value: '${app.songs.length}',
-        subtitle: 'Video online tersedia',
+        subtitle: 'Materi lagu anak',
         icon: Icons.music_video_rounded,
         color: const Color(0xffFB923C),
         background: const [Color(0xffFFF1E8), Color(0xffFFF8F1)],
       ),
       _TeacherSummaryCardData(
         title: 'Total User',
-        valueFuture: _userCountFuture,
-        subtitle: 'Akun tersinkron',
+        valueFuture: _databaseUserCountFuture,
+        subtitle: 'Akun terdaftar',
         icon: Icons.groups_rounded,
         color: const Color(0xffFBBF24),
         background: const [Color(0xffFFF9E7), Color(0xffFFFDF3)],
@@ -804,23 +811,17 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                 crossAxisSpacing: 14,
                 mainAxisSpacing: 14,
                 mainAxisExtent: desktop
-                    ? 470
+                    ? 490
                     : tablet
-                    ? 450
+                    ? 470
                     : columns == 1
-                    ? 500
-                    : 430,
+                    ? 520
+                    : 450,
               ),
               itemCount: items.length,
               itemBuilder: (_, i) =>
                   _TeacherContentCard(
                     item: items[i],
-                    onEdit: items[i].editable
-                        ? () => _openUploadDialog(
-                            activeCategory,
-                            existing: items[i],
-                          )
-                        : null,
                     onUpload: items[i].editable
                         ? () => _openUploadDialog(
                             activeCategory,
@@ -1949,7 +1950,6 @@ class _TeacherCategoryChip extends StatelessWidget {
 class _TeacherContentCard extends StatelessWidget {
   const _TeacherContentCard({
     required this.item,
-    required this.onEdit,
     required this.onUpload,
     required this.onDelete,
     required this.onReadOnlyTap,
@@ -1960,7 +1960,6 @@ class _TeacherContentCard extends StatelessWidget {
   });
 
   final _TeacherContentData item;
-  final VoidCallback? onEdit;
   final VoidCallback? onUpload;
   final VoidCallback? onDelete;
   final VoidCallback onReadOnlyTap;
@@ -2026,14 +2025,17 @@ class _TeacherContentCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: compact ? 10 : 14),
-              Text(
-                item.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: compact ? 16 : 18,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xff2F2966),
+              SizedBox(
+                height: compact ? 42 : 46,
+                child: Text(
+                  item.title,
+                  maxLines: item.song == null ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: compact ? 16 : 18,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xff2F2966),
+                  ),
                 ),
               ),
               const SizedBox(height: 4),
@@ -2065,6 +2067,7 @@ class _TeacherContentCard extends StatelessWidget {
                     ),
                 ],
               ),
+              const Spacer(),
               const SizedBox(height: 12),
               item.editable
                   ? Wrap(
@@ -2084,22 +2087,18 @@ class _TeacherContentCard extends StatelessWidget {
                             onTap: onPreview!,
                           ),
                         _TeacherActionButton(
-                          icon: Icons.edit_rounded,
-                          color: const Color(0xff8B5CF6),
-                          onTap: onEdit!,
-                        ),
-                        _TeacherActionButton(
                           icon: item.song == null
                               ? Icons.photo_size_select_large_rounded
                               : Icons.video_file_rounded,
                           color: const Color(0xff38BDF8),
                           onTap: onUpload!,
                         ),
-                        _TeacherActionButton(
-                          icon: Icons.delete_outline_rounded,
-                          color: const Color(0xffFB7185),
-                          onTap: onDelete!,
-                        ),
+                        if (item.letter == null)
+                          _TeacherActionButton(
+                            icon: Icons.delete_outline_rounded,
+                            color: const Color(0xffFB7185),
+                            onTap: onDelete!,
+                          ),
                       ],
                     )
                   : SizedBox(

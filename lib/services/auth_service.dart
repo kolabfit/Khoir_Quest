@@ -94,6 +94,12 @@ class AuthService {
     );
   }
 
+  Future<int> countDatabaseUsers() async {
+    if (!isConfigured) return 0;
+    await ensureReady();
+    return _repository.countProfiles();
+  }
+
   Future<CloudAuthProfile> authenticate({
     required String username,
     required String password,

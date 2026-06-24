@@ -73,6 +73,8 @@ class AuthRepository {
     return Map<String, dynamic>.from(data);
   }
 
+  Future<int> countProfiles() => _client.from('profiles').count();
+
   Future<Map<String, dynamic>> upsertProfile({
     required String userId,
     required String username,
