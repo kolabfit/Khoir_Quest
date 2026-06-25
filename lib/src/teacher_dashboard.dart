@@ -166,6 +166,9 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   final List<_TeacherActivity> _activities = [];
   final List<_LetterBlendItem> _letterBlends = [];
   final List<_WordAssemblyItem> _wordAssemblies = [];
+  late final RangkaiItemRepository _rangkaiRepository = RangkaiItemRepository(
+    SupabaseService.instance,
+  );
   Future<int>? _databaseUserCountFuture;
   final AudioPlayer _songPreviewPlayer = AudioPlayer();
   StreamSubscription<PlayerState>? _songPreviewSub;
@@ -196,15 +199,57 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     final prefs = await SharedPreferences.getInstance();
     final blendsRaw = prefs.getString(_letterBlendsPrefsKey);
     final wordsRaw = prefs.getString(_wordAssembliesPrefsKey);
+    final cachedBlends = _decodeLetterBlends(blendsRaw);
+    final cachedWords = _decodeWordAssemblies(wordsRaw);
     if (!mounted) return;
     setState(() {
       _letterBlends
         ..clear()
-        ..addAll(_decodeLetterBlends(blendsRaw));
+        ..addAll(cachedBlends);
       _wordAssemblies
         ..clear()
-        ..addAll(_decodeWordAssemblies(wordsRaw));
+        ..addAll(cachedWords);
     });
+    if (!SupabaseService.instance.isConfigured) return;
+    try {
+      await SupabaseService.instance.ensureInitialized();
+      final remoteItems = await _rangkaiRepository.fetchAll();
+      final remoteBlends = remoteItems
+          .where((item) => item.type == 'abjad')
+          .map(_LetterBlendItem.fromModel)
+          .where((item) => item.letters.length == 2)
+          .toList();
+      final remoteWords = remoteItems
+          .where((item) => item.type == 'kata')
+          .map(_WordAssemblyItem.fromModel)
+          .where((item) => item.units.isNotEmpty)
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _letterBlends
+          ..clear()
+          ..addAll(remoteBlends);
+        _wordAssemblies
+          ..clear()
+          ..addAll(remoteWords);
+      });
+      if (remoteItems.isEmpty && (cachedBlends.isNotEmpty || cachedWords.isNotEmpty)) {
+        for (final item in cachedBlends) {
+          await _rangkaiRepository.upsertItem(item.toModel());
+        }
+        for (final item in cachedWords) {
+          await _rangkaiRepository.upsertItem(item.toModel());
+        }
+      }
+      await _saveAbjadTools();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Data merangkai memakai cache lokal. Supabase gagal dimuat.'),
+        ),
+      );
+    }
   }
 
   Future<void> _saveAbjadTools() async {
@@ -216,6 +261,29 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     await prefs.setString(
       _wordAssembliesPrefsKey,
       jsonEncode(_wordAssemblies.map((item) => item.toJson()).toList()),
+    );
+  }
+
+  Future<void> _syncRangkaiItem(RangkaiItemModel item) async {
+    await _saveAbjadTools();
+    if (!SupabaseService.instance.isConfigured) return;
+    await SupabaseService.instance.ensureInitialized();
+    await _rangkaiRepository.upsertItem(item);
+  }
+
+  Future<void> _deleteRangkaiItem(String id) async {
+    await _saveAbjadTools();
+    if (!SupabaseService.instance.isConfigured) return;
+    await SupabaseService.instance.ensureInitialized();
+    await _rangkaiRepository.deleteItem(id);
+  }
+
+  void _showRangkaiSyncError() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Tersimpan lokal, tetapi sinkron Supabase gagal.'),
+      ),
     );
   }
 
@@ -1060,15 +1128,19 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _letterBlends.removeWhere((item) => item.id == result.id);
       _letterBlends.insert(0, result);
     });
-    await _saveAbjadTools();
-    _pushActivity(
-      title: existing == null
-          ? 'Menambahkan rangkaian abjad: ${result.label}'
-          : 'Memperbarui rangkaian abjad: ${result.label}',
-      subtitle: result.letters.join(' + '),
-      icon: Icons.join_inner_rounded,
-      color: _TeacherSection.merangkaiAbjad.color,
-    );
+    try {
+      await _syncRangkaiItem(result.toModel());
+      _pushActivity(
+        title: existing == null
+            ? 'Menambahkan rangkaian abjad: ${result.label}'
+            : 'Memperbarui rangkaian abjad: ${result.label}',
+        subtitle: result.letters.join(' + '),
+        icon: Icons.join_inner_rounded,
+        color: _TeacherSection.merangkaiAbjad.color,
+      );
+    } catch (_) {
+      _showRangkaiSyncError();
+    }
   }
 
   Future<void> _openWordAssemblyDialog({_WordAssemblyItem? existing}) async {
@@ -1090,15 +1162,19 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       _wordAssemblies.removeWhere((item) => item.id == result.id);
       _wordAssemblies.insert(0, result);
     });
-    await _saveAbjadTools();
-    _pushActivity(
-      title: existing == null
-          ? 'Menambahkan latihan kata: ${result.target}'
-          : 'Memperbarui latihan kata: ${result.target}',
-      subtitle: result.name,
-      icon: Icons.extension_rounded,
-      color: _TeacherSection.merangkaiKata.color,
-    );
+    try {
+      await _syncRangkaiItem(result.toModel());
+      _pushActivity(
+        title: existing == null
+            ? 'Menambahkan latihan kata: ${result.target}'
+            : 'Memperbarui latihan kata: ${result.target}',
+        subtitle: result.name,
+        icon: Icons.extension_rounded,
+        color: _TeacherSection.merangkaiKata.color,
+      );
+    } catch (_) {
+      _showRangkaiSyncError();
+    }
   }
 
   Future<void> _deleteLetterBlend(_LetterBlendItem item) async {
@@ -1117,7 +1193,11 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     final confirmed = await _confirmDeleteLabel('Hapus Rangkaian?', item.label);
     if (!confirmed || !mounted) return;
     setState(() => _letterBlends.removeWhere((entry) => entry.id == item.id));
-    await _saveAbjadTools();
+    try {
+      await _deleteRangkaiItem(item.id);
+    } catch (_) {
+      _showRangkaiSyncError();
+    }
   }
 
   Future<void> _deleteWordAssembly(_WordAssemblyItem item) async {
@@ -1127,7 +1207,11 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
     );
     if (!confirmed || !mounted) return;
     setState(() => _wordAssemblies.removeWhere((entry) => entry.id == item.id));
-    await _saveAbjadTools();
+    try {
+      await _deleteRangkaiItem(item.id);
+    } catch (_) {
+      _showRangkaiSyncError();
+    }
   }
 
   Future<bool> _confirmDeleteLabel(String title, String value) async {
@@ -5260,12 +5344,32 @@ class _LetterBlendItem {
   final String id;
   final List<String> letters;
 
+  factory _LetterBlendItem.fromModel(RangkaiItemModel model) {
+    return _LetterBlendItem(
+      id: model.id,
+      letters: model.pieces.map(_normalizeLabel).toList(),
+    );
+  }
+
   String get label => letters.map(_normalizeLabel).join();
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'letters': letters.map(_normalizeLabel).toList(),
   };
+
+  RangkaiItemModel toModel() {
+    return RangkaiItemModel(
+      id: id,
+      type: 'abjad',
+      title: label,
+      target: label,
+      pieces: letters.map(_normalizeLabel).toList(),
+      units: const [],
+      createdAt: DateTime.now().toUtc(),
+      updatedAt: DateTime.now().toUtc(),
+    );
+  }
 
   factory _LetterBlendItem.fromJson(Map<String, dynamic> json) {
     final letters = (json['letters'] as List? ?? const [])
@@ -5311,6 +5415,28 @@ class _WordAssemblyItem {
   final String name;
   final List<_WordUnitData> units;
 
+  factory _WordAssemblyItem.fromModel(RangkaiItemModel model) {
+    final units = model.units
+        .map(_WordUnitData.fromJson)
+        .where((item) => item.value.isNotEmpty)
+        .toList();
+    if (units.isEmpty) {
+      final pieces = model.pieces
+          .map((piece) => _WordUnitData(_WordUnitType.letter, piece))
+          .toList();
+      return _WordAssemblyItem(
+        id: model.id,
+        name: model.title.isEmpty ? model.target : model.title,
+        units: pieces,
+      );
+    }
+    return _WordAssemblyItem(
+      id: model.id,
+      name: model.title.isEmpty ? model.target : model.title,
+      units: units,
+    );
+  }
+
   String get target => units.map((unit) => unit.value).join();
 
   Map<String, dynamic> toJson() => {
@@ -5318,6 +5444,19 @@ class _WordAssemblyItem {
     'name': name,
     'units': units.map((unit) => unit.toJson()).toList(),
   };
+
+  RangkaiItemModel toModel() {
+    return RangkaiItemModel(
+      id: id,
+      type: 'kata',
+      title: name,
+      target: target,
+      pieces: units.map((unit) => unit.value).toList(),
+      units: units.map((unit) => unit.toJson()).toList(),
+      createdAt: DateTime.now().toUtc(),
+      updatedAt: DateTime.now().toUtc(),
+    );
+  }
 
   factory _WordAssemblyItem.fromJson(Map<String, dynamic> json) {
     final units = (json['units'] as List? ?? const [])

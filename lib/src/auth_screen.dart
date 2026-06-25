@@ -2,7 +2,7 @@ part of '../main.dart';
 
 enum _AuthMode { login, register, resetPassword }
 
-const String _semanticVersion = 'v1.0.1';
+const String _semanticVersion = 'v1.1.0';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});

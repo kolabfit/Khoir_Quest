@@ -49,6 +49,18 @@ create table if not exists public.learning_materials (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.rangkai_items (
+  id text primary key,
+  type text not null check (type in ('abjad', 'kata')),
+  title text not null default '',
+  target text not null default '',
+  pieces text[] not null default '{}',
+  units jsonb not null default '[]'::jsonb,
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
 alter table public.learning_materials
   add column if not exists version integer not null default 1,
   add column if not exists deleted_at timestamptz,
@@ -97,6 +109,16 @@ begin
 end;
 $$;
 
+create or replace function public.set_rangkai_items_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = timezone('utc', now());
+  return new;
+end;
+$$;
+
 create or replace function public.set_profiles_updated_at()
 returns trigger
 language plpgsql
@@ -111,6 +133,11 @@ drop trigger if exists set_learning_materials_updated_at on public.learning_mate
 create trigger set_learning_materials_updated_at
 before update on public.learning_materials
 for each row execute function public.set_learning_materials_updated_at();
+
+drop trigger if exists set_rangkai_items_updated_at on public.rangkai_items;
+create trigger set_rangkai_items_updated_at
+before update on public.rangkai_items
+for each row execute function public.set_rangkai_items_updated_at();
 
 drop trigger if exists set_profiles_updated_at on public.profiles;
 create trigger set_profiles_updated_at
@@ -256,6 +283,7 @@ $$;
 
 alter table public.profiles enable row level security;
 alter table public.learning_materials enable row level security;
+alter table public.rangkai_items enable row level security;
 alter table public.learning_histories enable row level security;
 
 drop policy if exists "profiles_select_self" on public.profiles;
@@ -334,6 +362,35 @@ with check (public.is_teacher() and auth.uid() = created_by);
 drop policy if exists "learning_materials_teacher_delete" on public.learning_materials;
 create policy "learning_materials_teacher_delete"
 on public.learning_materials
+for delete
+to authenticated
+using (public.is_teacher());
+
+drop policy if exists "rangkai_items_read_all_authenticated" on public.rangkai_items;
+create policy "rangkai_items_read_all_authenticated"
+on public.rangkai_items
+for select
+to authenticated
+using (true);
+
+drop policy if exists "rangkai_items_teacher_insert" on public.rangkai_items;
+create policy "rangkai_items_teacher_insert"
+on public.rangkai_items
+for insert
+to authenticated
+with check (public.is_teacher() and (created_by is null or auth.uid() = created_by));
+
+drop policy if exists "rangkai_items_teacher_update" on public.rangkai_items;
+create policy "rangkai_items_teacher_update"
+on public.rangkai_items
+for update
+to authenticated
+using (public.is_teacher())
+with check (public.is_teacher() and (created_by is null or auth.uid() = created_by));
+
+drop policy if exists "rangkai_items_teacher_delete" on public.rangkai_items;
+create policy "rangkai_items_teacher_delete"
+on public.rangkai_items
 for delete
 to authenticated
 using (public.is_teacher());
