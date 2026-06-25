@@ -796,8 +796,6 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
       onPage: (next) => setState(() => pageIndex = next),
       itemBuilder: (context, itemIndex, color) {
         final item = filtered[itemIndex];
-        final favoriteId = item.id.isEmpty ? 'benda:${item.name}' : item.id;
-        final fav = app.favorites.contains(favoriteId);
         final mastered = app.bendaMastered.contains(
           progressMasteryKey(item.name),
         );
@@ -810,9 +808,6 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
           badge: _objectFamily(item),
           kind: _PremiumCardKind.object,
           mastered: mastered,
-          favorite: fav,
-          onFavorite: () =>
-              ref.read(appStateProvider).toggleFavorite(favoriteId),
           onTap: () => ref.read(appStateProvider).markBendaViewed(item.name),
         );
       },
@@ -1281,8 +1276,6 @@ class _PremiumLearningCard extends StatelessWidget {
     required this.badge,
     required this.kind,
     required this.onTap,
-    this.favorite = false,
-    this.onFavorite,
     this.mastered = false,
   });
 
@@ -1294,8 +1287,6 @@ class _PremiumLearningCard extends StatelessWidget {
   final String badge;
   final _PremiumCardKind kind;
   final VoidCallback onTap;
-  final bool favorite;
-  final VoidCallback? onFavorite;
   final bool mastered;
 
   @override
@@ -1354,17 +1345,10 @@ class _PremiumLearningCard extends StatelessWidget {
               Positioned(
                 right: 7,
                 top: 7,
-                child: GestureDetector(
-                  onTap: onFavorite,
-                  child: Icon(
-                    kind == _PremiumCardKind.object
-                        ? (favorite
-                              ? Icons.star_rounded
-                              : Icons.star_border_rounded)
-                        : Icons.auto_awesome_rounded,
-                    color: const Color(0xffFFB927),
-                    size: 22,
-                  ),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Color(0xffFFB927),
+                  size: 22,
                 ),
               ),
               Column(
@@ -1783,15 +1767,9 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
                 latinEnabled: widget.readingHelp,
                 mastered: app.iqraMastered,
                 feedback: '',
-                favorites: app.favorites,
                 onSelect: (i) {
                   setState(() => index = i);
                   ref.read(appStateProvider).markIqraViewed(iqraItems[i]);
-                },
-                onFavorite: (item) {
-                  ref
-                      .read(appStateProvider)
-                      .toggleFavorite('iqra:${item.latin}');
                 },
               ),
             ],
@@ -1957,60 +1935,13 @@ class _IqraHeroSection extends StatelessWidget {
                   const Spacer(),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: tablet ? width * .55 : width * .58,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'IQRA 1',
-                            maxLines: 1,
-                            style: TextStyle(
-                              fontSize: tablet ? 54 : 40,
-                              height: .95,
-                              color: const Color(0xff1498BD),
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 18,
-                                  color: const Color(
-                                    0xff40C8F4,
-                                  ).withValues(alpha: .42),
-                                ),
-                                const Shadow(
-                                  blurRadius: 0,
-                                  color: Colors.white,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 9,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: Colors.transparent),
-                            ),
-                            child: const Text(
-                              'Belajar membaca Huruf Hijaiyah ✨',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Color(0xff335D73),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ],
+                    child: SizedBox(
+                      width: tablet ? 460 : 270,
+                      height: tablet ? 150 : 126,
+                      child: Image.asset(
+                        'assets/images/Belajar_Iqra.png',
+                        fit: BoxFit.contain,
+                        alignment: Alignment.centerLeft,
                       ),
                     ),
                   ),
@@ -2318,20 +2249,16 @@ class _IqraCatalogSection extends StatelessWidget {
     required this.selectedIndex,
     required this.latinEnabled,
     required this.mastered,
-    required this.favorites,
     required this.feedback,
     required this.onSelect,
-    required this.onFavorite,
   });
 
   final List<IqraItem> items;
   final int selectedIndex;
   final bool latinEnabled;
   final Set<String> mastered;
-  final Set<String> favorites;
   final String feedback;
   final ValueChanged<int> onSelect;
-  final ValueChanged<IqraItem> onFavorite;
 
   @override
   Widget build(BuildContext context) => _IqraSectionCard(
@@ -2363,9 +2290,7 @@ class _IqraCatalogSection extends StatelessWidget {
                   selected: selectedIndex == i,
                   latinEnabled: latinEnabled,
                   mastered: isIqraMastered(mastered, item),
-                  favorite: favorites.contains('iqra:${item.latin}'),
                   onTap: () => onSelect(i),
-                  onFavorite: () => onFavorite(item),
                 );
               },
             );
@@ -2402,9 +2327,7 @@ class _IqraLetterCard extends StatelessWidget {
     required this.selected,
     required this.latinEnabled,
     required this.mastered,
-    required this.favorite,
     required this.onTap,
-    required this.onFavorite,
   });
 
   final int number;
@@ -2412,9 +2335,7 @@ class _IqraLetterCard extends StatelessWidget {
   final bool selected;
   final bool latinEnabled;
   final bool mastered;
-  final bool favorite;
   final VoidCallback onTap;
-  final VoidCallback onFavorite;
 
   Color get statusColor {
     if (mastered) return const Color(0xff38C985);
@@ -2480,19 +2401,6 @@ class _IqraLetterCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     Icon(statusIcon, size: 18, color: statusColor),
-                    const SizedBox(width: 2),
-                    GestureDetector(
-                      onTap: onFavorite,
-                      child: Icon(
-                        favorite
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        size: 18,
-                        color: favorite
-                            ? const Color(0xffFF6FAE)
-                            : const Color(0xffB8BED2),
-                      ),
-                    ),
                   ],
                 ),
                 const Spacer(flex: 2),
