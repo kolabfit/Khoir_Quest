@@ -17,6 +17,8 @@ class _BelajarScreenState extends ConsumerState<BelajarScreen> {
     return switch (app.learnMode) {
       LearnMode.menu ||
       LearnMode.huruf ||
+      LearnMode.sukuKata ||
+      LearnMode.rangkaiKata ||
       LearnMode.angka ||
       LearnMode.benda ||
       LearnMode.iqra => body,
@@ -26,6 +28,8 @@ class _BelajarScreenState extends ConsumerState<BelajarScreen> {
   Widget modeBody(AppState app) {
     return switch (app.learnMode) {
       LearnMode.huruf => const HurufScreen(),
+      LearnMode.sukuKata => const SukuKataScreen(),
+      LearnMode.rangkaiKata => const RangkaiKataScreen(),
       LearnMode.angka => const AngkaScreen(),
       LearnMode.benda => const BendaScreen(),
       LearnMode.iqra => IqraLesson(
@@ -57,6 +61,22 @@ class LearnMenu extends ConsumerWidget {
         const Color(0xffFFE2ED),
         const Color(0xffF65391),
         LearnMode.huruf,
+      ),
+      _AdventureData(
+        'SUKU KATA',
+        'Gabungan abjad',
+        'assets/images/logo_Suku_kata.png',
+        const Color(0xffFFF0D9),
+        const Color(0xffF97316),
+        LearnMode.sukuKata,
+      ),
+      _AdventureData(
+        'MERANGKAI KATA',
+        'Latihan merangkai kata',
+        'assets/images/log_merangkai_kata.png',
+        const Color(0xffFFE2F0),
+        const Color(0xffEC4899),
+        LearnMode.rangkaiKata,
       ),
       _AdventureData(
         'ANGKA',
@@ -594,38 +614,57 @@ class HurufScreen extends ConsumerStatefulWidget {
 
 class _HurufScreenState extends ConsumerState<HurufScreen> {
   final search = TextEditingController();
+  final _tts = FlutterTts();
   int pageIndex = 0;
   String category = 'Semua';
 
   @override
+  void initState() {
+    super.initState();
+    unawaited(_setupTts());
+  }
+
+  @override
   void dispose() {
     search.dispose();
+    unawaited(_tts.stop());
     super.dispose();
+  }
+
+  Future<void> _setupTts() async {
+    try {
+      await _tts.setLanguage('id-ID');
+      await _tts.setSpeechRate(.42);
+      await _tts.setPitch(1.08);
+    } catch (_) {}
+  }
+
+  Future<void> _speakLetter(String letter) async {
+    await ref.read(appStateProvider).markHurfViewed(letter);
+    try {
+      await _tts.stop();
+      await _tts.speak(letter.toLowerCase());
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     final app = ref.watch(appStateProvider);
     final query = search.text.toLowerCase().trim();
-    final letterItems = app.letters;
-    final filtered = letterItems.where((item) {
-      final isVowel = 'AIUEO'.contains(item.letter);
-      final obj = item.objects.first;
+    final filtered = _fixedLatinLetters.where((letter) {
+      final isVowel = 'AIUEO'.contains(letter);
       final categoryOk =
           category == 'Semua' ||
           (category == 'Vokal' && isVowel) ||
           (category == 'Konsonan' && !isVowel);
-      final queryOk =
-          query.isEmpty ||
-          item.letter.toLowerCase().contains(query) ||
-          obj.name.toLowerCase().contains(query);
+      final queryOk = query.isEmpty || letter.toLowerCase().contains(query);
       return categoryOk && queryOk;
     }).toList();
     return _PremiumLearningScaffold(
       titleAsset: 'assets/images/Belajar_huruf.png',
       mascotAsset: 'assets/images/Anak_Belajar_Huruf.png',
       fallbackTitle: 'Belajar',
-      subtitle: tr(context, 'Ayo mengenal abjad dan contoh bendanya!'),
+      subtitle: tr(context, 'Ayo mengenal abjad besar dan kecil!'),
       accent: const Color(0xffFF8F1F),
       stars: app.stars,
       onBack: () => ref.read(appStateProvider).openLearn(LearnMode.menu),
@@ -642,24 +681,379 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
       pageIndex: pageIndex,
       onPage: (next) => setState(() => pageIndex = next),
       itemBuilder: (context, itemIndex, color) {
-        final item = filtered[itemIndex];
-        final obj = item.objects.first;
-        final mastered = app.hurfMastered.contains(
-          progressMasteryKey(item.letter),
-        );
+        final letter = filtered[itemIndex];
+        final mastered = app.hurfMastered.contains(progressMasteryKey(letter));
         return _PremiumLearningCard(
           color: color,
-          title: item.letter,
-          subtitle: item.letter,
-          caption: obj.name,
-          imageUrl: obj.img,
-          badge: obj.name.toLowerCase(),
+          title: letter,
+          subtitle: letter.toLowerCase(),
+          caption: '',
+          imageUrl: '',
+          badge: '',
           kind: _PremiumCardKind.letter,
           mastered: mastered,
-          onTap: () => ref.read(appStateProvider).markHurfViewed(item.letter),
+          onTap: () => unawaited(_speakLetter(letter)),
         );
       },
     );
+  }
+}
+
+class SukuKataScreen extends ConsumerStatefulWidget {
+  const SukuKataScreen({super.key});
+
+  @override
+  ConsumerState<SukuKataScreen> createState() => _SukuKataScreenState();
+}
+
+class _SukuKataScreenState extends ConsumerState<SukuKataScreen> {
+  final search = TextEditingController();
+  final _tts = FlutterTts();
+  List<_LetterBlendItem> items = const [];
+  int pageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_setupTts());
+    unawaited(_loadItems());
+  }
+
+  @override
+  void dispose() {
+    search.dispose();
+    unawaited(_tts.stop());
+    super.dispose();
+  }
+
+  Future<void> _setupTts() async {
+    try {
+      await _tts.setLanguage('id-ID');
+      await _tts.setSpeechRate(.42);
+      await _tts.setPitch(1.08);
+    } catch (_) {}
+  }
+
+  Future<void> _loadItems() async {
+    final loaded = await _loadRangkaiItems();
+    final blends = loaded
+        .where((item) => item.type == 'suku_kata' || item.type == 'abjad')
+        .map(_LetterBlendItem.fromModel)
+        .where((item) => item.letters.length == 2)
+        .toList();
+    if (!mounted) return;
+    setState(() => items = blends);
+    ref
+        .read(appStateProvider)
+        .setRangkaiLearningTotals(sukuKata: blends.length);
+  }
+
+  Future<void> _speak(_LetterBlendItem item) async {
+    await ref
+        .read(appStateProvider)
+        .markSukuKataViewed(item.id, total: items.length);
+    try {
+      await _tts.stop();
+      await _tts.speak(item.label.toLowerCase());
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = ref.watch(appStateProvider);
+    final query = search.text.toLowerCase().trim();
+    final filtered = items
+        .where(
+          (item) => query.isEmpty || item.label.toLowerCase().contains(query),
+        )
+        .toList();
+    return _PremiumLearningScaffold(
+      titleAsset: 'assets/images/Belajar_huruf.png',
+      mascotAsset: 'assets/images/Anak_Belajar_Huruf.png',
+      fallbackTitle: 'Suku Kata',
+      subtitle: 'Dengarkan gabungan abjad dari pengajar!',
+      accent: const Color(0xffF97316),
+      stars: app.stars,
+      onBack: () => ref.read(appStateProvider).openLearn(LearnMode.menu),
+      chips: const ['Semua'],
+      selectedChip: 'Semua',
+      onChip: (_) => setState(() => pageIndex = 0),
+      search: search,
+      searchHint: 'Cari suku kata...',
+      onSearch: () => setState(() => pageIndex = 0),
+      emptyText: 'Belum ada materi dari pengajar.',
+      itemCount: filtered.length,
+      pageIndex: pageIndex,
+      onPage: (next) => setState(() => pageIndex = next),
+      itemBuilder: (context, itemIndex, color) {
+        final item = filtered[itemIndex];
+        return _RangkaiLearningCard(
+          color: color,
+          title: item.label,
+          subtitle: item.letters.map(_letterPair).join(' + '),
+          badge: 'Suku Kata',
+          icon: Icons.volume_up_rounded,
+          mastered: app.sukuKataMastered.contains(progressMasteryKey(item.id)),
+          onTap: () => unawaited(_speak(item)),
+        );
+      },
+    );
+  }
+}
+
+class RangkaiKataScreen extends ConsumerStatefulWidget {
+  const RangkaiKataScreen({super.key});
+
+  @override
+  ConsumerState<RangkaiKataScreen> createState() => _RangkaiKataScreenState();
+}
+
+class _RangkaiKataScreenState extends ConsumerState<RangkaiKataScreen> {
+  final search = TextEditingController();
+  final _tts = FlutterTts();
+  List<_WordAssemblyItem> items = const [];
+  int pageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_setupTts());
+    unawaited(_loadItems());
+  }
+
+  @override
+  void dispose() {
+    search.dispose();
+    unawaited(_tts.stop());
+    super.dispose();
+  }
+
+  Future<void> _setupTts() async {
+    try {
+      await _tts.setLanguage('id-ID');
+      await _tts.setSpeechRate(.42);
+      await _tts.setPitch(1.08);
+    } catch (_) {}
+  }
+
+  Future<void> _loadItems() async {
+    final loaded = await _loadRangkaiItems();
+    final words = loaded
+        .where((item) => item.type == 'kata')
+        .map(_WordAssemblyItem.fromModel)
+        .where((item) => item.units.isNotEmpty)
+        .toList();
+    if (!mounted) return;
+    setState(() => items = words);
+    ref
+        .read(appStateProvider)
+        .setRangkaiLearningTotals(rangkaiKata: words.length);
+  }
+
+  Future<void> _speak(_WordAssemblyItem item) async {
+    await ref
+        .read(appStateProvider)
+        .markRangkaiKataViewed(item.id, total: items.length);
+    try {
+      await _tts.stop();
+      await _tts.speak(item.target.toLowerCase());
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = ref.watch(appStateProvider);
+    final query = search.text.toLowerCase().trim();
+    final filtered = items.where((item) {
+      return query.isEmpty ||
+          item.name.toLowerCase().contains(query) ||
+          item.target.toLowerCase().contains(query);
+    }).toList();
+    return _PremiumLearningScaffold(
+      titleAsset: 'assets/images/belajar_merangkai_kata.png',
+      mascotAsset: 'assets/images/Anak_Belajar_Huruf.png',
+      fallbackTitle: 'Merangkai Kata',
+      subtitle: 'Tekan kata, dengarkan, lalu kumpulkan poin!',
+      accent: const Color(0xffEC4899),
+      stars: app.stars,
+      onBack: () => ref.read(appStateProvider).openLearn(LearnMode.menu),
+      chips: const ['Semua'],
+      selectedChip: 'Semua',
+      onChip: (_) => setState(() => pageIndex = 0),
+      search: search,
+      searchHint: 'Cari kata...',
+      onSearch: () => setState(() => pageIndex = 0),
+      emptyText: 'Belum ada materi dari pengajar.',
+      itemCount: filtered.length,
+      pageIndex: pageIndex,
+      onPage: (next) => setState(() => pageIndex = next),
+      itemBuilder: (context, itemIndex, color) {
+        final item = filtered[itemIndex];
+        return _RangkaiLearningCard(
+          color: color,
+          title: item.target,
+          subtitle: item.name,
+          badge: item.units.map((unit) => unit.display).join(' + '),
+          icon: Icons.record_voice_over_rounded,
+          mastered: app.rangkaiKataMastered.contains(
+            progressMasteryKey(item.id),
+          ),
+          onTap: () => unawaited(_speak(item)),
+        );
+      },
+    );
+  }
+}
+
+Future<List<RangkaiItemModel>> _loadRangkaiItems() async {
+  if (SupabaseService.instance.isConfigured) {
+    try {
+      await SupabaseService.instance.ensureInitialized();
+      return await RangkaiItemRepository(SupabaseService.instance).fetchAll();
+    } catch (_) {}
+  }
+  final prefs = await SharedPreferences.getInstance();
+  final blends = _decodeLetterBlends(
+    prefs.getString(_letterBlendsPrefsKey),
+  ).map((item) => item.toModel());
+  final words = _decodeWordAssemblies(
+    prefs.getString(_wordAssembliesPrefsKey),
+  ).map((item) => item.toModel());
+  return [...blends, ...words];
+}
+
+class _RangkaiLearningCard extends StatelessWidget {
+  const _RangkaiLearningCard({
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.badge,
+    required this.icon,
+    required this.mastered,
+    required this.onTap,
+  });
+
+  final Color color;
+  final String title;
+  final String subtitle;
+  final String badge;
+  final IconData icon;
+  final bool mastered;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = _themeOf(context);
+    final textColor = t.night ? NightPalette.text : const Color(0xff293464);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: Ink(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: t.night
+                ? Color.lerp(color, NightPalette.surface, .54)
+                : color,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: t.night ? color.withValues(alpha: .46) : Colors.white,
+              width: 2.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 22,
+                offset: const Offset(0, 12),
+                color: color.withValues(alpha: t.night ? .30 : .45),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              if (mastered)
+                const Positioned(
+                  left: 6,
+                  top: 6,
+                  child: CircleAvatar(
+                    radius: 14,
+                    backgroundColor: Colors.white,
+                    child: Icon(
+                      Icons.check_rounded,
+                      color: Color(0xff38C985),
+                      size: 20,
+                    ),
+                  ),
+                ),
+              Positioned(
+                right: 6,
+                top: 6,
+                child: Icon(icon, color: const Color(0xffFFB927), size: 25),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 22),
+                  Expanded(
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: title.length <= 4 ? 74 : 54,
+                            height: .95,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(
+                        alpha: t.night ? .16 : .70,
+                      ),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      badge,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xff59617E),
+                        fontSize: 10,
+                        height: 1.15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: .05);
   }
 }
 
@@ -839,6 +1233,7 @@ class _PremiumLearningScaffold extends StatelessWidget {
     required this.pageIndex,
     required this.onPage,
     required this.itemBuilder,
+    this.emptyText,
   });
 
   final String titleAsset;
@@ -858,6 +1253,7 @@ class _PremiumLearningScaffold extends StatelessWidget {
   final int pageIndex;
   final ValueChanged<int> onPage;
   final _PremiumItemBuilder itemBuilder;
+  final String? emptyText;
 
   static const colors = [
     Color(0xffffe4ef),
@@ -909,7 +1305,10 @@ class _PremiumLearningScaffold extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             if (visible.isEmpty)
-              _PremiumEmptyState(accent: accent)
+              _PremiumEmptyState(
+                accent: accent,
+                text: emptyText ?? 'Belum ada hasil yang cocok.',
+              )
             else
               GridView.builder(
                 shrinkWrap: true,
@@ -1293,6 +1692,7 @@ class _PremiumLearningCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = _themeOf(context);
     final compact = MediaQuery.sizeOf(context).width < 430;
+    final isLetterCard = kind == _PremiumCardKind.letter;
     final isNumberCard = kind == _PremiumCardKind.number;
     final cardColor = color;
     final bg = t.night
@@ -1353,23 +1753,7 @@ class _PremiumLearningCard extends StatelessWidget {
               ),
               Column(
                 children: [
-                  if (kind == _PremiumCardKind.letter)
-                    SizedBox(
-                      height: 62,
-                      child: FittedBox(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            color: t.night ? color : const Color(0xff293464),
-                            fontSize: 64,
-                            height: 1,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
@@ -1385,6 +1769,41 @@ class _PremiumLearningCard extends StatelessWidget {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
+                          if (isLetterCard)
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: TextStyle(
+                                      color: t.night
+                                          ? color
+                                          : const Color(0xff293464),
+                                      fontSize: compact ? 92 : 112,
+                                      height: .9,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 18),
+                                  Text(
+                                    subtitle,
+                                    style: TextStyle(
+                                      color:
+                                          (t.night
+                                                  ? NightPalette.muted
+                                                  : const Color(0xff293464))
+                                              .withValues(alpha: .78),
+                                      fontSize: compact ? 68 : 84,
+                                      height: .95,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           if (isNumberCard)
                             Padding(
                               padding: EdgeInsets.only(
@@ -1405,68 +1824,74 @@ class _PremiumLearningCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          Transform.scale(
-                            scale: isNumberCard ? (compact ? 1.18 : 1.04) : 1,
-                            child: AppImage(url: imageUrl, fit: BoxFit.contain),
-                          ),
+                          if (!isLetterCard)
+                            Transform.scale(
+                              scale: isNumberCard ? (compact ? 1.18 : 1.04) : 1,
+                              child: AppImage(
+                                url: imageUrl,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                         ],
                       ),
                     ),
                   ),
-                  SizedBox(height: isNumberCard ? 10 : 0),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  if (!isNumberCard) ...[
-                    const SizedBox(height: 2),
+                  if (!isLetterCard) ...[
+                    SizedBox(height: isNumberCard ? 10 : 0),
                     Text(
-                      caption,
+                      subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color:
-                            (t.night
-                                    ? NightPalette.muted
-                                    : const Color(0xff293464))
-                                .withValues(alpha: .82),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
+                        color: textColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    if (!isNumberCard) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        caption,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color:
+                              (t.night
+                                      ? NightPalette.muted
+                                      : const Color(0xff293464))
+                                  .withValues(alpha: .82),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(
+                          alpha: t.night ? .16 : .70,
+                        ),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        badge,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xff59617E),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          height: 1.2,
+                        ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(
-                        alpha: t.night ? .16 : .70,
-                      ),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      badge,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xff59617E),
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        height: 1.2,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ],
@@ -1611,8 +2036,9 @@ class _PremiumPoints extends StatelessWidget {
 }
 
 class _PremiumEmptyState extends StatelessWidget {
-  const _PremiumEmptyState({required this.accent});
+  const _PremiumEmptyState({required this.accent, required this.text});
   final Color accent;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
@@ -1626,7 +2052,7 @@ class _PremiumEmptyState extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
       ),
       child: Text(
-        tr(context, 'Belum ada hasil yang cocok.'),
+        tr(context, text),
         textAlign: TextAlign.center,
         style: TextStyle(color: accent, fontWeight: FontWeight.w900),
       ),

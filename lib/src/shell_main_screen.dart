@@ -704,6 +704,22 @@ class _LearningGrid extends StatelessWidget {
         LearnMode.huruf,
       ),
       _LearningHomeItem(
+        'SUKU KATA',
+        'Gabungan abjad',
+        'assets/images/logo_Suku_kata.png',
+        const Color(0xffFFF0D9),
+        const Color(0xffF97316),
+        LearnMode.sukuKata,
+      ),
+      _LearningHomeItem(
+        'MERANGKAI KATA',
+        'Latihan kata',
+        'assets/images/log_merangkai_kata.png',
+        const Color(0xffFFE2F0),
+        const Color(0xffEC4899),
+        LearnMode.rangkaiKata,
+      ),
+      _LearningHomeItem(
         'ANGKA',
         '1 sampai 10',
         'assets/images/Logo_123.png',
@@ -732,7 +748,7 @@ class _LearningGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: tablet ? 4 : 2,
+        crossAxisCount: tablet ? 3 : 2,
         mainAxisSpacing: 14,
         crossAxisSpacing: 14,
         childAspectRatio: tablet ? .92 : .86,

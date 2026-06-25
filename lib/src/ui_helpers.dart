@@ -232,6 +232,8 @@ String tr(BuildContext context, String id, [String? en]) {
 
 const _enText = <String, String>{
   'Belajar Huruf': 'Learn Letters',
+  'Suku Kata': 'Syllables',
+  'Merangkai Kata': 'Word Assembly',
   'Belajar Angka': 'Learn Numbers',
   'Belajar Benda': 'Learn Objects',
   'Belajar Iqra 1': 'Learn Iqra 1',
@@ -249,6 +251,8 @@ const _enText = <String, String>{
 
 String titleForMode(LearnMode mode) => switch (mode) {
   LearnMode.huruf => 'Belajar Huruf',
+  LearnMode.sukuKata => 'Suku Kata',
+  LearnMode.rangkaiKata => 'Merangkai Kata',
   LearnMode.angka => 'Belajar Angka',
   LearnMode.benda => 'Belajar Benda',
   LearnMode.iqra => 'Belajar Iqra 1',

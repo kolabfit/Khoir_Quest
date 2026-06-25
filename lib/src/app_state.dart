@@ -10,7 +10,7 @@ enum Gender { boy, girl }
 
 enum TabItem { main, belajar, lagu, akun }
 
-enum LearnMode { menu, huruf, angka, benda, iqra }
+enum LearnMode { menu, huruf, sukuKata, rangkaiKata, angka, benda, iqra }
 
 class AppState extends ChangeNotifier with WidgetsBindingObserver {
   AppState(this._db) {
@@ -52,8 +52,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   final Set<String> favorites = {};
   final Set<String> iqraMastered = {};
   final Set<String> hurfMastered = {};
+  final Set<String> sukuKataMastered = {};
+  final Set<String> rangkaiKataMastered = {};
   final Set<String> angkaMastered = {};
   final Set<String> bendaMastered = {};
+  int _sukuKataTotal = 0;
+  int _rangkaiKataTotal = 0;
   final List<String> iqraHistory = [];
   int stars = 12;
   int iqraStreak = 0;
@@ -112,6 +116,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     } else {
       _applyAccount(account);
     }
+    await _loadRangkaiLearningProgress();
     await _reloadLearningCatalog();
     await _refreshPendingMaterialSyncCount();
     await _startConnectivityWatch();
@@ -228,6 +233,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     email = null;
     role = null;
     favorites.clear();
+    sukuKataMastered.clear();
+    rangkaiKataMastered.clear();
     _autoSyncTimer?.cancel();
     _autoSyncTimer = null;
     await _materialSubscription?.cancel();
@@ -315,6 +322,39 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     stars += 1;
     _registerHurfViewed(letter);
     await _saveAccount();
+    notifyListeners();
+  }
+
+  Future<void> markSukuKataViewed(String id, {required int total}) async {
+    _sukuKataTotal = total;
+    stars += 1;
+    sukuKataMastered.add(progressMasteryKey(id));
+    _refreshHurfProgress();
+    await _saveRangkaiLearningProgress();
+    await _saveAccount();
+    notifyListeners();
+  }
+
+  Future<void> markRangkaiKataViewed(String id, {required int total}) async {
+    _rangkaiKataTotal = total;
+    stars += 1;
+    rangkaiKataMastered.add(progressMasteryKey(id));
+    _refreshHurfProgress();
+    await _saveRangkaiLearningProgress();
+    await _saveAccount();
+    notifyListeners();
+  }
+
+  void setRangkaiLearningTotals({int? sukuKata, int? rangkaiKata}) {
+    final nextSukuKata = sukuKata ?? _sukuKataTotal;
+    final nextRangkaiKata = rangkaiKata ?? _rangkaiKataTotal;
+    if (_sukuKataTotal == nextSukuKata &&
+        _rangkaiKataTotal == nextRangkaiKata) {
+      return;
+    }
+    _sukuKataTotal = nextSukuKata;
+    _rangkaiKataTotal = nextRangkaiKata;
+    _refreshHurfProgress();
     notifyListeners();
   }
 
@@ -940,6 +980,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   String? _progressKeyForMode(LearnMode mode) => switch (mode) {
     LearnMode.huruf => 'membaca',
+    LearnMode.sukuKata => 'membaca',
+    LearnMode.rangkaiKata => 'membaca',
     LearnMode.angka => 'angka',
     LearnMode.benda => 'benda',
     LearnMode.iqra => 'iqra',
@@ -948,6 +990,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   String? _historyCategoryForMode(LearnMode mode) => switch (mode) {
     LearnMode.huruf => 'huruf',
+    LearnMode.sukuKata => 'suku_kata',
+    LearnMode.rangkaiKata => 'rangkai_kata',
     LearnMode.angka => 'angka',
     LearnMode.benda => 'benda',
     LearnMode.iqra => 'iqra',
@@ -992,7 +1036,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void _refreshHurfProgress() {
     final valid = _validProgressKeys(letters.map((item) => item.letter));
     _normalizeMastered(hurfMastered, valid, upperCase: true);
-    progress['membaca'] = _progressPercent(hurfMastered, valid);
+    final masteredCount =
+        hurfMastered.where(valid.contains).length +
+        sukuKataMastered.length +
+        rangkaiKataMastered.length;
+    final total = valid.length + _sukuKataTotal + _rangkaiKataTotal;
+    progress['membaca'] = total == 0
+        ? 0
+        : min(100, (masteredCount / total * 100).round());
   }
 
   void _refreshAngkaProgress() {
@@ -1055,5 +1106,33 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       );
     }
     await _saveAccount();
+  }
+
+  String _rangkaiProgressKey(String suffix) =>
+      'child_rangkai_progress_${email ?? 'guest'}_$suffix';
+
+  Future<void> _loadRangkaiLearningProgress() async {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    sukuKataMastered
+      ..clear()
+      ..addAll(prefs.getStringList(_rangkaiProgressKey('suku')) ?? const [])
+      ..addAll(prefs.getStringList(_rangkaiProgressKey('saku')) ?? const []);
+    rangkaiKataMastered
+      ..clear()
+      ..addAll(prefs.getStringList(_rangkaiProgressKey('kata')) ?? const []);
+  }
+
+  Future<void> _saveRangkaiLearningProgress() async {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    await prefs.setStringList(
+      _rangkaiProgressKey('suku'),
+      sukuKataMastered.toList(),
+    );
+    await prefs.setStringList(
+      _rangkaiProgressKey('kata'),
+      rangkaiKataMastered.toList(),
+    );
   }
 }

@@ -215,7 +215,7 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       await SupabaseService.instance.ensureInitialized();
       final remoteItems = await _rangkaiRepository.fetchAll();
       final remoteBlends = remoteItems
-          .where((item) => item.type == 'abjad')
+          .where((item) => item.type == 'suku_kata' || item.type == 'abjad')
           .map(_LetterBlendItem.fromModel)
           .where((item) => item.letters.length == 2)
           .toList();
@@ -233,7 +233,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
           ..clear()
           ..addAll(remoteWords);
       });
-      if (remoteItems.isEmpty && (cachedBlends.isNotEmpty || cachedWords.isNotEmpty)) {
+      if (remoteItems.isEmpty &&
+          (cachedBlends.isNotEmpty || cachedWords.isNotEmpty)) {
         for (final item in cachedBlends) {
           await _rangkaiRepository.upsertItem(item.toModel());
         }
@@ -246,7 +247,9 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Data merangkai memakai cache lokal. Supabase gagal dimuat.'),
+          content: Text(
+            'Data merangkai memakai cache lokal. Supabase gagal dimuat.',
+          ),
         ),
       );
     }
@@ -5361,7 +5364,7 @@ class _LetterBlendItem {
   RangkaiItemModel toModel() {
     return RangkaiItemModel(
       id: id,
-      type: 'abjad',
+      type: 'suku_kata',
       title: label,
       target: label,
       pieces: letters.map(_normalizeLabel).toList(),
