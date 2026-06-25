@@ -633,9 +633,7 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
 
   Future<void> _setupTts() async {
     try {
-      await _tts.setLanguage('id-ID');
-      await _tts.setSpeechRate(.42);
-      await _tts.setPitch(1.08);
+      await _configureTts(_tts, 'id-ID');
     } catch (_) {}
   }
 
@@ -728,9 +726,7 @@ class _SukuKataScreenState extends ConsumerState<SukuKataScreen> {
 
   Future<void> _setupTts() async {
     try {
-      await _tts.setLanguage('id-ID');
-      await _tts.setSpeechRate(.42);
-      await _tts.setPitch(1.08);
+      await _configureTts(_tts, 'id-ID');
     } catch (_) {}
   }
 
@@ -830,9 +826,7 @@ class _RangkaiKataScreenState extends ConsumerState<RangkaiKataScreen> {
 
   Future<void> _setupTts() async {
     try {
-      await _tts.setLanguage('id-ID');
-      await _tts.setSpeechRate(.42);
-      await _tts.setPitch(1.08);
+      await _configureTts(_tts, 'id-ID');
     } catch (_) {}
   }
 
@@ -1066,13 +1060,38 @@ class AngkaScreen extends ConsumerStatefulWidget {
 
 class _AngkaScreenState extends ConsumerState<AngkaScreen> {
   final search = TextEditingController();
+  final _tts = FlutterTts();
   int pageIndex = 0;
   String category = 'Semua';
 
   @override
+  void initState() {
+    super.initState();
+    unawaited(_setupTts());
+  }
+
+  @override
   void dispose() {
     search.dispose();
+    unawaited(_tts.stop());
     super.dispose();
+  }
+
+  Future<void> _setupTts() async {
+    try {
+      await _configureTts(_tts, 'id-ID');
+    } catch (_) {}
+  }
+
+  Future<void> _speak(NumberItem item) async {
+    await ref.read(appStateProvider).markAngkaViewed(item.number);
+    final text = _numberTtsText(item);
+    if (text.isEmpty) return;
+    try {
+      await _configureTts(_tts, 'id-ID');
+      await _tts.stop();
+      await _tts.speak(text);
+    } catch (_) {}
   }
 
   @override
@@ -1129,7 +1148,7 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
           badge: _numberBadge(item.number),
           kind: _PremiumCardKind.number,
           mastered: mastered,
-          onTap: () => ref.read(appStateProvider).markAngkaViewed(item.number),
+          onTap: () => unawaited(_speak(item)),
         );
       },
     );
@@ -1145,13 +1164,36 @@ class BendaScreen extends ConsumerStatefulWidget {
 
 class _BendaScreenState extends ConsumerState<BendaScreen> {
   final search = TextEditingController();
+  final _tts = FlutterTts();
   int pageIndex = 0;
   String category = 'Semua';
 
   @override
+  void initState() {
+    super.initState();
+    unawaited(_setupTts());
+  }
+
+  @override
   void dispose() {
     search.dispose();
+    unawaited(_tts.stop());
     super.dispose();
+  }
+
+  Future<void> _setupTts() async {
+    try {
+      await _configureTts(_tts, 'id-ID');
+    } catch (_) {}
+  }
+
+  Future<void> _speak(LearningObject item) async {
+    await ref.read(appStateProvider).markBendaViewed(item.name);
+    try {
+      await _configureTts(_tts, 'id-ID');
+      await _tts.stop();
+      await _tts.speak(item.name.toLowerCase());
+    } catch (_) {}
   }
 
   @override
@@ -1165,7 +1207,7 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
       final queryOk =
           query.isEmpty ||
           item.name.toLowerCase().contains(query) ||
-          _englishName(item.name).contains(query);
+          item.category.toLowerCase().contains(query);
       return categoryOk && queryOk;
     }).toList();
     return _PremiumLearningScaffold(
@@ -1197,12 +1239,12 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
           color: color,
           title: item.name,
           subtitle: item.name,
-          caption: _englishName(item.name),
+          caption: item.category,
           imageUrl: item.img,
           badge: _objectFamily(item),
           kind: _PremiumCardKind.object,
           mastered: mastered,
-          onTap: () => ref.read(appStateProvider).markBendaViewed(item.name),
+          onTap: () => unawaited(_speak(item)),
         );
       },
     );
@@ -2093,41 +2135,74 @@ String _standardObjectCategory(String rawCategory) {
   return 'Perabot Rumah';
 }
 
-String _englishName(String value) {
-  const names = {
-    'Apel': 'apple',
-    'Bola': 'ball',
-    'Cicak': 'lizard',
-    'Domba': 'sheep',
-    'Elang': 'eagle',
-    'Gajah': 'elephant',
-    'Harimau': 'tiger',
-    'Ikan': 'fish',
-    'Jeruk': 'orange',
-    'Kucing': 'cat',
-    'Mobil': 'car',
-    'Rumah': 'house',
-    'Sepeda': 'bicycle',
-    'Meja': 'table',
-    'Kursi': 'chair',
-    'Buku': 'book',
-    'Pensil': 'pencil',
-    'Tas': 'school bag',
-    'Lampu': 'lamp',
-    'Nanas': 'pineapple',
-    'Pisang': 'banana',
-    'Quran': 'quran',
-    'Tomat': 'tomato',
-    'Ular': 'snake',
-    'Wortel': 'carrot',
-    'Zebra': 'zebra',
-  };
-  return names[value] ?? value.toLowerCase();
+Future<void> _configureTts(
+  FlutterTts tts,
+  String language, {
+  double speechRate = .42,
+  double pitch = 1.08,
+}) async {
+  await tts.setLanguage(language);
+  await tts.setSpeechRate(speechRate);
+  await tts.setPitch(pitch);
+  try {
+    final voices = await tts.getVoices;
+    if (voices is! List) return;
+    final prefix = language.toLowerCase();
+    for (final voice in voices) {
+      if (voice is! Map) continue;
+      final locale = (voice['locale'] ?? voice['lang'] ?? '').toString();
+      final name = (voice['name'] ?? '').toString();
+      if (name.isEmpty || !locale.toLowerCase().startsWith(prefix)) continue;
+      await tts.setVoice({'name': name, 'locale': locale});
+      return;
+    }
+  } catch (_) {}
 }
 
 String _numberBadge(String number) {
   final n = int.tryParse(number) ?? 0;
   return n.isEven ? 'genap' : 'ganjil';
+}
+
+String _numberTtsText(NumberItem item) {
+  final label = item.name.trim();
+  final n = int.tryParse(item.number.trim());
+  if (label.isNotEmpty && int.tryParse(label) == null) {
+    return label.toLowerCase();
+  }
+  if (n == null || n < 0 || n > 999) return label.toLowerCase();
+  return _numberToIndonesian(n);
+}
+
+String _numberToIndonesian(int value) {
+  const units = [
+    'nol',
+    'satu',
+    'dua',
+    'tiga',
+    'empat',
+    'lima',
+    'enam',
+    'tujuh',
+    'delapan',
+    'sembilan',
+    'sepuluh',
+    'sebelas',
+  ];
+  if (value < 12) return units[value];
+  if (value < 20) return '${units[value - 10]} belas';
+  if (value < 100) {
+    final tens = value ~/ 10;
+    final rest = value % 10;
+    return rest == 0
+        ? '${units[tens]} puluh'
+        : '${units[tens]} puluh ${units[rest]}';
+  }
+  if (value == 100) return 'seratus';
+  final hundreds = value ~/ 100;
+  final rest = value % 100;
+  final prefix = hundreds == 1 ? 'seratus' : '${units[hundreds]} ratus';
+  return rest == 0 ? prefix : '$prefix ${_numberToIndonesian(rest)}';
 }
 
 class IqraLesson extends ConsumerStatefulWidget {
@@ -2145,18 +2220,40 @@ class IqraLesson extends ConsumerStatefulWidget {
 
 class _IqraLessonState extends ConsumerState<IqraLesson> {
   late final ConfettiController confetti;
+  final _tts = FlutterTts();
   int index = 0;
 
   @override
   void initState() {
     super.initState();
     confetti = ConfettiController(duration: const Duration(seconds: 2));
+    unawaited(_setupTts());
   }
 
   @override
   void dispose() {
     confetti.dispose();
+    unawaited(_tts.stop());
     super.dispose();
+  }
+
+  Future<void> _setupTts() async {
+    try {
+      await _tts.setLanguage('ar-SA');
+      await _tts.setSpeechRate(.38);
+      await _tts.setPitch(1.0);
+    } catch (_) {}
+  }
+
+  Future<void> _selectIqra(int i, List<IqraItem> items) async {
+    setState(() => index = i);
+    final item = items[i];
+    await ref.read(appStateProvider).markIqraViewed(item);
+    try {
+      await _tts.setLanguage('ar-SA');
+      await _tts.stop();
+      await _tts.speak(item.char);
+    } catch (_) {}
   }
 
   @override
@@ -2193,10 +2290,7 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
                 latinEnabled: widget.readingHelp,
                 mastered: app.iqraMastered,
                 feedback: '',
-                onSelect: (i) {
-                  setState(() => index = i);
-                  ref.read(appStateProvider).markIqraViewed(iqraItems[i]);
-                },
+                onSelect: (i) => unawaited(_selectIqra(i, iqraItems)),
               ),
             ],
           ),
