@@ -105,6 +105,8 @@ class AuthService {
     required String password,
     required bool register,
     required String preferredRole,
+    required String childName,
+    required String gender,
   }) async {
     await ensureReady();
     final normalizedUsername = _repository.normalizeUsername(username);
@@ -125,6 +127,9 @@ class AuthService {
       userId: user.id,
       username: normalizedUsername,
       preferredRole: preferredRole,
+      register: register,
+      childName: childName,
+      gender: gender,
     );
     final progressMap = Map<String, dynamic>.from(
       profile['progress'] as Map<String, dynamic>? ??
@@ -169,10 +174,28 @@ class AuthService {
     required String userId,
     required String username,
     required String preferredRole,
+    required bool register,
+    required String childName,
+    required String gender,
   }) async {
     final existing = await _repository.fetchProfileByUserId(userId);
+    if (register) {
+      return upsertProfileState(
+        userId: userId,
+        username: username,
+        role: preferredRole,
+        childName: childName,
+        gender: gender,
+      );
+    }
     if (existing == null) {
-      return {'id': userId, 'username': username, 'role': preferredRole};
+      return upsertProfileState(
+        userId: userId,
+        username: username,
+        role: preferredRole,
+        childName: childName,
+        gender: gender,
+      );
     }
     return existing;
   }

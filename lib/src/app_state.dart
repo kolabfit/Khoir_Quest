@@ -153,6 +153,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         password: password,
         register: register,
         preferredRole: nextRole.name,
+        childName: name ?? nextEmail,
+        gender: (nextGender ?? Gender.boy).name,
       );
       nextRole = usernameIsTeacher
           ? Role.teacher
@@ -341,6 +343,22 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     rangkaiKataMastered.add(progressMasteryKey(id));
     _refreshHurfProgress();
     await _saveRangkaiLearningProgress();
+    await _saveAccount();
+    notifyListeners();
+  }
+
+  Future<void> awardRangkaiKataPoint(String id, {required int total}) async {
+    _rangkaiKataTotal = total;
+    stars += 5;
+    rangkaiKataMastered.add(progressMasteryKey(id));
+    _refreshHurfProgress();
+    await _saveRangkaiLearningProgress();
+    await _recordHistory(
+      materialId: id,
+      category: 'rangkai_kata',
+      duration: 1,
+      score: 100,
+    );
     await _saveAccount();
     notifyListeners();
   }

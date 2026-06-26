@@ -806,28 +806,19 @@ class RangkaiKataScreen extends ConsumerStatefulWidget {
 
 class _RangkaiKataScreenState extends ConsumerState<RangkaiKataScreen> {
   final search = TextEditingController();
-  final _tts = FlutterTts();
   List<_WordAssemblyItem> items = const [];
   int pageIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    unawaited(_setupTts());
     unawaited(_loadItems());
   }
 
   @override
   void dispose() {
     search.dispose();
-    unawaited(_tts.stop());
     super.dispose();
-  }
-
-  Future<void> _setupTts() async {
-    try {
-      await _configureTts(_tts, 'id-ID');
-    } catch (_) {}
   }
 
   Future<void> _loadItems() async {
@@ -844,16 +835,6 @@ class _RangkaiKataScreenState extends ConsumerState<RangkaiKataScreen> {
         .setRangkaiLearningTotals(rangkaiKata: words.length);
   }
 
-  Future<void> _speak(_WordAssemblyItem item) async {
-    await ref
-        .read(appStateProvider)
-        .markRangkaiKataViewed(item.id, total: items.length);
-    try {
-      await _tts.stop();
-      await _tts.speak(item.target.toLowerCase());
-    } catch (_) {}
-  }
-
   @override
   Widget build(BuildContext context) {
     final app = ref.watch(appStateProvider);
@@ -867,7 +848,7 @@ class _RangkaiKataScreenState extends ConsumerState<RangkaiKataScreen> {
       titleAsset: 'assets/images/belajar_merangkai_kata.png',
       mascotAsset: 'assets/images/Anak_Belajar_Huruf.png',
       fallbackTitle: 'Merangkai Kata',
-      subtitle: 'Tekan kata, dengarkan, lalu kumpulkan poin!',
+      subtitle: 'Tekan kata, susun potongan, lalu kumpulkan poin!',
       accent: const Color(0xffEC4899),
       stars: app.stars,
       onBack: () => ref.read(appStateProvider).openLearn(LearnMode.menu),
@@ -892,9 +873,330 @@ class _RangkaiKataScreenState extends ConsumerState<RangkaiKataScreen> {
           mastered: app.rangkaiKataMastered.contains(
             progressMasteryKey(item.id),
           ),
-          onTap: () => unawaited(_speak(item)),
+          onTap: () => showDialog<void>(
+            context: context,
+            builder: (_) => RangkaiKataGameDialog(initialId: item.id),
+          ),
         );
       },
+    );
+  }
+}
+
+class RangkaiKataGameDialog extends ConsumerStatefulWidget {
+  const RangkaiKataGameDialog({super.key, this.initialId});
+
+  final String? initialId;
+
+  @override
+  ConsumerState<RangkaiKataGameDialog> createState() =>
+      _RangkaiKataGameDialogState();
+}
+
+class _RangkaiKataGameDialogState extends ConsumerState<RangkaiKataGameDialog> {
+  List<_WordAssemblyItem> items = const [];
+  final Set<String> done = {};
+  _WordAssemblyItem? selected;
+  List<_WordUnitData> choices = const [];
+  final List<_WordUnitData> answer = [];
+  bool loading = true;
+  bool awarded = false;
+  String feedback = '';
+  int attempts = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+  }
+
+  Future<void> _load() async {
+    final loaded = await _loadRangkaiItems();
+    final words = loaded
+        .where((item) => item.type == 'kata')
+        .map(_WordAssemblyItem.fromModel)
+        .where((item) => item.units.isNotEmpty)
+        .toList();
+    if (!mounted) return;
+    setState(() {
+      items = words;
+      loading = false;
+    });
+    final initialId = widget.initialId;
+    if (initialId != null) {
+      for (final item in words) {
+        if (item.id == initialId) {
+          _select(item);
+          break;
+        }
+      }
+    }
+    ref
+        .read(appStateProvider)
+        .setRangkaiLearningTotals(rangkaiKata: words.length);
+  }
+
+  void _select(_WordAssemblyItem item) {
+    final shuffled = [...item.units]..shuffle(Random());
+    setState(() {
+      selected = item;
+      choices = shuffled;
+      answer.clear();
+      awarded = false;
+      feedback = '';
+      attempts = 0;
+    });
+  }
+
+  void _pick(_WordUnitData unit) {
+    if (selected == null || answer.length == selected!.units.length) return;
+    setState(() {
+      choices = [...choices]..remove(unit);
+      answer.add(unit);
+      feedback = '';
+    });
+    if (answer.length == selected!.units.length) unawaited(_check());
+  }
+
+  void _undo() {
+    if (answer.isEmpty || selected == null) return;
+    setState(() {
+      final unit = answer.removeLast();
+      choices = [...choices, unit];
+      feedback = '';
+    });
+  }
+
+  void _reset() {
+    final item = selected;
+    if (item == null) return;
+    setState(() {
+      choices = [...item.units]..shuffle(Random());
+      answer.clear();
+      feedback = '';
+    });
+  }
+
+  Future<void> _check() async {
+    final item = selected;
+    if (item == null) return;
+    attempts += 1;
+    final correct = answer.map((unit) => unit.value).join() == item.target;
+    if (!correct) {
+      setState(() => feedback = 'Hampir benar. Coba susun lagi, ya!');
+      return;
+    }
+    if (!awarded) {
+      awarded = true;
+      done.add(item.id);
+      await ref
+          .read(appStateProvider)
+          .awardRangkaiKataPoint(item.id, total: items.length);
+    }
+    if (!mounted) return;
+    setState(() => feedback = 'Hebat! Kata ${item.target} berhasil dirangkai.');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = selected;
+    return Dialog(
+      insetPadding: const EdgeInsets.all(18),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560, maxHeight: 680),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: item == null ? _buildList(context) : _buildGame(context, item),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _dialogHeader('Merangkai Kata', onBack: Navigator.of(context).pop),
+        const SizedBox(height: 14),
+        if (loading)
+          const Expanded(child: Center(child: CircularProgressIndicator()))
+        else if (items.isEmpty)
+          const Expanded(
+            child: Center(
+              child: Text(
+                'Belum ada kata untuk dirangkai.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+              ),
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.separated(
+              itemCount: items.length,
+              separatorBuilder: (_, separatorIndex) =>
+                  const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return FilledButton.icon(
+                  onPressed: () => _select(item),
+                  icon: Icon(
+                    done.contains(item.id)
+                        ? Icons.check_circle_rounded
+                        : Icons.extension_rounded,
+                  ),
+                  label: Text(item.target),
+                  style: FilledButton.styleFrom(
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 16,
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                    ),
+                    backgroundColor: const Color(0xffEC4899),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildGame(BuildContext context, _WordAssemblyItem item) {
+    final complete = feedback.startsWith('Hebat!');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _dialogHeader(
+          item.target,
+          onBack: widget.initialId == null
+              ? () => setState(() => selected = null)
+              : Navigator.of(context).pop,
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final unit in answer)
+              Chip(
+                label: Text(unit.display),
+                labelStyle: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Expanded(
+          child: Center(
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
+              children: [
+                for (final unit in choices)
+                  FilledButton(
+                    onPressed: complete ? null : () => _pick(unit),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xffFFB927),
+                      foregroundColor: const Color(0xff293464),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 16,
+                      ),
+                    ),
+                    child: Text(
+                      unit.display,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (feedback.isNotEmpty)
+          Text(
+            feedback,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: complete
+                  ? const Color(0xff20B447)
+                  : const Color(0xffF97316),
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: complete ? null : _undo,
+                icon: const Icon(Icons.backspace_rounded),
+                label: const Text('Hapus terakhir'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: complete ? null : _reset,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Reset'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        FilledButton.icon(
+          onPressed: complete
+              ? widget.initialId == null
+                    ? () => setState(() => selected = null)
+                    : Navigator.of(context).pop
+              : null,
+          icon: const Icon(Icons.done_rounded),
+          label: Text(complete ? 'Selesai (+5 poin)' : 'Susun sampai lengkap'),
+        ),
+        if (complete)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Percobaan: $attempts',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _dialogHeader(String title, {required VoidCallback onBack}) {
+    return Row(
+      children: [
+        IconButton.filledTonal(
+          onPressed: onBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+          ),
+        ),
+      ],
     );
   }
 }

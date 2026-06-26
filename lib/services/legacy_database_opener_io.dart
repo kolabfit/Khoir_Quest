@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 
 Future<Database?> openLegacyDatabaseIfExists(String path) async {

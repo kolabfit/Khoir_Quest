@@ -59,12 +59,16 @@ class CloudSyncService {
     required String password,
     required bool register,
     required String preferredRole,
+    required String childName,
+    required String gender,
   }) {
     return _auth.authenticate(
       username: username,
       password: password,
       register: register,
       preferredRole: preferredRole,
+      childName: childName,
+      gender: gender,
     );
   }
 
