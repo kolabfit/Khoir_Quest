@@ -638,11 +638,10 @@ class _HurufScreenState extends ConsumerState<HurufScreen> {
   }
 
   Future<void> _speakLetter(String letter) async {
-    await ref.read(appStateProvider).markHurfViewed(letter);
     try {
-      await _tts.stop();
-      await _tts.speak(letter.toLowerCase());
+      await _speakTts(_tts, letter.toLowerCase(), language: 'id-ID');
     } catch (_) {}
+    await ref.read(appStateProvider).markHurfViewed(letter);
   }
 
   @override
@@ -745,13 +744,12 @@ class _SukuKataScreenState extends ConsumerState<SukuKataScreen> {
   }
 
   Future<void> _speak(_LetterBlendItem item) async {
+    try {
+      await _speakTts(_tts, item.label.toLowerCase(), language: 'id-ID');
+    } catch (_) {}
     await ref
         .read(appStateProvider)
         .markSukuKataViewed(item.id, total: items.length);
-    try {
-      await _tts.stop();
-      await _tts.speak(item.label.toLowerCase());
-    } catch (_) {}
   }
 
   @override
@@ -1386,14 +1384,12 @@ class _AngkaScreenState extends ConsumerState<AngkaScreen> {
   }
 
   Future<void> _speak(NumberItem item) async {
-    await ref.read(appStateProvider).markAngkaViewed(item.number);
     final text = _numberTtsText(item);
     if (text.isEmpty) return;
     try {
-      await _configureTts(_tts, 'id-ID');
-      await _tts.stop();
-      await _tts.speak(text);
+      await _speakTts(_tts, text, language: 'id-ID');
     } catch (_) {}
+    await ref.read(appStateProvider).markAngkaViewed(item.number);
   }
 
   @override
@@ -1490,12 +1486,10 @@ class _BendaScreenState extends ConsumerState<BendaScreen> {
   }
 
   Future<void> _speak(LearningObject item) async {
-    await ref.read(appStateProvider).markBendaViewed(item.name);
     try {
-      await _configureTts(_tts, 'id-ID');
-      await _tts.stop();
-      await _tts.speak(item.name.toLowerCase());
+      await _speakTts(_tts, item.name.toLowerCase(), language: 'id-ID');
     } catch (_) {}
+    await ref.read(appStateProvider).markBendaViewed(item.name);
   }
 
   @override
@@ -2443,6 +2437,7 @@ Future<void> _configureTts(
   double speechRate = .42,
   double pitch = 1.08,
 }) async {
+  if (kIsWeb) return;
   await tts.setLanguage(language);
   await tts.setSpeechRate(speechRate);
   await tts.setPitch(pitch);
@@ -2459,6 +2454,29 @@ Future<void> _configureTts(
       return;
     }
   } catch (_) {}
+}
+
+Future<bool> _speakTts(
+  FlutterTts tts,
+  String text, {
+  required String language,
+  double speechRate = .42,
+  double pitch = 1.08,
+}) async {
+  if (await speakWithWebTts(
+    text,
+    language: language,
+    speechRate: speechRate,
+    pitch: pitch,
+  )) {
+    return true;
+  }
+  if (kIsWeb) {
+    return false;
+  }
+  unawaited(tts.stop());
+  await tts.speak(text);
+  return true;
 }
 
 String _numberBadge(String number) {
@@ -2541,6 +2559,7 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
 
   Future<void> _setupTts() async {
     try {
+      if (kIsWeb) return;
       await _tts.setLanguage('ar-SA');
       await _tts.setSpeechRate(.38);
       await _tts.setPitch(1.0);
@@ -2550,12 +2569,19 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
   Future<void> _selectIqra(int i, List<IqraItem> items) async {
     setState(() => index = i);
     final item = items[i];
-    await ref.read(appStateProvider).markIqraViewed(item);
     try {
-      await _tts.setLanguage('ar-SA');
-      await _tts.stop();
-      await _tts.speak(item.char);
+      final spoken = await _speakTts(
+        _tts,
+        _iqraArabicTtsText(item),
+        language: 'ar-SA',
+        speechRate: .38,
+        pitch: 1.0,
+      );
+      if (!spoken) {
+        await _speakTts(_tts, item.latin.toLowerCase(), language: 'id-ID');
+      }
     } catch (_) {}
+    await ref.read(appStateProvider).markIqraViewed(item);
   }
 
   @override
@@ -2608,6 +2634,40 @@ class _IqraLessonState extends ConsumerState<IqraLesson> {
       ],
     );
   }
+}
+
+String _iqraArabicTtsText(IqraItem item) {
+  return switch (item.latin.toLowerCase()) {
+    'alif' => 'أَلِف',
+    'ba' => 'بَاء',
+    'ta' => 'تَاء',
+    'tsa' => 'ثَاء',
+    'jim' => 'جِيم',
+    'ha' => item.char == '\u062D' ? 'حَاء' : 'هَاء',
+    'kho' => 'خَاء',
+    'dal' => 'دَال',
+    'dzal' => 'ذَال',
+    'ra' => 'رَاء',
+    'zai' => 'زَاي',
+    'sin' => 'سِين',
+    'syin' => 'شِين',
+    'shod' => 'صَاد',
+    'dhod' => 'ضَاد',
+    'tho' => 'طَاء',
+    'zho' => 'ظَاء',
+    'ain' => 'عَيْن',
+    'ghoin' => 'غَيْن',
+    'fa' => 'فَاء',
+    'qof' => 'قَاف',
+    'kaf' => 'كَاف',
+    'lam' => 'لَام',
+    'mim' => 'مِيم',
+    'nun' => 'نُون',
+    'wau' => 'وَاو',
+    'hamzah' => 'هَمْزَة',
+    'ya' => 'يَاء',
+    _ => item.char,
+  };
 }
 
 class _IqraParticles extends StatelessWidget {

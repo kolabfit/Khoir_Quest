@@ -109,7 +109,12 @@ class CloudSyncService {
     final profile = await _auth.currentProfile();
     if (profile == null) return;
     for (final record in records) {
-      await _auth.addLearningHistory(userId: profile.userId, record: record);
+      try {
+        await _auth.addLearningHistory(userId: profile.userId, record: record);
+      } catch (_) {
+        // ponytail: history sync is best-effort; add retry queue when lossless
+        // cloud audit matters.
+      }
     }
   }
 

@@ -127,14 +127,14 @@ class AuthRepository {
     required String userId,
     required LearningHistoryRecord record,
   }) async {
-    await _client.from('learning_histories').upsert({
+    await _client.from('learning_histories').insert({
       'user_id': userId,
       'material_id': record.materialId,
       'category': record.category,
       'duration': record.duration,
       'score': record.score,
       'played_at': record.playedAt.toUtc().toIso8601String(),
-    }, onConflict: 'user_id,material_id,category,played_at');
+    });
   }
 
   Future<List<Map<String, dynamic>>> fetchLearningHistories(
